@@ -20,6 +20,6 @@ const average = games
     .map(game => game.total_money)
     .reduce((acc, current) => acc + current, 0) / games.length;
 
-console.log(`--- Análisis de eSports para: ${targetcountry} ---`);
+console.log(`--- Análisis de eSports para: ${country} ---`);
 console.log(`Se han encontrado ${games.length} juegos.`);
 console.log(`La media de 'total_money' es: ${average.toFixed(2)}`);
