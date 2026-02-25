@@ -2,18 +2,31 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// IMPORTAS tu algoritmo desde index-FMGP.js
+// Importamos la función desde index-FMGP.js
 const fmgp = require('./index-FMGP.js');
 
-// Definir la ruta /samples/FMGP
 app.get('/samples/FMGP', (req, res) => {
-    // EJECUTAS la función que exporta index-FMGP.js
-    const resultado = fmgp.calcularMedia();
-    res.json(resultado);
+    try {
+        // Usamos la función importada
+        const resultado = fmgp.calcularMediaCheaters();
+        res.json({
+            alumno: "FMGP",
+            pais: resultado.FiltroPais,
+            campo: resultado.CampoNumerico,
+            media: resultado.media,
+            registros_analizados: resultado.filaCountry.length,
+            datos_utilizados: resultado.filaCountry
+        });
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-// Iniciar el servidor
+app.get('/', (req, res) => {
+    res.json({ message: 'API funcionando', ruta: '/samples/FMGP' });
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
-    console.log(`Prueba: https://sos2526-30.onrender.com/samples/FMGP`);
 });
