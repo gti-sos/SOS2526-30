@@ -12,9 +12,6 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-
-const fmgp = require('./index-FMGP.js');
-
 app.get('/samples/FMGP', (req, res) => {
     try {
        
