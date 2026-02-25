@@ -29,18 +29,15 @@ const initialData = fmgp.datos;
 let cheatersStats = [];
 
 
+
 app.get(`${BASE_PATH}/loadInitialData`, (req, res) => {
     if (cheatersStats.length === 0) {
         cheatersStats.push(...initialData);
-        return res.status(201).json({ 
-            message: 'Datos iniciales cargados', 
-            count: cheatersStats.length 
-        });
+        
+        return res.status(201).json(cheatersStats); 
     } else {
-        return res.status(200).json({ 
-            message: 'Los datos ya estaban cargados', 
-            count: cheatersStats.length 
-        });
+        
+        return res.status(200).json(cheatersStats);
     }
 });
 
