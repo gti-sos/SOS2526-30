@@ -2,41 +2,33 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// IMPORTAMOS TU FUNCIÓN DESDE LA RAÍZ
+// Importamos tu función desde la raíz
 const fmgp = require('./index-FMGP.js');
 
 app.get('/samples/FMGP', (req, res) => {
     try {
-        // EJECUTAMOS TU FUNCIÓN
+        // Ejecutamos tu función
         const resultado = fmgp.calcularMediaCheaters();
         
-        // DEVOLVEMOS EL RESULTADO COMO JSON
-        res.json({
-            alumno: "FMGP",
-            pais: resultado.FiltroPais,
-            campo: resultado.CampoNumerico,
-            media: resultado.media,
-            registros_analizados: resultado.filaCountry.length,
-            datos_utilizados: resultado.filaCountry
-        });
+        // Creamos el mismo mensaje que en index-FMGP.js
+        const mensaje = `Media de ${resultado.CampoNumerico} en ${resultado.FiltroPais}: ${resultado.media.toFixed(2)}`;
+        
+        // Enviamos como texto plano (no JSON)
+        res.set('Content-Type', 'text/plain');
+        res.send(mensaje);
+        
     } catch (error) {
-        console.error("Error en /samples/FMGP:", error);
-        res.status(500).json({ 
-            error: "Error al calcular la media",
-            detalle: error.message 
-        });
+        console.error("Error:", error);
+        res.status(500).send("Error interno del servidor");
     }
 });
 
-// RUTA RAÍZ (opcional)
+// Ruta raíz (opcional)
 app.get('/', (req, res) => {
-    res.json({ 
-        message: 'API SOS2526-30 funcionando',
-        rutas_disponibles: ['/samples/FMGP']
-    });
+    res.send('API funcionando. Prueba /samples/FMGP');
 });
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
-    console.log(`Prueba tu ruta: /samples/FMGP`);
+    console.log(`Prueba: /samples/FMGP`);
 });
