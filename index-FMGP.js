@@ -12,19 +12,29 @@ const datos = [
 ];
 
 
-const FiltroPais = "Spain";
-const CampoNumerico = "cheater_report";
+function calcularMediaCheaters() {
+    const FiltroPais = "Spain";
+    const CampoNumerico = "cheater_report";
+    
+    const filaCountry = datos.filter(row => row.country === FiltroPais);
+    const suma = filaCountry
+        .map(row => row[CampoNumerico])
+        .reduce((acc, val) => acc + val, 0);
+    
+    const media = suma / filaCountry.length;
+    
+    
+    return {
+        media: media,
+        filaCountry: filaCountry,
+        FiltroPais: FiltroPais,
+        CampoNumerico: CampoNumerico
+    };
+}
 
 
-const filaCountry = datos.filter(row => row.country === FiltroPais);
+const resultado = calcularMediaCheaters();
+console.log(`Media de ${resultado.CampoNumerico} en ${resultado.FiltroPais}: ${resultado.media.toFixed(2)}`);
 
 
-const suma = filaCountry
-    .map(row => row[CampoNumerico])
-    .reduce((acc, val) => acc + val, 0);
-
-
-const media = suma / filaCountry.length;
-
-
-console.log(`Media de ${CampoNumerico} en ${FiltroPais}: ${media.toFixed(2)}`);
+module.exports = { calcularMediaCheaters };
