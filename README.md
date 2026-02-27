@@ -8,3 +8,5 @@
 
 - **Project description**: Our sources of information are geared towards analysing the relationship between the growth of the esports industry, the earnings of esports players, cheating players in esports, and statistics on Olympic athletes.
 - **Repository**: [gti-sos/SOS2526-30](https://github.com/gti-sos/SOS2526-30)
+
+Render: https://sos2526-30.onrender.com/

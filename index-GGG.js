@@ -26,4 +26,4 @@ const sumaEdades = filasPorPais
 const media = sumaEdades / filasPorPais.length;
 
 
-console.log(`Media de edades de los atletas de ${pais}: ${media} años`);
+console.log(`Media de edad de los atletas de ${pais}: ${media} años`);
