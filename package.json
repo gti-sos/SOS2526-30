@@ -1,24 +1,27 @@
 {
   "name": "sos2526-30",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "- **Team**\r   - David Real Pérez (https://github.com/davreaper)\r   - Mario Ramos Tuñón (https://github.com/MarioRt8558)\r   - Gonzalo García Gómez (https://github.com/gonzaloogrcia)\r   - Francisco Manuel García Patino (https://github.com/PaGarPa)",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "keywords": [],
+  "homepage": "https://github.com/gti-sos/SOS2526-30#readme",
+  "bugs": {
+    "url": "https://github.com/gti-sos/SOS2526-30/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gti-sos/SOS2526-30.git"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
+  "author": "",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/gti-sos/SOS2526-30/issues"
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "homepage": "https://github.com/gti-sos/SOS2526-30#readme",
   "dependencies": {
+    "cool-ascii-faces": "^1.3.4",
     "express": "^5.2.1"
-  }
+  },
+  "devDependencies": {}
 }
