@@ -68,7 +68,7 @@ app.get("/samples/GGG", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("=".repeat(50));
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`- Servidor corriendo en puerto ${PORT}`);
     console.log(`- /samples/FMGP`);
     console.log(`- /samples/GGG`);
     console.log(`- /api/v1/cheaters-stats`);
