@@ -37,7 +37,6 @@ module.exports = {
     datos  
 };
 
-// Si se ejecuta directamente
 if (require.main === module) {
     const resultado = calcularMediaCheaters();
     console.log(`Media de ${resultado.CampoNumerico} en ${resultado.FiltroPais}: ${resultado.media.toFixed(2)}`);

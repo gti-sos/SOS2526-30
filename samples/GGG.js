@@ -11,27 +11,19 @@ const datosOlimpicos = [
     { id: 6, name: "Per Knut Aaland", sex: "M", age: 31, height: 188, weight: 75, country: "United States", noc: "USA", game: "1992 Winter", year: 1992, season: "Winter", city: "Albertville", sport: "Cross Country Skiing", event: "Cross Country Skiing Men's 10 kilometres", medal: "NA" }
 ];
 
-function calcularMediaEdadAtletas() {
 const pais = "Netherlands";
 const edad = "age";
+
+
 const filasPorPais = datosOlimpicos.filter(row => row.country === pais);
+
+
 const sumaEdades = filasPorPais
     .map(row => row[edad])
     .reduce((ac, e) => ac + e, 0);
-const media = sumaEdades / filasPorPais.length;
- return {
-        media: media,
-        filasPorPais: filasPorPais,
-        pais: pais,
-        edad: edad
-    };
 
-}
-module.exports = { 
-    calcularMediaEdadAtletas,
-    datosOlimpicos 
-};
-if (require.main === module) {
-    const resultado = calcularMediaEdadAtletas();
-    console.log(`Media de edad de los atletas de ${resultado.FiltroPais}: ${resultado.media.toFixed(2)} años`);
-}
+
+const media = sumaEdades / filasPorPais.length;
+
+
+console.log(`Media de edad de los atletas de ${pais}: ${media} años`);
