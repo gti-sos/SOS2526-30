@@ -9,6 +9,7 @@ const cool = require("cool-ascii-faces");
 // Importamos las APIs modulares
 
 const athleteEventsAPI = require("./api/athlete_events.js");
+const esportsStatsAPI = require("./api/esportsgrowth-stats.js");
 
 const app = express();
 const BASE_URL_API = "/api/v1";
@@ -19,6 +20,7 @@ app.use(express.static("public"));
 // Registramos las APIs
 
 app.use(`${BASE_URL_API}/athlete-events`, athleteEventsAPI);
+app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsStatsAPI);
 
 app.get('/', (req, res) => {
     res.json({
@@ -31,7 +33,8 @@ app.get('/', (req, res) => {
             },
             apis: {
                 cheaters: "/api/v1/cheaters-stats",
-                athletes: "/api/v1/athlete-events"
+                athletes: "/api/v1/athlete-events",
+                esports: "/api/v1/esportsgrowth-stats"
             },
             about: "/about",
             cool: "/cool"
