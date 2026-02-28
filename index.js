@@ -88,6 +88,7 @@ app.listen(PORT, () => {
     console.log(`- /samples/GGG`);
     console.log(`- /api/v1/cheaters-stats`);
     console.log(`- /api/v1/athlete-events`);
+    console.log(`- /api/v1/esportsgrowth-events`);
     console.log(`- /about`);
     console.log(`- /cool`);
     console.log("=".repeat(50));
