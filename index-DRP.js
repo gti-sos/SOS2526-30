@@ -11,10 +11,12 @@ const datos = [
   { year: 2019, country: "Spain",         active_player_no: 27.3, viewership: 73.5,  top_genre: "FPS",      top_platform: "PC",      tournament_no: 86,  pro_player_no: 17458, internet_penetration: 82.9, company_no: 282 },
 ];
 
-const pais = "Spain";
-
-function calcularMediaViewership(arrayDatos, pais) {
-  const filasPais = arrayDatos.filter(row => row.country === pais);
+// 1. Quitamos los parámetros de aquí ()
+function calcularMediaViewership() {
+  const pais = "Spain";
+  
+  // 2. Usamos directamente la variable 'datos' definida arriba
+  const filasPais = datos.filter(row => row.country === pais);
 
   if (filasPais.length === 0) {
     return `No se encontraron datos de viewership para: ${pais}`;
@@ -28,3 +30,7 @@ function calcularMediaViewership(arrayDatos, pais) {
 
   return `Media de viewership en ${pais}: ${media.toFixed(2)}`;
 }
+
+module.exports = {
+  calcularMediaViewership
+};
