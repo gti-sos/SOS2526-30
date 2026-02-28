@@ -11,6 +11,8 @@ const datos = [
   { year: 2019, country: "Spain",         active_player_no: 27.3, viewership: 73.5,  top_genre: "FPS",      top_platform: "PC",      tournament_no: 86,  pro_player_no: 17458, internet_penetration: 82.9, company_no: 282 },
 ];
 
+const pais = "Spain";
+
 function calcularMediaViewership(arrayDatos, pais) {
   const filasPais = arrayDatos.filter(row => row.country === pais);
 
