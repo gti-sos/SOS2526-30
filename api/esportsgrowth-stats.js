@@ -16,43 +16,152 @@ const datosIniciales = [
   { year: 2019, country: "Spain", active_player_no: 27.3, viewership: 73.5, top_genre: "FPS", top_platform: "PC", tournament_no: 86, pro_player_no: 17458, internet_penetration: 82.9, company_no: 282 }
 ];
 
-
 router.get("/loadInitialData", (req, res) => {
     if (datos.length === 0) {
-        // Si está vacío, copiamos los datos iniciales
         datos = [...datosIniciales];
-        res.status(201).json(datos); // 201 Created (o 200 OK dependiendo del profesor)
+        res.status(201).json(datos);
     } else {
-        // Si ya tiene datos, avisamos que ya están cargados
         res.status(200).json({ message: "Data is already loaded" });
     }
 });
 
-
+// =======================================================
+// GET GENERAL INTELIGENTE (Patrón del profesor)
+// Soporta: /, /?country=X, /?year=Y, /?from=A&to=B
+// =======================================================
 router.get("/", (req, res) => {
-    res.status(200).json(datos);
-});
+    const { country, year, from, to } = req.query;
+    let filtrados = [...datos];
 
+    // Filtro por país (ej: ?country=Spain)
+    if (country) {
+        filtrados = filtrados.filter(d => d.country === country);
+    }
+
+    // Filtro por año exacto (ej: ?year=2010)
+    if (year) {
+        filtrados = filtrados.filter(d => d.year === parseInt(year));
+    }
+
+    // Filtro por rango de años (ej: ?from=2010&to=2015)
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+    }
+
+    // El patrón exige devolver un array (incluso vacío si no hay resultados)
+    res.status(200).json(filtrados); 
+});
 
 router.post("/", (req, res) => {
     const newData = req.body;
     
-    // Comprobamos si ya existe un dato para ese país y año
+    // Validación básica: que traiga los campos clave
+    if (!newData.country || !newData.year) {
+        return res.status(400).json({ message: "Bad Request: Missing country or year" });
+    }
+
     const existe = datos.find(d => d.country === newData.country && d.year === newData.year);
     
     if (existe) {
-        res.status(409).json({ message: "Resource already exists" }); // 409 Conflict
+        res.status(409).json({ message: "Resource already exists" });
     } else {
         datos.push(newData);
-        res.status(201).json(newData); // 201 Created
+        res.status(201).json(newData);
     }
 });
 
+router.put("/", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
+});
 
 router.delete("/", (req, res) => {
     datos = [];
     res.status(200).json({ message: "All data deleted successfully" });
 });
 
-// Exportamos el router para poder usarlo en index.js
+
+// =======================================================
+// GET ESPECÍFICO CON RANGOS (Patrón del profesor)
+// Soporta: /:country?from=A&to=B
+// =======================================================
+router.get("/:country", (req, res) => {
+    const country = req.params.country;
+    const { from, to } = req.query;
+    
+    let filtrados = datos.filter(d => d.country === country);
+
+    // Si tiene parámetros from/to, filtramos el resultado
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+    }
+
+    // Si no hay datos Y NO SE USARON FILTROS, devolvemos 404 (recurso no existe).
+    // Si se usaron filtros (from/to) y no hay datos, el patrón dice que devolvamos un array vacío [] con 200 OK.
+    if (filtrados.length === 0 && !from && !to) {
+        res.status(404).json({ message: "Resource not found" });
+    } else {
+        res.status(200).json(filtrados);
+    }
+});
+
+
+// =======================================================
+// RUTAS DE RECURSO EXACTO (País y Año)
+// =======================================================
+router.get("/:country/:year", (req, res) => {
+    const country = req.params.country;
+    const year = parseInt(req.params.year); 
+    const recurso = datos.find(d => d.country === country && d.year === year);
+    
+    if (recurso) {
+        res.status(200).json(recurso);
+    } else {
+        res.status(404).json({ message: "Resource not found" });
+    }
+});
+
+router.post("/:country/:year", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
+});
+
+router.put("/:country/:year", (req, res) => {
+    const country = req.params.country;
+    const year = parseInt(req.params.year);
+    const body = req.body;
+
+    if (country !== body.country || year !== parseInt(body.year)) {
+        return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
+    }
+
+    const index = datos.findIndex(d => d.country === country && d.year === year);
+    
+    if (index !== -1) {
+        datos[index] = body;
+        res.status(200).json(datos[index]);
+    } else {
+        res.status(404).json({ message: "Resource not found" });
+    }
+});
+
+router.delete("/:country/:year", (req, res) => {
+    const country = req.params.country;
+    const year = parseInt(req.params.year);
+    const index = datos.findIndex(d => d.country === country && d.year === year);
+    
+    if (index !== -1) {
+        datos.splice(index, 1);
+        res.status(200).json({ message: "Resource deleted successfully" });
+    } else {
+        res.status(404).json({ message: "Resource not found" });
+    }
+});
+
 module.exports = router;
