@@ -84,7 +84,7 @@ router.delete("/", (req, res) => {
 
 
 
-// GET ESPECÍFICO CON RANGOS (Patrón del profesor)
+// GET ESPECÍFICO CON RANGOS
 
 router.get("/:country", (req, res) => {
     const country = req.params.country;
