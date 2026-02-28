@@ -11,13 +11,18 @@ const datos = [
   { year: 2019, country: "Spain",         active_player_no: 27.3, viewership: 73.5,  top_genre: "FPS",      top_platform: "PC",      tournament_no: 86,  pro_player_no: 17458, internet_penetration: 82.9, company_no: 282 },
 ];
 
-const paisFiltro = "Japan";
-const filasPais = datos.filter(row => row.country === paisFiltro);
+function calcularMediaViewership(arrayDatos, pais) {
+  const filasPais = arrayDatos.filter(row => row.country === pais);
 
-const suma = filasPais
-  .map(row => row.viewership)
-  .reduce((acc, val) => acc + val, 0);
+  if (filasPais.length === 0) {
+    return `No se encontraron datos de viewership para: ${pais}`;
+  }
 
-const media = suma / filasPais.length;
+  const suma = filasPais
+    .map(row => row.viewership)
+    .reduce((acc, val) => acc + val, 0);
 
-console.log(`Media de viewership en ${paisFiltro}: ${media.toFixed(2)}`);
+  const media = suma / filasPais.length;
+
+  return `Media de viewership en ${pais}: ${media.toFixed(2)}`;
+}
