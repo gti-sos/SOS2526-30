@@ -26,3 +26,7 @@ function calcularMediaViewership(arrayDatos, pais) {
 
   return `Media de viewership en ${pais}: ${media.toFixed(2)}`;
 }
+
+module.exports = {
+  calcularMediaViewership
+};
