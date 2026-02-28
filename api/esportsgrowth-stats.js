@@ -25,10 +25,9 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-// =======================================================
-// GET GENERAL INTELIGENTE (Patrón del profesor)
-// Soporta: /, /?country=X, /?year=Y, /?from=A&to=B
-// =======================================================
+
+// GET GENERAL INTELIGENTE
+
 router.get("/", (req, res) => {
     const { country, year, from, to } = req.query;
     let filtrados = [...datos];
@@ -84,10 +83,9 @@ router.delete("/", (req, res) => {
 });
 
 
-// =======================================================
+
 // GET ESPECÍFICO CON RANGOS (Patrón del profesor)
-// Soporta: /:country?from=A&to=B
-// =======================================================
+
 router.get("/:country", (req, res) => {
     const country = req.params.country;
     const { from, to } = req.query;
@@ -113,9 +111,9 @@ router.get("/:country", (req, res) => {
 });
 
 
-// =======================================================
+
 // RUTAS DE RECURSO EXACTO (País y Año)
-// =======================================================
+
 router.get("/:country/:year", (req, res) => {
     const country = req.params.country;
     const year = parseInt(req.params.year); 
