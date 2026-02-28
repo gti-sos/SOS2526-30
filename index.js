@@ -3,6 +3,7 @@ const path = require('path');
 
 const FMPG = require("./index-FMGP.js");
 const GGG = require("./index-GGG.js");
+const DRP = require("./samples/DRP.js")
 const cool = require("cool-ascii-faces"); 
 
 // Importamos las APIs modulares
@@ -25,7 +26,8 @@ app.get('/', (req, res) => {
         endpoints: {
             samples: {
                 FMGP: "/samples/FMGP",
-                GGG: "/samples/GGG"
+                GGG: "/samples/GGG",
+                DRP: "/samples/DRP"
             },
             apis: {
                 cheaters: "/api/v1/cheaters-stats",
@@ -65,6 +67,16 @@ app.get("/samples/GGG", (req, res) => {
     }
 });
 
+app.get('/samples/DRP', (req, res) => {
+    try {
+        const resultado = DRP.calcularMediaViewership(); 
+        
+        res.send(`<h1>Resultado para Viewership</h1>
+                  <p>${resultado}</p>`); 
+    } catch (error) {
+        res.status(500).send("Error calculando la media de viewership");
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("=".repeat(50));
