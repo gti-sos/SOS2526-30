@@ -3,15 +3,13 @@ const router = express.Router();
 const path = require("path");
 const csv = require('csvtojson');
 
-// Ruta al CSV
+
 const cheaters_csv = path.join(__dirname, "../data/video_game_cheaters_dataset_en.csv");
 
-// Array en memoria
+
 let cheaters = [];
 
-/* ================================
-    1. CARGA INICIAL
-================================ */
+
 router.get("/loadInitialData", (req, res) => {
     if (cheaters.length === 0) {
         csv().fromFile(cheaters_csv).then((datos) => {
@@ -25,9 +23,7 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-/* ================================
-    2. COLECCIÓN PRINCIPAL
-================================ */
+
 router.get("/", (req, res) => {
     let results = [...cheaters];
 
@@ -79,9 +75,7 @@ router.delete("/", (req, res) => {
     res.status(200).json({ message: "Colección borrada" });
 });
 
-/* ================================
-    3. RECURSOS POR ID
-================================ */
+
 router.get("/id/:id", (req, res) => {
     const results = cheaters.filter(a => a.id == req.params.id);
     res.status(200).json(results);
@@ -95,9 +89,7 @@ router.delete("/id/:id", (req, res) => {
     res.status(404).json({ error: "No encontrado - este dataset no tiene IDs" });
 });
 
-/* ================================
-    4. RECURSOS POR PAÍS/AÑO
-================================ */
+
 router.get("/country/:country/year/:year", (req, res) => {
     const recurso = cheaters.find(a => 
         a.country && a.country.toLowerCase() === req.params.country.toLowerCase() && 
@@ -154,16 +146,13 @@ router.get("/country/:country", (req, res) => {
     res.status(200).json(results);
 });
 
-/* ================================
-    5. LISTA DE PAÍSES (COUNTRIES)
-================================ */
-// GET /countries - Listar todos los países
+
 router.get("/countries", (req, res) => {
     const paises = [...new Set(cheaters.map(c => c.country).filter(Boolean))];
     res.status(200).json(paises.sort());
 });
 
-// POST /countries - Crear un nuevo país
+
 router.post("/countries", (req, res) => {
     const nuevoPais = req.body;
     
@@ -175,13 +164,13 @@ router.post("/countries", (req, res) => {
     res.status(201).send();
 });
 
-// DELETE /countries - Borrar todos los países
+
 router.delete("/countries", (req, res) => {
     cheaters = [];
     res.status(200).json({ message: "Todos los países borrados" });
 });
 
-// GET /countries/:country - Ver un país específico
+
 router.get("/countries/:country", (req, res) => {
     const results = cheaters.filter(a => 
         a.country && a.country.toLowerCase() === req.params.country.toLowerCase()
@@ -194,7 +183,7 @@ router.get("/countries/:country", (req, res) => {
     }
 });
 
-// PUT /countries/:country - Actualizar un país
+
 router.put("/countries/:country", (req, res) => {
     const countryActual = req.params.country;
     const nuevosDatos = req.body;
@@ -215,7 +204,7 @@ router.put("/countries/:country", (req, res) => {
     }
 });
 
-// DELETE /countries/:country - Borrar un país específico
+
 router.delete("/countries/:country", (req, res) => {
     const longitud = cheaters.length;
     cheaters = cheaters.filter(c => 
@@ -229,16 +218,13 @@ router.delete("/countries/:country", (req, res) => {
     }
 });
 
-/* ================================
-    6. LISTA DE AÑOS (YEARS)
-================================ */
-// GET /years - Listar todos los años
+
 router.get("/years", (req, res) => {
     const años = [...new Set(cheaters.map(c => c.year).filter(Boolean))];
     res.status(200).json(años.sort((a,b) => a - b));
 });
 
-// POST /years - Crear un nuevo año
+
 router.post("/years", (req, res) => {
     const nuevoAño = req.body;
     
@@ -250,13 +236,13 @@ router.post("/years", (req, res) => {
     res.status(201).send();
 });
 
-// DELETE /years - Borrar todos los años
+
 router.delete("/years", (req, res) => {
     cheaters = [];
     res.status(200).json({ message: "Todos los años borrados" });
 });
 
-// GET /years/:year - Ver un año específico
+
 router.get("/years/:year", (req, res) => {
     const results = cheaters.filter(c => c.year == req.params.year);
     
@@ -267,7 +253,7 @@ router.get("/years/:year", (req, res) => {
     }
 });
 
-// PUT /years/:year - Actualizar un año
+
 router.put("/years/:year", (req, res) => {
     const yearActual = parseInt(req.params.year);
     const nuevosDatos = req.body;
@@ -288,7 +274,7 @@ router.put("/years/:year", (req, res) => {
     }
 });
 
-// DELETE /years/:year - Borrar un año específico
+
 router.delete("/years/:year", (req, res) => {
     const yearActual = parseInt(req.params.year);
     const longitud = cheaters.length;
@@ -301,9 +287,7 @@ router.delete("/years/:year", (req, res) => {
     }
 });
 
-/* ================================
-    7. MÉTODOS NO PERMITIDOS
-================================ */
+
 router.post("/countries/:country", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
