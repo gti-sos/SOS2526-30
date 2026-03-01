@@ -3,15 +3,13 @@ const path = require('path');
 
 const FMPG = require("./index-FMGP.js");
 const GGG = require("./index-GGG.js");
-const DRP = require("./samples/DRP.js")
+const DRP = require("./samples/DRP.js");
 const cool = require("cool-ascii-faces"); 
 
 // Importamos las APIs modulares
-
 const athleteEventsAPI = require("./api/athlete_events.js");
-const esportsStatsAPI = require("./api/esportsgrowth-stats.js");
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
-
+const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
 
 const app = express();
 const BASE_URL_API = "/api/v1";
@@ -20,10 +18,9 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // Registramos las APIs
-
 app.use(`${BASE_URL_API}/athlete-events`, athleteEventsAPI);
-app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsStatsAPI);
 app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
+app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 
 app.get('/', (req, res) => {
     res.json({
@@ -35,8 +32,19 @@ app.get('/', (req, res) => {
                 DRP: "/samples/DRP"
             },
             apis: {
-                cheaters: "/api/v1/cheaters-stats",
-                athletes: "/api/v1/athlete-events",
+                cheaters: {
+                    base: "/api/v1/cheaters-stats",
+                    countries: "/api/v1/cheaters-stats/countries",
+                    years: "/api/v1/cheaters-stats/years"
+                },
+                athletes: {
+                    base: "/api/v1/athlete-events",
+                    teams: "/api/v1/athlete-events/teams",
+                    sports: "/api/v1/athlete-events/sports",
+                    cities: "/api/v1/athlete-events/cities",
+                    years: "/api/v1/athlete-events/years",
+                    seasons: "/api/v1/athlete-events/seasons"
+                },
                 esports: "/api/v1/esportsgrowth-stats"
             },
             about: "/about",
@@ -76,23 +84,38 @@ app.get("/samples/GGG", (req, res) => {
 app.get('/samples/DRP', (req, res) => {
     try {
         const resultado = DRP.calcularMediaViewership(); 
-        
         res.send(`<h1>Resultado para Viewership</h1>
                   <p>${resultado}</p>`); 
     } catch (error) {
         res.status(500).send("Error calculando la media de viewership");
     }
 });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("=".repeat(50));
-    console.log(`- Servidor corriendo en puerto ${PORT}`);
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
     console.log(`- /samples/FMGP`);
     console.log(`- /samples/GGG`);
+    console.log(`- /samples/DRP`);
     console.log(`- /api/v1/cheaters-stats`);
     console.log(`- /api/v1/athlete-events`);
-    console.log(`- /api/v1/esportsgrowth-events`);
-    console.log(`- /about`);
-    console.log(`- /cool`);
+    console.log(`- /api/v1/esportsgrowth-stats`);
+    console.log("\n📋 LISTAS (GET, POST, DELETE):");
+    console.log(`- /api/v1/cheaters-stats/countries`);
+    console.log(`- /api/v1/cheaters-stats/years`);
+    console.log(`- /api/v1/athlete-events/teams`);
+    console.log(`- /api/v1/athlete-events/sports`);
+    console.log(`- /api/v1/athlete-events/cities`);
+    console.log(`- /api/v1/athlete-events/years`);
+    console.log(`- /api/v1/athlete-events/seasons`);
+    console.log("\n🔍 RECURSOS CONCRETOS (GET, PUT, DELETE):");
+    console.log(`- /api/v1/cheaters-stats/countries/spain`);
+    console.log(`- /api/v1/cheaters-stats/years/2020`);
+    console.log(`- /api/v1/athlete-events/teams/netherlands`);
+    console.log(`- /api/v1/athlete-events/sports/basketball`);
+    console.log(`- /api/v1/athlete-events/cities/barcelona`);
+    console.log(`- /api/v1/athlete-events/years/1992`);
+    console.log(`- /api/v1/athlete-events/seasons/summer`);
     console.log("=".repeat(50));
 });
