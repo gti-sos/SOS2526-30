@@ -16,7 +16,7 @@ router.get("/loadInitialData", (req, res) => {
     if (athletes.length === 0) {
         csv().fromFile(athletes_csv).then((datos) => {
             athletes = datos.slice(0, 15);
-            res.status(201).json(athletes); // Devuelve el array
+            res.status(201).json(athletes);
         }).catch(() => {
             res.status(500).json({ error: "Error al cargar CSV" });
         });
@@ -26,24 +26,26 @@ router.get("/loadInitialData", (req, res) => {
 });
 
 /* ================================
-    2. COLECCIÓN
+    2. COLECCIÓN (con filtros)
 ================================ */
 router.get("/", (req, res) => {
     let results = [...athletes];
-    
-    // Filtrar por país (como ?town= seville)
+
+    // ✅ FILTRO POR ID AÑADIDO
+    if (req.query.id) {
+        results = results.filter(a => String(a.id) === String(req.query.id));
+    }
+
     if (req.query.country) {
         results = results.filter(a => 
             a.team && a.team.toLowerCase() === req.query.country.toLowerCase()
         );
     }
     
-    // Filtrar por año
     if (req.query.year) {
         results = results.filter(a => a.year == req.query.year);
     }
-    
-    // Filtrar por rango de años
+
     if (req.query.from) {
         results = results.filter(a => a.year >= parseInt(req.query.from));
     }
@@ -51,19 +53,16 @@ router.get("/", (req, res) => {
         results = results.filter(a => a.year <= parseInt(req.query.to));
     }
     
-    // Siempre array (vacío si no hay datos)
     res.status(200).json(results);
 });
 
 router.post("/", (req, res) => {
     const nuevo = req.body;
 
-    // Validar campos obligatorios (análogo a town y year)
     if (!nuevo.name || !nuevo.year) {
         return res.status(400).json({ error: "name y year son obligatorios" });
     }
     
-    // Comprobar si ya existe (como town+year)
     const existe = athletes.find(a => 
         a.name === nuevo.name && a.year == nuevo.year
     );
@@ -73,12 +72,39 @@ router.post("/", (req, res) => {
     }
     
     athletes.push(nuevo);
-    res.status(201).send(); // 201 CREATED sin datos
+    res.status(201).send();
 });
 
 router.delete("/", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Colección borrada" });
+});
+
+router.get("/id/:id", (req, res) => {
+    const results = athletes.filter(a => a.id == req.params.id);
+    res.status(200).json(results);
+});
+
+router.put("/id/:id", (req, res) => {
+    const index = athletes.findIndex(a => a.id == req.params.id);
+    
+    if (index !== -1) {
+        athletes[index] = { ...req.body, id: athletes[index].id };
+        res.status(200).send();
+    } else {
+        res.status(404).json({ error: "No encontrado" });
+    }
+});
+
+router.delete("/id/:id", (req, res) => {
+    const longitud = athletes.length;
+    athletes = athletes.filter(a => a.id != req.params.id);
+    
+    if (athletes.length < longitud) {
+        res.status(200).send();
+    } else {
+        res.status(404).json({ error: "No encontrado" });
+    }
 });
 
 /* ================================
@@ -90,7 +116,7 @@ router.get("/:name/:year", (req, res) => {
     );
     
     if (recurso) {
-        res.status(200).json(recurso); // OBJETO, no array
+        res.status(200).json(recurso);
     } else {
         res.status(404).json({ error: "No encontrado" });
     }
@@ -103,7 +129,7 @@ router.put("/:name/:year", (req, res) => {
     
     if (index !== -1) {
         athletes[index] = req.body;
-        res.status(200).send(); // 200 OK sin datos
+        res.status(200).send();
     } else {
         res.status(404).json({ error: "No encontrado" });
     }
@@ -116,16 +142,12 @@ router.delete("/:name/:year", (req, res) => {
     );
     
     if (athletes.length < longitud) {
-        res.status(200).send(); // 200 OK sin datos
+        res.status(200).send();
     } else {
         res.status(404).json({ error: "No encontrado" });
     }
 });
 
-/* ================================
-    4. BÚSQUEDA POR NOMBRE CON RANGO
-     (como /seville?from=2014&to=2016)
-================================ */
 router.get("/:name", (req, res) => {
     let results = athletes.filter(a => a.name === req.params.name);
     
@@ -136,7 +158,7 @@ router.get("/:name", (req, res) => {
         results = results.filter(a => a.year <= parseInt(req.query.to));
     }
     
-    res.status(200).json(results); // Siempre array
+    res.status(200).json(results);
 });
 
 /* ================================
