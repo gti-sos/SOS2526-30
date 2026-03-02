@@ -11,7 +11,7 @@ const cool = require("cool-ascii-faces");
 const athleteEventsAPI = require("./api/athlete_events.js");
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
 const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
-const esportsearningsAPI = require("./api/esportsearnigs-stats.js");
+const esportsearningsAPI = require("./api/esportsearnings-stats.js");
 
 const app = express();
 const BASE_URL_API = "/api/v1";
@@ -23,7 +23,7 @@ app.use(express.static("public"));
 app.use(`${BASE_URL_API}/athlete-events`, athleteEventsAPI);
 app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
-app.use(`${BASE_URL_API}/esportsearnigs-stats`, esportsearningsAPI);
+app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 
 app.get('/', (req, res) => {
     res.json({
