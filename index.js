@@ -4,12 +4,14 @@ const path = require('path');
 const FMPG = require("./index-FMGP.js");
 const GGG = require("./index-GGG.js");
 const DRP = require("./samples/DRP.js");
+const MRT = require("./index-MRT.js");
 const cool = require("cool-ascii-faces"); 
 
 // Importamos las APIs modulares
 const athleteEventsAPI = require("./api/athlete_events.js");
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
 const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
+const esportsearningsAPI = require("./api/esportsearnigs-stats.js");
 
 const app = express();
 const BASE_URL_API = "/api/v1";
@@ -21,6 +23,7 @@ app.use(express.static("public"));
 app.use(`${BASE_URL_API}/athlete-events`, athleteEventsAPI);
 app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
+app.use(`${BASE_URL_API}/esportsearnigs-stats`, esportsearningsAPI);
 
 app.get('/', (req, res) => {
     res.json({
@@ -29,7 +32,8 @@ app.get('/', (req, res) => {
             samples: {
                 FMGP: "/samples/FMGP",
                 GGG: "/samples/GGG",
-                DRP: "/samples/DRP"
+                DRP: "/samples/DRP",
+                MRT: "/samples/MRT",
             },
             apis: {
                 cheaters: {
@@ -90,6 +94,16 @@ app.get('/samples/DRP', (req, res) => {
         res.status(500).send("Error calculando la media de viewership");
     }
 });
+app.get("/samples/MRT", (req, res) => {
+    try {
+        const resultado = MRT.calcularMediaEsports(); //
+        res.send(`<h1>Resultado para ${resultado.FiltroPais}</h1>
+                  <p>Media de ${resultado.CampoNumerico}: ${resultado.media.toFixed(2)}</p>
+                  <p>Registros analizados: ${resultado.filaCountry.length}</p>`);
+    } catch (error) {
+        res.status(500).send("Error calculando la media de eSports");
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -98,9 +112,11 @@ app.listen(PORT, () => {
     console.log(`- /samples/FMGP`);
     console.log(`- /samples/GGG`);
     console.log(`- /samples/DRP`);
+    console.log(`- /samples/MRT`);
     console.log(`- /api/v1/cheaters-stats`);
     console.log(`- /api/v1/athlete-events`);
     console.log(`- /api/v1/esportsgrowth-stats`);
+    console.log(`- /api/v1/esportsearnings-stats`);
     console.log("\n📋 LISTAS (GET, POST, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries`);
     console.log(`- /api/v1/cheaters-stats/years`);
@@ -117,5 +133,6 @@ app.listen(PORT, () => {
     console.log(`- /api/v1/athlete-events/cities/barcelona`);
     console.log(`- /api/v1/athlete-events/years/1992`);
     console.log(`- /api/v1/athlete-events/seasons/summer`);
+    console.log(`- /api/v1/esportsgrowth-stats/United States/2017`);
     console.log("=".repeat(50));
 });
