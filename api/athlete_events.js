@@ -3,11 +3,13 @@ const router = express.Router();
 const path = require("path");
 const csv = require('csvtojson');
 
-
 const athletes_csv = path.join(__dirname, "../data/athlete_events.csv");
 
 let athletes = [];
 
+/* ================================
+    1. CARGA INICIAL
+================================ */
 router.get("/loadInitialData", (req, res) => {
     if (athletes.length === 0) {
         csv().fromFile(athletes_csv).then((datos) => {
@@ -21,7 +23,9 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-
+/* ================================
+    2. COLECCIÓN (con filtros)
+================================ */
 router.get("/", (req, res) => {
     let results = [...athletes];
 
@@ -73,7 +77,9 @@ router.delete("/", (req, res) => {
     res.status(200).json({ message: "Colección borrada" });
 });
 
-
+/* ================================
+    3. RECURSOS POR ID
+================================ */
 router.get("/id/:id", (req, res) => {
     const results = athletes.filter(a => a.id == req.params.id);
     res.status(200).json(results);
@@ -101,7 +107,9 @@ router.delete("/id/:id", (req, res) => {
     }
 });
 
-
+/* ================================
+    4. RECURSOS POR NOMBRE/AÑO
+================================ */
 router.get("/name/:name/year/:year", (req, res) => {
     const recurso = athletes.find(a => 
         a.name === req.params.name && a.year == req.params.year
@@ -153,14 +161,15 @@ router.get("/name/:name", (req, res) => {
     res.status(200).json(results);
 });
 
-
-router.get("/teams", (req, res) => {
+/* ================================
+    5. LISTAS EN SINGULAR (TEAM)
+================================ */
+router.get("/team", (req, res) => {
     const equipos = [...new Set(athletes.map(a => a.team).filter(Boolean))];
     res.status(200).json(equipos.sort());
 });
 
-
-router.post("/teams", (req, res) => {
+router.post("/team", (req, res) => {
     const nuevoEquipo = req.body;
     
     if (!nuevoEquipo.team || !nuevoEquipo.name) {
@@ -171,13 +180,12 @@ router.post("/teams", (req, res) => {
     res.status(201).send();
 });
 
-router.delete("/teams", (req, res) => {
+router.delete("/team", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todos los equipos borrados" });
 });
 
-
-router.get("/teams/:team", (req, res) => {
+router.get("/team/:team", (req, res) => {
     const results = athletes.filter(a => 
         a.team && a.team.toLowerCase() === req.params.team.toLowerCase()
     );
@@ -189,7 +197,7 @@ router.get("/teams/:team", (req, res) => {
     }
 });
 
-router.put("/teams/:team", (req, res) => {
+router.put("/team/:team", (req, res) => {
     const teamActual = req.params.team;
     const nuevosDatos = req.body;
     let actualizados = 0;
@@ -209,7 +217,7 @@ router.put("/teams/:team", (req, res) => {
     }
 });
 
-router.delete("/teams/:team", (req, res) => {
+router.delete("/team/:team", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
         !(a.team && a.team.toLowerCase() === req.params.team.toLowerCase())
@@ -222,14 +230,15 @@ router.delete("/teams/:team", (req, res) => {
     }
 });
 
-
-router.get("/sports", (req, res) => {
+/* ================================
+    6. LISTAS EN SINGULAR (SPORT)
+================================ */
+router.get("/sport", (req, res) => {
     const deportes = [...new Set(athletes.map(a => a.sport).filter(Boolean))];
     res.status(200).json(deportes.sort());
 });
 
-
-router.post("/sports", (req, res) => {
+router.post("/sport", (req, res) => {
     const nuevoDeporte = req.body;
     
     if (!nuevoDeporte.sport || !nuevoDeporte.name) {
@@ -240,13 +249,12 @@ router.post("/sports", (req, res) => {
     res.status(201).send();
 });
 
-router.delete("/sports", (req, res) => {
+router.delete("/sport", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todos los deportes borrados" });
 });
 
-
-router.get("/sports/:sport", (req, res) => {
+router.get("/sport/:sport", (req, res) => {
     const results = athletes.filter(a => 
         a.sport && a.sport.toLowerCase() === req.params.sport.toLowerCase()
     );
@@ -258,8 +266,7 @@ router.get("/sports/:sport", (req, res) => {
     }
 });
 
-
-router.put("/sports/:sport", (req, res) => {
+router.put("/sport/:sport", (req, res) => {
     const sportActual = req.params.sport;
     const nuevosDatos = req.body;
     let actualizados = 0;
@@ -279,8 +286,7 @@ router.put("/sports/:sport", (req, res) => {
     }
 });
 
-
-router.delete("/sports/:sport", (req, res) => {
+router.delete("/sport/:sport", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
         !(a.sport && a.sport.toLowerCase() === req.params.sport.toLowerCase())
@@ -293,13 +299,15 @@ router.delete("/sports/:sport", (req, res) => {
     }
 });
 
-
-router.get("/cities", (req, res) => {
+/* ================================
+    7. LISTAS EN SINGULAR (CITY)
+================================ */
+router.get("/city", (req, res) => {
     const ciudades = [...new Set(athletes.map(a => a.city).filter(Boolean))];
     res.status(200).json(ciudades.sort());
 });
 
-router.post("/cities", (req, res) => {
+router.post("/city", (req, res) => {
     const nuevaCiudad = req.body;
     
     if (!nuevaCiudad.city || !nuevaCiudad.name) {
@@ -310,12 +318,12 @@ router.post("/cities", (req, res) => {
     res.status(201).send();
 });
 
-router.delete("/cities", (req, res) => {
+router.delete("/city", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todas las ciudades borradas" });
 });
 
-router.get("/cities/:city", (req, res) => {
+router.get("/city/:city", (req, res) => {
     const results = athletes.filter(a => 
         a.city && a.city.toLowerCase() === req.params.city.toLowerCase()
     );
@@ -327,8 +335,7 @@ router.get("/cities/:city", (req, res) => {
     }
 });
 
-
-router.put("/cities/:city", (req, res) => {
+router.put("/city/:city", (req, res) => {
     const cityActual = req.params.city;
     const nuevosDatos = req.body;
     let actualizados = 0;
@@ -348,8 +355,7 @@ router.put("/cities/:city", (req, res) => {
     }
 });
 
-
-router.delete("/cities/:city", (req, res) => {
+router.delete("/city/:city", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
         !(a.city && a.city.toLowerCase() === req.params.city.toLowerCase())
@@ -362,14 +368,15 @@ router.delete("/cities/:city", (req, res) => {
     }
 });
 
-
-router.get("/years", (req, res) => {
+/* ================================
+    8. LISTAS EN SINGULAR (YEAR)
+================================ */
+router.get("/year", (req, res) => {
     const años = [...new Set(athletes.map(a => a.year).filter(Boolean))];
     res.status(200).json(años.sort((a,b) => a - b));
 });
 
-
-router.post("/years", (req, res) => {
+router.post("/year", (req, res) => {
     const nuevoAño = req.body;
     
     if (!nuevoAño.year || !nuevoAño.name) {
@@ -380,14 +387,12 @@ router.post("/years", (req, res) => {
     res.status(201).send();
 });
 
-
-router.delete("/years", (req, res) => {
+router.delete("/year", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todos los años borrados" });
 });
 
-
-router.get("/years/:year", (req, res) => {
+router.get("/year/:year", (req, res) => {
     const results = athletes.filter(a => a.year == req.params.year);
     
     if (results.length > 0) {
@@ -397,8 +402,7 @@ router.get("/years/:year", (req, res) => {
     }
 });
 
-
-router.put("/years/:year", (req, res) => {
+router.put("/year/:year", (req, res) => {
     const yearActual = parseInt(req.params.year);
     const nuevosDatos = req.body;
     let actualizados = 0;
@@ -418,8 +422,7 @@ router.put("/years/:year", (req, res) => {
     }
 });
 
-
-router.delete("/years/:year", (req, res) => {
+router.delete("/year/:year", (req, res) => {
     const yearActual = parseInt(req.params.year);
     const longitud = athletes.length;
     athletes = athletes.filter(a => a.year != yearActual);
@@ -431,14 +434,15 @@ router.delete("/years/:year", (req, res) => {
     }
 });
 
-
-router.get("/seasons", (req, res) => {
+/* ================================
+    9. LISTAS EN SINGULAR (SEASON)
+================================ */
+router.get("/season", (req, res) => {
     const temporadas = [...new Set(athletes.map(a => a.season).filter(Boolean))];
     res.status(200).json(temporadas.sort());
 });
 
-
-router.post("/seasons", (req, res) => {
+router.post("/season", (req, res) => {
     const nuevaTemporada = req.body;
     
     if (!nuevaTemporada.season || !nuevaTemporada.name) {
@@ -449,14 +453,12 @@ router.post("/seasons", (req, res) => {
     res.status(201).send();
 });
 
-
-router.delete("/seasons", (req, res) => {
+router.delete("/season", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todas las temporadas borradas" });
 });
 
-
-router.get("/seasons/:season", (req, res) => {
+router.get("/season/:season", (req, res) => {
     const results = athletes.filter(a => 
         a.season && a.season.toLowerCase() === req.params.season.toLowerCase()
     );
@@ -468,8 +470,7 @@ router.get("/seasons/:season", (req, res) => {
     }
 });
 
-
-router.put("/seasons/:season", (req, res) => {
+router.put("/season/:season", (req, res) => {
     const seasonActual = req.params.season;
     const nuevosDatos = req.body;
     let actualizados = 0;
@@ -489,8 +490,7 @@ router.put("/seasons/:season", (req, res) => {
     }
 });
 
-
-router.delete("/seasons/:season", (req, res) => {
+router.delete("/season/:season", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
         !(a.season && a.season.toLowerCase() === req.params.season.toLowerCase())
@@ -503,23 +503,26 @@ router.delete("/seasons/:season", (req, res) => {
     }
 });
 
-router.post("/teams/:team", (req, res) => 
+/* ================================
+    10. MÉTODOS NO PERMITIDOS
+================================ */
+router.post("/team/:team", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
-router.post("/sports/:sport", (req, res) => 
+router.post("/sport/:sport", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
-router.post("/cities/:city", (req, res) => 
+router.post("/city/:city", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
-router.post("/years/:year", (req, res) => 
+router.post("/year/:year", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
-router.post("/seasons/:season", (req, res) => 
+router.post("/season/:season", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
