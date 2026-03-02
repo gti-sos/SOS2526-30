@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
                 FMGP: "/samples/FMGP",
                 GGG: "/samples/GGG",
                 DRP: "/samples/DRP",
-                MRT: "/samples/MRT",
+                MRT: "/samples/MRT"
             },
             apis: {
                 cheaters: {
@@ -42,16 +42,16 @@ app.get('/', (req, res) => {
                     years: "/api/v1/cheaters-stats/years"
                 },
                 athletes: {
-                    base: "/api/v1/athlete-events",
-                    teams: "/api/v1/athlete-events/teams",
-                    sports: "/api/v1/athlete-events/sports",
-                    cities: "/api/v1/athlete-events/cities",
-                    years: "/api/v1/athlete-events/years",
-                    seasons: "/api/v1/athlete-events/seasons"
+                    base: "/api/v1/olympics-athlete-events",
+                    teams: "/api/v1/olympics-athlete-events/teams",
+                    sports: "/api/v1/olympics-athlete-events/sports",
+                    cities: "/api/v1/olympics-athlete-events/cities",
+                    years: "/api/v1/olympics-athlete-events/years",
+                    seasons: "/api/v1/olympics-athlete-events/seasons"
                 },
                 esports: "/api/v1/esportsgrowth-stats",
-                earnings: "/api/v1/esportsearnigs-stats"
-                },
+                earnings: "/api/v1/esportsearnings-stats" // CORREGIDO: faltaba una coma y el nombre
+            },
             about: "/about",
             cool: "/cool"
         }
@@ -95,6 +95,7 @@ app.get('/samples/DRP', (req, res) => {
         res.status(500).send("Error calculando la media de viewership");
     }
 });
+
 app.get("/samples/MRT", (req, res) => {
     try {
         const resultado = MRT.calcularMediaEsports();
@@ -114,25 +115,25 @@ app.listen(PORT, () => {
     console.log(`- /samples/DRP`);
     console.log(`- /samples/MRT`);
     console.log(`- /api/v1/cheaters-stats`);
-    console.log(`- /api/v1/athlete-events`);
+    console.log(`- /api/v1/olympics-athlete-events`); // CORREGIDO
     console.log(`- /api/v1/esportsgrowth-stats`);
     console.log(`- /api/v1/esportsearnings-stats`);
     console.log("\n📋 LISTAS (GET, POST, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries`);
     console.log(`- /api/v1/cheaters-stats/years`);
-    console.log(`- /api/v1/athlete-events/teams`);
-    console.log(`- /api/v1/athlete-events/sports`);
-    console.log(`- /api/v1/athlete-events/cities`);
-    console.log(`- /api/v1/athlete-events/years`);
-    console.log(`- /api/v1/athlete-events/seasons`);
+    console.log(`- /api/v1/olympics-athlete-events/teams`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/sports`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/cities`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/years`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/seasons`); // CORREGIDO
     console.log("\n🔍 RECURSOS CONCRETOS (GET, PUT, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries/spain`);
     console.log(`- /api/v1/cheaters-stats/years/2020`);
-    console.log(`- /api/v1/athlete-events/teams/netherlands`);
-    console.log(`- /api/v1/athlete-events/sports/basketball`);
-    console.log(`- /api/v1/athlete-events/cities/barcelona`);
-    console.log(`- /api/v1/athlete-events/years/1992`);
-    console.log(`- /api/v1/athlete-events/seasons/summer`);
-    console.log(`- /api/v1/esportsgrowth-stats/United States/2017`);
+    console.log(`- /api/v1/olympics-athlete-events/teams/netherlands`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/sports/basketball`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/cities/barcelona`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/years/1992`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/seasons/summer`); // CORREGIDO
+    console.log(`- /api/v1/esportsgrowth-stats/United%20States/2017`); // CORREGIDO (con %20 para espacios)
     console.log("=".repeat(50));
 });
