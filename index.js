@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // Registramos las APIs
-app.use(`${BASE_URL_API}/athlete-events`, athleteEventsAPI);
+app.use(`${BASE_URL_API}/olympics-athlete-events`, athleteEventsAPI);
 app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
