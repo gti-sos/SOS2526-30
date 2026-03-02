@@ -96,10 +96,9 @@ app.get('/samples/DRP', (req, res) => {
 });
 app.get("/samples/MRT", (req, res) => {
     try {
-        const resultado = MRT.calcularMediaEsports(); //
-        res.send(`<h1>Resultado para ${resultado.FiltroPais}</h1>
-                  <p>Media de ${resultado.CampoNumerico}: ${resultado.media.toFixed(2)}</p>
-                  <p>Registros analizados: ${resultado.filaCountry.length}</p>`);
+        const resultado = MRT.calcularMediaEsports();
+        res.send(`<h1>Resultado eSports</h1>
+                   <p>${resultado}</p>`);
     } catch (error) {
         res.status(500).send("Error calculando la media de eSports");
     }
