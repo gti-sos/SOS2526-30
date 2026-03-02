@@ -10,32 +10,29 @@ const data = [
     { total_money: 114467.372, game_name: "FIFA 20", genre: "Sports", player_no: 248, tournament_no: 39, country: "United Kingdom", top_country_earnings: 20561.304, year: 2019 },
     { total_money: 9750842.500, game_name: "Fortnite", genre: "Battle Royale", player_no: 4347, tournament_no: 660, country: "United States", top_country_earnings: 3342275.637, year: 2017 }
 ];
-function calcularMediaEsports() {
-    const FiltroPais = "United States";
-    const CampoNumerico = "total_money";
 
-    const filaCountry = datos.filter(row => row.country === FiltroPais);
-    
-    const suma = filaCountry
-        .map(row => row[CampoNumerico])
+function calcularMediaEsports() {
+
+    const pais = "United States";
+
+    const filasPais = data.filter(row => row.country === pais);
+
+    if (filasPais.length === 0) {
+        return `No se encontraron datos para: ${pais}`;
+    }
+
+    const suma = filasPais
+        .map(row => row.total_money)
         .reduce((acc, val) => acc + val, 0);
 
-    const media = filaCountry.length > 0 ? suma / filaCountry.length : 0;
+    const media = suma / filasPais.length;
 
-    return {
-        media: media,
-        filaCountry: filaCountry,
-        FiltroPais: FiltroPais,
-        CampoNumerico: CampoNumerico
-    };
+    return `Media de total_money en ${pais}: ${media.toFixed(2)}`;
 }
 
-// Parte necesaria para los puntos 13 y 14 (exportar para la API)
 module.exports = {
-    calcularMediaEsports,
-    datos
+    calcularMediaEsports
 };
-
 // Bloque de ejecución para probarlo con "node index-MRT.js"
 if (require.main === module) {
     const resultado = calcularMediaEsports();
