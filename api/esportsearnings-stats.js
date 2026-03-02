@@ -5,8 +5,8 @@ let datos = [];
 
 const datosIniciales = [
     { total_money: 31, game_name: "Acceleration of SUGURI 2", genre: "Fighting Game", player_no: 6, tournament_no: 2, country: "United States", top_country_earnings: 31, year: 2018 },
-    { total_money: 149248.951, game_name: "Age of Empires II", genre: "Strategy", player_no: 956, tournament_no: 576, country: "China", top_country_earnings: 17425.244, year: 1999 },
-    { total_money: 6811.385, game_name: "Age of Empires III", genre: "Strategy", player_no: 106, tournament_no: 76, country: "United States", top_country_earnings: 1852.352, year: 2005 },
+    { total_money: 149248.951, game_name: "Age of Empires II", genre: "Strategy", player_no: 956, tournament_no: 576, country: "China", top_country_earnings: 17425.244, year: 2004 },
+    { total_money: 6811.385, game_name: "Age of Empires II", genre: "Strategy", player_no: 106, tournament_no: 76, country: "United States", top_country_earnings: 1852.352, year: 2005 },
     { total_money: 266.8, game_name: "Age of Empires Online", genre: "Strategy", player_no: 16, tournament_no: 7, country: "Germany", top_country_earnings: 126.4, year: 2011 },
     { total_money: 393978.329, game_name: "Call of Duty: Black Ops III", genre: "First-Person Shooter", player_no: 420, tournament_no: 78, country: "United States", top_country_earnings: 225498.462, year: 2015 },
     { total_money: 1349422.957, game_name: "Counter-Strike", genre: "First-Person Shooter", player_no: 4137, tournament_no: 995, country: "Sweden", top_country_earnings: 283739.801, year: 2000 },
@@ -26,24 +26,28 @@ router.get("/loadInitialData", (req, res) => {
 });
 
 
-// GET GENERAL CON FILTROS
+// GET GENERAL INTELIGENTE (Actualizado con el estilo de growth-stats)
 
 router.get("/", (req, res) => {
     const { country, genre, year, from, to } = req.query;
     let filtrados = [...datos];
 
+    // Filtro por país
     if (country) {
         filtrados = filtrados.filter(d => d.country === country);
     }
 
+    // Filtro por género (específico de earnings)
     if (genre) {
         filtrados = filtrados.filter(d => d.genre === genre);
     }
 
+    // Filtro por año exacto
     if (year) {
         filtrados = filtrados.filter(d => d.year === parseInt(year));
     }
 
+    // Filtro por rango de años (from/to)
     if (from && to) {
         filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
     } else if (from) {
@@ -52,6 +56,7 @@ router.get("/", (req, res) => {
         filtrados = filtrados.filter(d => d.year <= parseInt(to));
     }
 
+    // Siempre devuelve array (aunque sea vacío)
     res.status(200).json(filtrados);
 });
 
@@ -62,7 +67,7 @@ router.post("/", (req, res) => {
     const newData = req.body;
 
     if (!newData.game_name || !newData.year) {
-        return res.status(400).json({ message: "Missing game_name or year" });
+        return res.status(400).json({ message: "Bad Request: Missing game_name or year" });
     }
 
     const existe = datos.find(d => 
@@ -79,24 +84,37 @@ router.post("/", (req, res) => {
 });
 
 router.put("/", (req, res) => {
-    res.status(405).json({ message: "Cannot update entire list" });
+    res.status(405).json({ message: "Method Not Allowed: Cannot update entire list" });
 });
 
 router.delete("/", (req, res) => {
     datos = [];
-    res.status(200).json({ message: "All data deleted" });
+    res.status(200).json({ message: "All data deleted successfully" });
 });
 
 
-// GET POR JUEGO
+// GET ESPECÍFICO CON RANGOS (Adaptado de growth-stats :country)
 
 router.get("/:game_name", (req, res) => {
     const game = req.params.game_name;
+    const { from, to } = req.query;
 
-    const filtrados = datos.filter(d => d.game_name === game);
+    let filtrados = datos.filter(d => d.game_name === game);
 
-    if (filtrados.length === 0) {
-        res.status(404).json({ message: "Game not found" });
+    // Filtro por rango si vienen en la query
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+    }
+
+    // Lógica inteligente de estados:
+    // 1. Si no hay datos y NO se usaron filtros de tiempo -> 404 (el juego no existe)
+    // 2. Si no hay datos pero SÍ se usaron filtros -> 200 con [] (el juego existe pero no en esos años)
+    if (filtrados.length === 0 && !from && !to) {
+        res.status(404).json({ message: "Resource not found" });
     } else {
         res.status(200).json(filtrados);
     }
@@ -127,7 +145,7 @@ router.put("/:game_name/:year", (req, res) => {
     const body = req.body;
 
     if (game !== body.game_name || year !== parseInt(body.year)) {
-        return res.status(400).json({ message: "IDs do not match" });
+        return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
     }
 
     const index = datos.findIndex(d => 
@@ -154,10 +172,12 @@ router.delete("/:game_name/:year", (req, res) => {
 
     if (index !== -1) {
         datos.splice(index, 1);
-        res.status(200).json({ message: "Deleted successfully" });
+        res.status(200).json({ message: "Resource deleted successfully" });
     } else {
         res.status(404).json({ message: "Resource not found" });
     }
 });
 
 module.exports = router;
+
+
