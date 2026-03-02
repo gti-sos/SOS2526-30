@@ -3,7 +3,7 @@ const path = require('path');
 
 const FMPG = require("./index-FMGP.js");
 const GGG = require("./index-GGG.js");
-const DRP = require("./samples/DRP.js");
+const DRP = require("./index.DRP.js");
 const MRT = require("./index-MRT.js");
 const cool = require("cool-ascii-faces"); 
 
