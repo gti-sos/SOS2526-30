@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
                     years: "/api/v1/athlete-events/years",
                     seasons: "/api/v1/athlete-events/seasons"
                 },
-                esports: "/api/v1/esportsgrowth-stats"
+                esports: "/api/v1/esportsgrowth-stats",
                 earnings: "/api/v1/esportsearnigs-stats"
                 },
             about: "/about",
