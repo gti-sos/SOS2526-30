@@ -7,9 +7,6 @@ const athletes_csv = path.join(__dirname, "../data/athlete_events.csv");
 
 let athletes = [];
 
-/* ================================
-    1. CARGA INICIAL
-================================ */
 router.get("/loadInitialData", (req, res) => {
     if (athletes.length === 0) {
         csv().fromFile(athletes_csv).then((datos) => {
@@ -23,9 +20,6 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-/* ================================
-    2. COLECCIÓN (con filtros)
-================================ */
 router.get("/", (req, res) => {
     let results = [...athletes];
 
@@ -38,6 +32,13 @@ router.get("/", (req, res) => {
             a.team && a.team.toLowerCase() === req.query.country.toLowerCase()
         );
     }
+
+    // DESPUÉS (con team)
+    if (req.query.team) {  // Cambiado de country a team
+        results = results.filter(a => 
+            a.team && a.team.toLowerCase() === req.query.team.toLowerCase()  // Cambiado aquí también
+        );
+}
     
     if (req.query.year) {
         results = results.filter(a => a.year == req.query.year);
