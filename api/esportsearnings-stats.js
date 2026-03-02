@@ -26,24 +26,28 @@ router.get("/loadInitialData", (req, res) => {
 });
 
 
-// GET GENERAL CON FILTROS
+// GET GENERAL INTELIGENTE (Actualizado con el estilo de growth-stats)
 
 router.get("/", (req, res) => {
     const { country, genre, year, from, to } = req.query;
     let filtrados = [...datos];
 
+    // Filtro por país
     if (country) {
         filtrados = filtrados.filter(d => d.country === country);
     }
 
+    // Filtro por género (específico de earnings)
     if (genre) {
         filtrados = filtrados.filter(d => d.genre === genre);
     }
 
+    // Filtro por año exacto
     if (year) {
         filtrados = filtrados.filter(d => d.year === parseInt(year));
     }
 
+    // Filtro por rango de años (from/to)
     if (from && to) {
         filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
     } else if (from) {
@@ -52,6 +56,7 @@ router.get("/", (req, res) => {
         filtrados = filtrados.filter(d => d.year <= parseInt(to));
     }
 
+    // Siempre devuelve array (aunque sea vacío)
     res.status(200).json(filtrados);
 });
 
@@ -62,7 +67,7 @@ router.post("/", (req, res) => {
     const newData = req.body;
 
     if (!newData.game_name || !newData.year) {
-        return res.status(400).json({ message: "Missing game_name or year" });
+        return res.status(400).json({ message: "Bad Request: Missing game_name or year" });
     }
 
     const existe = datos.find(d => 
@@ -79,24 +84,37 @@ router.post("/", (req, res) => {
 });
 
 router.put("/", (req, res) => {
-    res.status(405).json({ message: "Cannot update entire list" });
+    res.status(405).json({ message: "Method Not Allowed: Cannot update entire list" });
 });
 
 router.delete("/", (req, res) => {
     datos = [];
-    res.status(200).json({ message: "All data deleted" });
+    res.status(200).json({ message: "All data deleted successfully" });
 });
 
 
-// GET POR JUEGO
+// GET ESPECÍFICO CON RANGOS (Adaptado de growth-stats :country)
 
 router.get("/:game_name", (req, res) => {
     const game = req.params.game_name;
+    const { from, to } = req.query;
 
-    const filtrados = datos.filter(d => d.game_name === game);
+    let filtrados = datos.filter(d => d.game_name === game);
 
-    if (filtrados.length === 0) {
-        res.status(404).json({ message: "Game not found" });
+    // Filtro por rango si vienen en la query
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+    }
+
+    // Lógica inteligente de estados:
+    // 1. Si no hay datos y NO se usaron filtros de tiempo -> 404 (el juego no existe)
+    // 2. Si no hay datos pero SÍ se usaron filtros -> 200 con [] (el juego existe pero no en esos años)
+    if (filtrados.length === 0 && !from && !to) {
+        res.status(404).json({ message: "Resource not found" });
     } else {
         res.status(200).json(filtrados);
     }
@@ -127,7 +145,7 @@ router.put("/:game_name/:year", (req, res) => {
     const body = req.body;
 
     if (game !== body.game_name || year !== parseInt(body.year)) {
-        return res.status(400).json({ message: "IDs do not match" });
+        return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
     }
 
     const index = datos.findIndex(d => 
@@ -154,10 +172,12 @@ router.delete("/:game_name/:year", (req, res) => {
 
     if (index !== -1) {
         datos.splice(index, 1);
-        res.status(200).json({ message: "Deleted successfully" });
+        res.status(200).json({ message: "Resource deleted successfully" });
     } else {
         res.status(404).json({ message: "Resource not found" });
     }
 });
 
 module.exports = router;
+
+
