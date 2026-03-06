@@ -1,321 +1,243 @@
-// athlete_events.js - VERSIÓN CON CALLBACKS
+// api/athlete_events.js - VERSIÓN ADAPTADA DEL EJEMPLO
 
-// FUNCIONES PARA LEER Y PARSEAR EL CSV
+const express = require("express");
+const router = express.Router();
 const { readFileSync } = require('fs');
 const { parse } = require('csv-parse/sync');
-
-// IMPORTAMOS LAS FUNCIONES PARA LA BASE DE DATOS
-const dataStore = require('nedb-promises');
 const path = require('path');
 
-// LEEMOS EL CSV
-const fileContent = readFileSync(path.join(__dirname, '..', 'data', 'athlete_events.csv'), 'utf-8');
+// Array en memoria
+let datos = [];
 
-// PARSEAMOS EL CONTENIDO DEL CSV
-let csvContent = parse(fileContent, {
-    columns: true,
-    cast: (value, context) => {
-        if (context.column == 'id') return Number(value);
-        if (context.column == 'age') return value === 'NA' ? null : Number(value);
-        if (context.column == 'height') return value === 'NA' ? null : Number(value);
-        if (context.column == 'weight') return value === 'NA' ? null : Number(value);
-        if (context.column == 'year') return Number(value);
-        return value;
-    }
-});
+// Cargar datos iniciales del CSV
+let csvContent = [];
+try {
+    const fileContent = readFileSync(path.join(__dirname, '..', 'data', 'athlete_events.csv'), 'utf-8');
+    csvContent = parse(fileContent, {
+        columns: true,
+        cast: (value, context) => {
+            if (context.column == 'id') return Number(value);
+            if (context.column == 'age') return value === 'NA' ? null : Number(value);
+            if (context.column == 'height') return value === 'NA' ? null : Number(value);
+            if (context.column == 'weight') return value === 'NA' ? null : Number(value);
+            if (context.column == 'year') return Number(value);
+            return value;
+        }
+    });
+    console.log(`✅ CSV cargado: ${csvContent.length} atletas totales`);
+} catch (err) {
+    console.error("❌ Error leyendo CSV:", err.message);
+}
 
-const BASE_API = "/api/v1";
-const recurso = "/olympics-athlete-events";
-const db = dataStore.create();
-
-// Cargamos todos los datos al iniciar
-db.insert(csvContent, (err, newDocs) => {
-    if (err) {
-        console.error("Error al insertar los datos:", err);
+// ============================================
+// CARGA INICIAL
+// ============================================
+router.get("/loadInitialData", (req, res) => {
+    if (datos.length === 0) {
+        // Cargar SOLO 15 registros
+        datos = csvContent.slice(0, 15);
+        res.status(201).json(datos);
     } else {
-        console.log(`✅ ${newDocs.length} atletas cargados en la BD`);
+        res.status(200).json({ message: "Data is already loaded", count: datos.length });
     }
 });
 
-// Función auxiliar para crear rutas de listas
-function crearRutasLista(app, nombre, campo) {
-    const ruta = `${BASE_API}${recurso}/${nombre}`;
+// ============================================
+// COLECCIÓN PRINCIPAL (con filtros)
+// ============================================
+router.get("/", (req, res) => {
+    const { name, team, country, year, from, to, sport, season, city, id } = req.query;
+    let filtrados = [...datos];
+
+    // Filtros
+    if (name) {
+        filtrados = filtrados.filter(d => d.name && d.name.toLowerCase().includes(name.toLowerCase()));
+    }
+    if (team || country) {
+        const teamFilter = team || country;
+        filtrados = filtrados.filter(d => d.team && d.team.toLowerCase() === teamFilter.toLowerCase());
+    }
+    if (year) {
+        filtrados = filtrados.filter(d => d.year === parseInt(year));
+    }
+    if (sport) {
+        filtrados = filtrados.filter(d => d.sport && d.sport.toLowerCase().includes(sport.toLowerCase()));
+    }
+    if (season) {
+        filtrados = filtrados.filter(d => d.season && d.season.toLowerCase() === season.toLowerCase());
+    }
+    if (city) {
+        filtrados = filtrados.filter(d => d.city && d.city.toLowerCase().includes(city.toLowerCase()));
+    }
+    if (id) {
+        filtrados = filtrados.filter(d => d.id == id);
+    }
+
+    // Rango de años
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+    }
+
+    res.status(200).json(filtrados);
+});
+
+// ============================================
+// POST - Crear nuevo atleta
+// ============================================
+router.post("/", (req, res) => {
+    const newData = req.body;
     
-    // GET - Listar todos los valores únicos
-    app.get(ruta, (req, res) => {
-        db.find({}).exec((err, data) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            const valores = [...new Set(data.map(a => a[campo]).filter(Boolean))];
-            res.status(200).json(valores.sort());
-        });
-    });
+    if (!newData.name || !newData.year) {
+        return res.status(400).json({ message: "Bad Request: Missing name or year" });
+    }
 
-    // POST - Crear nuevo elemento
-    app.post(ruta, (req, res) => {
-        if (!req.body.name || !req.body.year) {
-            return res.sendStatus(400);
-        }
-
-        db.findOne({ name: req.body.name, year: req.body.year, event: req.body.event }, (err, existente) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            if (existente) return res.sendStatus(409);
-
-            db.insert(req.body, (err) => {
-                if (err) return res.status(500).send("Error al insertar");
-                res.sendStatus(201);
-            });
-        });
-    });
-
-    // DELETE - Borrar todos
-    app.delete(ruta, (req, res) => {
-        db.remove({}, { multi: true }, (err) => {
-            if (err) return res.status(500).send("Error al borrar");
-            res.status(200).json({ message: `Todos los ${nombre} borrados` });
-        });
-    });
-
-    // PUT - No permitido
-    app.put(ruta, (req, res) => res.sendStatus(405));
-
-    // GET /:valor - Ver elementos con ese valor
-    app.get(`${ruta}/:valor`, (req, res) => {
-        let valor = req.params.valor;
-        let query = {};
-        query[campo] = { $regex: new RegExp(`^${valor}$`, 'i') };
-
-        db.find(query, (err, data) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            if (data.length === 0) return res.status(404).json({ error: `${nombre} no encontrado` });
-            const nuevo = data.map(({_id, ...rest}) => rest);
-            res.status(200).json(nuevo);
-        });
-    });
-
-    // PUT /:valor - Actualizar elementos con ese valor
-    app.put(`${ruta}/:valor`, (req, res) => {
-        let valor = req.params.valor;
-        if (req.body[campo] && req.body[campo].toLowerCase() !== valor.toLowerCase()) {
-            return res.sendStatus(400);
-        }
-
-        let query = {};
-        query[campo] = { $regex: new RegExp(`^${valor}$`, 'i') };
-
-        db.update(query, { $set: req.body }, { multi: true }, (err, numUpdated) => {
-            if (err) return res.status(500).send("Error al actualizar");
-            if (numUpdated === 0) return res.status(404).json({ error: `${nombre} no encontrado` });
-            res.sendStatus(200);
-        });
-    });
-
-    // DELETE /:valor - Borrar elementos con ese valor
-    app.delete(`${ruta}/:valor`, (req, res) => {
-        let valor = req.params.valor;
-        let query = {};
-        query[campo] = { $regex: new RegExp(`^${valor}$`, 'i') };
-
-        db.remove(query, { multi: true }, (err, numRemoved) => {
-            if (err) return res.status(500).send("Error al eliminar");
-            if (numRemoved === 0) return res.status(404).json({ error: `${nombre} no encontrado` });
-            res.sendStatus(200);
-        });
-    });
-
-    // POST no permitido en /:valor
-    app.post(`${ruta}/:valor`, (req, res) => res.sendStatus(405));
-}
-
-function loadBackendGGG(app) {
-    // ============================================
-    // DOCUMENTACIÓN
-    // ============================================
-    app.get(BASE_API + recurso + "/docs", (req, res) => {
-        res.redirect("https://documenter.getpostman.com/view/42360434/2sB2cUC3wh");
-    });
-
-    // ============================================
-    // CARGA INICIAL
-    // ============================================
-    app.get(BASE_API + recurso + "/loadInitialData", (req, res) => {
-        db.count({}, (err, count) => {
-            if (err) return res.status(500).send("Error al comprobar la BD");
-            
-            if (count === 0) {
-                let initialData = csvContent.slice(0, 15);
-                db.insert(initialData, (err) => {
-                    if (err) return res.status(500).send("Error al insertar datos");
-                    
-                    db.find({}).limit(15).exec((err, data) => {
-                        if (err) return res.status(500).send("Error al recuperar datos");
-                        const nuevo = data.map(({_id, ...rest}) => rest);
-                        res.status(201).json(nuevo);
-                    });
-                });
-            } else {
-                db.find({}).limit(15).exec((err, data) => {
-                    if (err) return res.status(500).send("Error al recuperar datos");
-                    const nuevo = data.map(({_id, ...rest}) => rest);
-                    res.status(200).json(nuevo);
-                });
-            }
-        });
-    });
-
-    // ============================================
-    // COLECCIÓN PRINCIPAL
-    // ============================================
-    app.get(BASE_API + recurso, (req, res) => {
-        let { id, country, team, name, year, from, to, sport, season, city, limit, offset } = req.query;
-        let query = {};
-
-        if (id) query.id = Number(id);
-        if (country || team) query.team = country || team;
-        if (name) query.name = name;
-        if (year) query.year = Number(year);
-        if (sport) query.sport = sport;
-        if (season) query.season = season;
-        if (city) query.city = city;
-        
-        if (from || to) {
-            query.year = {};
-            if (from) query.year.$gte = Number(from);
-            if (to) query.year.$lte = Number(to);
-        }
-
-        let queryBuilder = db.find(query);
-        
-        if (offset !== undefined) queryBuilder = queryBuilder.skip(Number(offset));
-        if (limit !== undefined) queryBuilder = queryBuilder.limit(Number(limit));
-
-        queryBuilder.exec((err, data) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            const nuevo = data.map(({_id, ...rest}) => rest);
-            res.json(nuevo);
-        });
-    });
-
-    // POST - Crear nuevo atleta
-    app.post(BASE_API + recurso, (req, res) => {
-        if (!req.body.name || !req.body.year) return res.sendStatus(400);
-
-        db.findOne({ name: req.body.name, year: req.body.year, event: req.body.event }, (err, existente) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            if (existente) return res.sendStatus(409);
-
-            db.insert(req.body, (err) => {
-                if (err) return res.status(500).send("Error al insertar");
-                res.sendStatus(201);
-            });
-        });
-    });
-
-    // PUT no permitido en colección
-    app.put(BASE_API + recurso, (req, res) => res.sendStatus(405));
-
-    // DELETE - Borrar todos
-    app.delete(BASE_API + recurso, (req, res) => {
-        db.remove({}, { multi: true }, (err) => {
-            if (err) return res.status(500).send("Error al borrar");
-            res.sendStatus(200);
-        });
-    });
-
-    // ============================================
-    // CREAR TODAS LAS LISTAS
-    // ============================================
-    crearRutasLista(app, "team", "team");
-    crearRutasLista(app, "sport", "sport");
-    crearRutasLista(app, "city", "city");
-    crearRutasLista(app, "year", "year");
-    crearRutasLista(app, "season", "season");
-
-    // ============================================
-    // RECURSOS POR NOMBRE/AÑO
-    // ============================================
-    const rutaNombreAnio = `${BASE_API}${recurso}/name/:name/year/:year`;
+    const existe = datos.find(d => 
+        d.name === newData.name && 
+        d.year === newData.year && 
+        d.event === newData.event
+    );
     
-    app.get(rutaNombreAnio, (req, res) => {
-        db.findOne({ name: req.params.name, year: Number(req.params.year) }, (err, data) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            if (!data) return res.status(404).json({ error: "Atleta no encontrado" });
-            let { _id, ...sinId } = data;
-            res.status(200).json(sinId);
-        });
-    });
+    if (existe) {
+        res.status(409).json({ message: "Resource already exists" });
+    } else {
+        datos.push(newData);
+        res.status(201).json(newData);
+    }
+});
 
-    app.put(rutaNombreAnio, (req, res) => {
-        if (req.body.name && req.body.name !== req.params.name) return res.sendStatus(400);
-        if (req.body.year && req.body.year !== Number(req.params.year)) return res.sendStatus(400);
+// ============================================
+// PUT no permitido en colección
+// ============================================
+router.put("/", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
+});
 
-        db.update({ name: req.params.name, year: Number(req.params.year) }, req.body, {}, (err, numReplaced) => {
-            if (err) return res.status(500).send("Error al actualizar");
-            if (numReplaced === 0) return res.status(404).json({ error: "Atleta no encontrado" });
-            res.sendStatus(200);
-        });
-    });
+// ============================================
+// DELETE - Borrar todos
+// ============================================
+router.delete("/", (req, res) => {
+    datos = [];
+    res.status(200).json({ message: "All data deleted successfully" });
+});
 
-    app.delete(rutaNombreAnio, (req, res) => {
-        db.remove({ name: req.params.name, year: Number(req.params.year) }, {}, (err, numRemoved) => {
-            if (err) return res.status(500).send("Error al eliminar");
-            if (numRemoved === 0) return res.status(404).json({ error: "Atleta no encontrado" });
-            res.sendStatus(200);
-        });
-    });
+// ============================================
+// LISTAS EN SINGULAR
+// ============================================
 
-    app.post(rutaNombreAnio, (req, res) => res.sendStatus(405));
+// GET /team - Lista de equipos
+router.get("/team", (req, res) => {
+    const equipos = [...new Set(datos.map(d => d.team).filter(Boolean))];
+    res.status(200).json(equipos.sort());
+});
 
-    // GET /name/:name - Buscar por nombre
-    app.get(`${BASE_API}${recurso}/name/:name`, (req, res) => {
-        let query = { name: req.params.name };
-        if (req.query.from || req.query.to) {
-            query.year = {};
-            if (req.query.from) query.year.$gte = Number(req.query.from);
-            if (req.query.to) query.year.$lte = Number(req.query.to);
-        }
+// GET /sport - Lista de deportes
+router.get("/sport", (req, res) => {
+    const deportes = [...new Set(datos.map(d => d.sport).filter(Boolean))];
+    res.status(200).json(deportes.sort());
+});
 
-        db.find(query, (err, data) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            if (data.length === 0) return res.status(404).json({ error: `No hay atletas con nombre: ${req.params.name}` });
-            const nuevo = data.map(({_id, ...rest}) => rest);
-            res.status(200).json(nuevo);
-        });
-    });
+// GET /city - Lista de ciudades
+router.get("/city", (req, res) => {
+    const ciudades = [...new Set(datos.map(d => d.city).filter(Boolean))];
+    res.status(200).json(ciudades.sort());
+});
 
-    // ============================================
-    // RECURSOS POR ID
-    // ============================================
-    const rutaId = `${BASE_API}${recurso}/id/:id`;
+// GET /year - Lista de años
+router.get("/year", (req, res) => {
+    const años = [...new Set(datos.map(d => d.year).filter(a => a))];
+    res.status(200).json(años.sort((a,b) => a - b));
+});
+
+// GET /season - Lista de temporadas
+router.get("/season", (req, res) => {
+    const temporadas = [...new Set(datos.map(d => d.season).filter(Boolean))];
+    res.status(200).json(temporadas.sort());
+});
+
+// ============================================
+// BÚSQUEDA POR NOMBRE (con rangos)
+// ============================================
+router.get("/:name", (req, res) => {
+    const name = req.params.name;
+    const { from, to } = req.query;
     
-    app.get(rutaId, (req, res) => {
-        db.find({ id: Number(req.params.id) }, (err, data) => {
-            if (err) return res.status(500).send("Error al acceder a la BD");
-            if (data.length === 0) return res.status(404).json({ error: `No hay atletas con ID: ${req.params.id}` });
-            const nuevo = data.map(({_id, ...rest}) => rest);
-            res.status(200).json(nuevo);
-        });
-    });
+    let filtrados = datos.filter(d => d.name && d.name.toLowerCase().includes(name.toLowerCase()));
 
-    app.put(rutaId, (req, res) => {
-        if (req.body.id && req.body.id !== Number(req.params.id)) return res.sendStatus(400);
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+    }
 
-        db.update({ id: Number(req.params.id) }, { $set: req.body }, { multi: true }, (err, numUpdated) => {
-            if (err) return res.status(500).send("Error al actualizar");
-            if (numUpdated === 0) return res.status(404).json({ error: "ID no encontrado" });
-            res.sendStatus(200);
-        });
-    });
+    // Si no hay datos y NO se usaron filtros, devolvemos 404
+    if (filtrados.length === 0 && !from && !to) {
+        res.status(404).json({ message: "Atleta no encontrado" });
+    } else {
+        res.status(200).json(filtrados);
+    }
+});
 
-    app.delete(rutaId, (req, res) => {
-        db.remove({ id: Number(req.params.id) }, { multi: true }, (err, numRemoved) => {
-            if (err) return res.status(500).send("Error al eliminar");
-            if (numRemoved === 0) return res.status(404).json({ error: "ID no encontrado" });
-            res.sendStatus(200);
-        });
-    });
+// ============================================
+// RECURSO EXACTO (Nombre y Año)
+// ============================================
 
-    app.post(rutaId, (req, res) => res.sendStatus(405));
-}
+// GET /:name/:year
+router.get("/:name/:year", (req, res) => {
+    const name = req.params.name;
+    const year = parseInt(req.params.year);
+    
+    const recurso = datos.find(d => d.name === name && d.year === year);
+    
+    if (recurso) {
+        res.status(200).json(recurso);
+    } else {
+        res.status(404).json({ message: "Resource not found" });
+    }
+});
 
-// EXPORTAMOS CON COMMONJS
-module.exports = { loadBackendGGG, csvContent };
+// POST no permitido
+router.post("/:name/:year", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
+});
+
+// PUT /:name/:year
+router.put("/:name/:year", (req, res) => {
+    const name = req.params.name;
+    const year = parseInt(req.params.year);
+    const body = req.body;
+
+    if (name !== body.name || year !== parseInt(body.year)) {
+        return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
+    }
+
+    const index = datos.findIndex(d => d.name === name && d.year === year);
+    
+    if (index !== -1) {
+        datos[index] = body;
+        res.status(200).json(datos[index]);
+    } else {
+        res.status(404).json({ message: "Resource not found" });
+    }
+});
+
+// DELETE /:name/:year
+router.delete("/:name/:year", (req, res) => {
+    const name = req.params.name;
+    const year = parseInt(req.params.year);
+    const index = datos.findIndex(d => d.name === name && d.year === year);
+    
+    if (index !== -1) {
+        datos.splice(index, 1);
+        res.status(200).json({ message: "Resource deleted successfully" });
+    } else {
+        res.status(404).json({ message: "Resource not found" });
+    }
+});
+
+module.exports = router;

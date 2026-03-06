@@ -7,7 +7,7 @@ const DRP = require("./index-DRP.js");
 const MRT = require("./index-MRT.js");
 const cool = require("cool-ascii-faces"); 
 
-const { loadBackendGGG } = require('./api/athlete_events.js');
+const athleteEventsAPI = require('./api/athlete_events.js');
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
 const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
 const esportsearningsAPI = require("./api/esportsearnings-stats.js");
@@ -22,7 +22,7 @@ app.use(express.static("public"));
 app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
-loadBackendGGG(app);
+app.use(`${BASE_URL_API}/olympics-athlete-events`, athleteEventsAPI);
 
 app.get('/', (req, res) => {
     res.json({
