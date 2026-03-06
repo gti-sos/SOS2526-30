@@ -1,15 +1,15 @@
+// athlete_events.js - VERSIÓN CON CALLBACKS
+
 // FUNCIONES PARA LEER Y PARSEAR EL CSV
 const { readFileSync } = require('fs');
 const { parse } = require('csv-parse/sync');
 
-const { createRequire } = require('module');
-const dataStore = require('nedb');
+// IMPORTAMOS LAS FUNCIONES PARA LA BASE DE DATOS
+const dataStore = require('nedb-promises');
 const path = require('path');
-const request = require('request')
 
 // LEEMOS EL CSV
-const __dirname = path.resolve();
-let fileContent = readFileSync(path.join(__dirname, 'data/athlete_events.csv'), 'utf-8');
+const fileContent = readFileSync(path.join(__dirname, '..', 'data', 'athlete_events.csv'), 'utf-8');
 
 // PARSEAMOS EL CONTENIDO DEL CSV
 let csvContent = parse(fileContent, {
@@ -26,7 +26,7 @@ let csvContent = parse(fileContent, {
 
 const BASE_API = "/api/v1";
 const recurso = "/olympics-athlete-events";
-const db = new dataStore();
+const db = dataStore.create();
 
 // Cargamos todos los datos al iniciar
 db.insert(csvContent, (err, newDocs) => {
@@ -37,8 +37,8 @@ db.insert(csvContent, (err, newDocs) => {
     }
 });
 
-// Función auxiliar para crear rutas de listas (team, sport, city, year, season)
-function crearRutasLista(nombre, campo) {
+// Función auxiliar para crear rutas de listas
+function crearRutasLista(app, nombre, campo) {
     const ruta = `${BASE_API}${recurso}/${nombre}`;
     
     // GET - Listar todos los valores únicos
@@ -50,9 +50,8 @@ function crearRutasLista(nombre, campo) {
         });
     });
 
-    // POST - Crear nuevo elemento (nuevo atleta)
+    // POST - Crear nuevo elemento
     app.post(ruta, (req, res) => {
-        let { name, year, event } = req.body;
         if (!req.body.name || !req.body.year) {
             return res.sendStatus(400);
         }
@@ -146,14 +145,20 @@ function loadBackendGGG(app) {
                 let initialData = csvContent.slice(0, 15);
                 db.insert(initialData, (err) => {
                     if (err) return res.status(500).send("Error al insertar datos");
+                    
+                    db.find({}).limit(15).exec((err, data) => {
+                        if (err) return res.status(500).send("Error al recuperar datos");
+                        const nuevo = data.map(({_id, ...rest}) => rest);
+                        res.status(201).json(nuevo);
+                    });
+                });
+            } else {
+                db.find({}).limit(15).exec((err, data) => {
+                    if (err) return res.status(500).send("Error al recuperar datos");
+                    const nuevo = data.map(({_id, ...rest}) => rest);
+                    res.status(200).json(nuevo);
                 });
             }
-            
-            db.find({}).limit(15).exec((err, data) => {
-                if (err) return res.status(500).send("Error al recuperar datos");
-                const nuevo = data.map(({_id, ...rest}) => rest);
-                res.status(count === 0 ? 201 : 200).json(nuevo);
-            });
         });
     });
 
@@ -178,11 +183,12 @@ function loadBackendGGG(app) {
             if (to) query.year.$lte = Number(to);
         }
 
-        let d = db.find(query);
-        if (offset !== undefined) d = d.skip(Number(offset));
-        if (limit !== undefined) d = d.limit(Number(limit));
+        let queryBuilder = db.find(query);
+        
+        if (offset !== undefined) queryBuilder = queryBuilder.skip(Number(offset));
+        if (limit !== undefined) queryBuilder = queryBuilder.limit(Number(limit));
 
-        d.exec((err, data) => {
+        queryBuilder.exec((err, data) => {
             if (err) return res.status(500).send("Error al acceder a la BD");
             const nuevo = data.map(({_id, ...rest}) => rest);
             res.json(nuevo);
@@ -191,10 +197,9 @@ function loadBackendGGG(app) {
 
     // POST - Crear nuevo atleta
     app.post(BASE_API + recurso, (req, res) => {
-        let { name, year, event } = req.body;
-        if (!name || !year) return res.sendStatus(400);
+        if (!req.body.name || !req.body.year) return res.sendStatus(400);
 
-        db.findOne({ name, year, event }, (err, existente) => {
+        db.findOne({ name: req.body.name, year: req.body.year, event: req.body.event }, (err, existente) => {
             if (err) return res.status(500).send("Error al acceder a la BD");
             if (existente) return res.sendStatus(409);
 
@@ -217,13 +222,13 @@ function loadBackendGGG(app) {
     });
 
     // ============================================
-    // CREAR TODAS LAS LISTAS (5 recursos en 5 líneas)
+    // CREAR TODAS LAS LISTAS
     // ============================================
-    crearRutasLista("team", "team");
-    crearRutasLista("sport", "sport");
-    crearRutasLista("city", "city");
-    crearRutasLista("year", "year");
-    crearRutasLista("season", "season");
+    crearRutasLista(app, "team", "team");
+    crearRutasLista(app, "sport", "sport");
+    crearRutasLista(app, "city", "city");
+    crearRutasLista(app, "year", "year");
+    crearRutasLista(app, "season", "season");
 
     // ============================================
     // RECURSOS POR NOMBRE/AÑO
@@ -312,5 +317,5 @@ function loadBackendGGG(app) {
     app.post(rutaId, (req, res) => res.sendStatus(405));
 }
 
-// EXPORTAMOS
+// EXPORTAMOS CON COMMONJS
 module.exports = { loadBackendGGG, csvContent };

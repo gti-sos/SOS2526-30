@@ -7,7 +7,7 @@ const DRP = require("./index-DRP.js");
 const MRT = require("./index-MRT.js");
 const cool = require("cool-ascii-faces"); 
 
-const { loadBackendGGG } = require('./api/athlete-events.js');
+const { loadBackendGGG } = require('./api/athlete_events.js');
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
 const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
 const esportsearningsAPI = require("./api/esportsearnings-stats.js");
