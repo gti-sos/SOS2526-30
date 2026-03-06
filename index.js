@@ -1,3 +1,10 @@
+
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+
+
+
 const express = require('express');
 const path = require('path');
 
@@ -7,8 +14,7 @@ const DRP = require("./index-DRP.js");
 const MRT = require("./index-MRT.js");
 const cool = require("cool-ascii-faces"); 
 
-// Importamos las APIs modulares
-const athleteEventsAPI = require("./api/athlete_events.js");
+import { loadBackendGGG } from './api/athlete-events.js';
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
 const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
 const esportsearningsAPI = require("./api/esportsearnings-stats.js");
@@ -19,11 +25,11 @@ const BASE_URL_API = "/api/v1";
 app.use(express.json());
 app.use(express.static("public"));
 
-// Registramos las APIs
-app.use(`${BASE_URL_API}/olympics-athlete-events`, athleteEventsAPI);
+
 app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+loadBackendGGG(app);
 
 app.get('/', (req, res) => {
     res.json({
@@ -43,11 +49,11 @@ app.get('/', (req, res) => {
                 },
                 athletes: {
                     base: "/api/v1/olympics-athlete-events",
-                    teams: "/api/v1/olympics-athlete-events/teams",
-                    sports: "/api/v1/olympics-athlete-events/sports",
-                    cities: "/api/v1/olympics-athlete-events/cities",
-                    years: "/api/v1/olympics-athlete-events/years",
-                    seasons: "/api/v1/olympics-athlete-events/seasons"
+                    teams: "/api/v1/olympics-athlete-events/team",      
+                    sports: "/api/v1/olympics-athlete-events/sport",    
+                    cities: "/api/v1/olympics-athlete-events/city",     
+                    years: "/api/v1/olympics-athlete-events/year",      
+                    seasons: "/api/v1/olympics-athlete-events/season"  
                 },
                 esports: "/api/v1/esportsgrowth-stats",
                 earnings: "/api/v1/esportsearnings-stats"  
@@ -121,19 +127,19 @@ app.listen(PORT, () => {
     console.log("\n📋 LISTAS (GET, POST, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries`);
     console.log(`- /api/v1/cheaters-stats/years`);
-    console.log(`- /api/v1/olympics-athlete-events/teams`);  
-    console.log(`- /api/v1/olympics-athlete-events/sports`);  
-    console.log(`- /api/v1/olympics-athlete-events/cities`);  
-    console.log(`- /api/v1/olympics-athlete-events/years`);  
-    console.log(`- /api/v1/olympics-athlete-events/seasons`);  
+    console.log(`- /api/v1/olympics-athlete-events/team`);      
+    console.log(`- /api/v1/olympics-athlete-events/sport`);     
+    console.log(`- /api/v1/olympics-athlete-events/city`);      
+    console.log(`- /api/v1/olympics-athlete-events/year`);      
+    console.log(`- /api/v1/olympics-athlete-events/season`);    
     console.log("\n🔍 RECURSOS CONCRETOS (GET, PUT, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries/spain`);
     console.log(`- /api/v1/cheaters-stats/years/2020`);
-    console.log(`- /api/v1/olympics-athlete-events/teams/netherlands`); 
-    console.log(`- /api/v1/olympics-athlete-events/sports/basketball`); 
-    console.log(`- /api/v1/olympics-athlete-events/cities/barcelona`); 
-    console.log(`- /api/v1/olympics-athlete-events/years/1992`); 
-    console.log(`- /api/v1/olympics-athlete-events/seasons/summer`); 
+    console.log(`- /api/v1/olympics-athlete-events/team/netherlands`); 
+    console.log(`- /api/v1/olympics-athlete-events/sport/basketball`); 
+    console.log(`- /api/v1/olympics-athlete-events/city/barcelona`); 
+    console.log(`- /api/v1/olympics-athlete-events/year/1992`); 
+    console.log(`- /api/v1/olympics-athlete-events/season/summer`); 
     console.log(`- /api/v1/esportsgrowth-stats/United%20States/2017`); 
     console.log("=".repeat(50));
 });
