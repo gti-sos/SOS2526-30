@@ -33,13 +33,14 @@ try {
 // CARGA INICIAL
 // ============================================
 router.get("/loadInitialData", (req, res) => {
+  
     if (datos.length === 0) {
-        // Cargar SOLO 15 registros
         datos = csvContent.slice(0, 15);
-        res.status(201).json(datos);
-    } else {
-        res.status(200).json({ message: "Data is already loaded", count: datos.length });
+        console.log(`✅ Datos iniciales cargados: ${datos.length} registros`);
     }
+    
+    // SIEMPRE devolvemos 200 OK con los datos actuales
+    res.status(200).json(datos);
 });
 
 // ============================================
