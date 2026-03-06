@@ -50,7 +50,7 @@ app.get('/', (req, res) => {
                     seasons: "/api/v1/olympics-athlete-events/seasons"
                 },
                 esports: "/api/v1/esportsgrowth-stats",
-                earnings: "/api/v1/esportsearnings-stats" // CORREGIDO: faltaba una coma y el nombre
+                earnings: "/api/v1/esportsearnings-stats"  
             },
             about: "/about",
             cool: "/cool"
@@ -115,25 +115,25 @@ app.listen(PORT, () => {
     console.log(`- /samples/DRP`);
     console.log(`- /samples/MRT`);
     console.log(`- /api/v1/cheaters-stats`);
-    console.log(`- /api/v1/olympics-athlete-events`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events`);  
     console.log(`- /api/v1/esportsgrowth-stats`);
     console.log(`- /api/v1/esportsearnings-stats`);
     console.log("\n📋 LISTAS (GET, POST, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries`);
     console.log(`- /api/v1/cheaters-stats/years`);
-    console.log(`- /api/v1/olympics-athlete-events/teams`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/sports`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/cities`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/years`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/seasons`); // CORREGIDO
+    console.log(`- /api/v1/olympics-athlete-events/teams`);  
+    console.log(`- /api/v1/olympics-athlete-events/sports`);  
+    console.log(`- /api/v1/olympics-athlete-events/cities`);  
+    console.log(`- /api/v1/olympics-athlete-events/years`);  
+    console.log(`- /api/v1/olympics-athlete-events/seasons`);  
     console.log("\n🔍 RECURSOS CONCRETOS (GET, PUT, DELETE):");
     console.log(`- /api/v1/cheaters-stats/countries/spain`);
     console.log(`- /api/v1/cheaters-stats/years/2020`);
-    console.log(`- /api/v1/olympics-athlete-events/teams/netherlands`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/sports/basketball`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/cities/barcelona`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/years/1992`); // CORREGIDO
-    console.log(`- /api/v1/olympics-athlete-events/seasons/summer`); // CORREGIDO
-    console.log(`- /api/v1/esportsgrowth-stats/United%20States/2017`); // CORREGIDO (con %20 para espacios)
+    console.log(`- /api/v1/olympics-athlete-events/teams/netherlands`); 
+    console.log(`- /api/v1/olympics-athlete-events/sports/basketball`); 
+    console.log(`- /api/v1/olympics-athlete-events/cities/barcelona`); 
+    console.log(`- /api/v1/olympics-athlete-events/years/1992`); 
+    console.log(`- /api/v1/olympics-athlete-events/seasons/summer`); 
+    console.log(`- /api/v1/esportsgrowth-stats/United%20States/2017`); 
     console.log("=".repeat(50));
 });
