@@ -7,6 +7,9 @@ const athletes_csv = path.join(__dirname, "../data/athlete_events.csv");
 
 let athletes = [];
 
+/* ================================
+    F05 - FUNCIÓN DE VALIDACIÓN DE CAMPOS
+================================ */
 function validarCamposAtleta(datos) {
     const camposEsperados = ['id', 'name', 'sex', 'age', 'height', 'weight', 'team', 'noc', 'games', 'year', 'season', 'city', 'sport', 'event', 'medal'];
     const camposRecibidos = Object.keys(datos);
@@ -23,6 +26,9 @@ function validarCamposAtleta(datos) {
     return { valido: true };
 }
 
+/* ================================
+    1. CARGA INICIAL
+================================ */
 router.get("/loadInitialData", (req, res) => {
     if (athletes.length === 0) {
         csv().fromFile(athletes_csv).then((datos) => {
@@ -36,7 +42,9 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-
+/* ================================
+    2. COLECCIÓN PRINCIPAL
+================================ */
 router.get("/", (req, res) => {
     let results = [...athletes];
 
@@ -86,13 +94,23 @@ router.delete("/", (req, res) => {
     res.status(200).json({ message: "Colección borrada" });
 });
 
-
 router.put("/", (req, res) => 
     res.status(405).json({ error: "Método PUT no permitido sobre la colección" })
 );
 
+/* ================================
+    3. RECURSOS POR ID - CORREGIDO CON 404
+================================ */
 router.get("/id/:id", (req, res) => {
     const results = athletes.filter(a => a.id == req.params.id);
+    
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "No encontrado",
+            message: `No hay atletas con ID: ${req.params.id}`
+        });
+    }
+    
     res.status(200).json(results);
 });
 
@@ -121,7 +139,13 @@ router.delete("/id/:id", (req, res) => {
     }
 });
 
+router.post("/id/:id", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
+);
 
+/* ================================
+    4. RECURSOS POR NOMBRE/AÑO - CORREGIDO CON 404
+================================ */
 router.get("/name/:name/year/:year", (req, res) => {
     const recurso = athletes.find(a => 
         a.name === req.params.name && a.year == req.params.year
@@ -130,7 +154,10 @@ router.get("/name/:name/year/:year", (req, res) => {
     if (recurso) {
         res.status(200).json(recurso);
     } else {
-        res.status(404).json({ error: "No encontrado" });
+        res.status(404).json({ 
+            error: "No encontrado",
+            message: `No hay atleta con nombre ${req.params.name} y año ${req.params.year}`
+        });
     }
 });
 
@@ -166,18 +193,48 @@ router.delete("/name/:name/year/:year", (req, res) => {
     }
 });
 
+router.post("/name/:name/year/:year", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
+);
+
+/* ================================
+    5. BÚSQUEDA POR NOMBRE - CORREGIDO CON 404
+================================ */
 router.get("/name/:name", (req, res) => {
     let results = athletes.filter(a => a.name === req.params.name);
+    
     if (req.query.from) {
         results = results.filter(a => a.year >= parseInt(req.query.from));
     }
     if (req.query.to) {
         results = results.filter(a => a.year <= parseInt(req.query.to));
     }
+    
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "No encontrado",
+            message: `No hay atletas con el nombre: ${req.params.name}`
+        });
+    }
+    
     res.status(200).json(results);
 });
 
+router.post("/name/:name", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido" })
+);
 
+router.put("/name/:name", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido" })
+);
+
+router.delete("/name/:name", (req, res) => 
+    res.status(405).json({ error: "Método DELETE no permitido" })
+);
+
+/* ================================
+    6. LISTA /team (colección)
+================================ */
 router.get("/team", (req, res) => {
     const equipos = [...new Set(athletes.map(a => a.team).filter(Boolean))];
     res.status(200).json(equipos.sort());
@@ -207,22 +264,26 @@ router.delete("/team", (req, res) => {
     res.status(200).json({ message: "Todos los equipos borrados" });
 });
 
-
 router.put("/team", (req, res) => 
     res.status(405).json({ error: "Método PUT no permitido sobre la lista de equipos" })
 );
 
-
+/* ================================
+    7. RECURSOS CONCRETOS /team/:team - CORREGIDO CON 404
+================================ */
 router.get("/team/:team", (req, res) => {
     const results = athletes.filter(a => 
         a.team && a.team.toLowerCase() === req.params.team.toLowerCase()
     );
     
-    if (results.length > 0) {
-        res.status(200).json(results);
-    } else {
-        res.status(404).json({ error: "Equipo no encontrado" });
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "Equipo no encontrado",
+            message: `No hay atletas del equipo: ${req.params.team}`
+        });
     }
+    
+    res.status(200).json(results);
 });
 
 router.put("/team/:team", (req, res) => {
@@ -264,6 +325,13 @@ router.delete("/team/:team", (req, res) => {
     }
 });
 
+router.post("/team/:team", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
+);
+
+/* ================================
+    8. LISTA /sport (colección)
+================================ */
 router.get("/sport", (req, res) => {
     const deportes = [...new Set(athletes.map(a => a.sport).filter(Boolean))];
     res.status(200).json(deportes.sort());
@@ -297,16 +365,22 @@ router.put("/sport", (req, res) =>
     res.status(405).json({ error: "Método PUT no permitido sobre la lista de deportes" })
 );
 
+/* ================================
+    9. RECURSOS CONCRETOS /sport/:sport - CORREGIDO CON 404
+================================ */
 router.get("/sport/:sport", (req, res) => {
     const results = athletes.filter(a => 
         a.sport && a.sport.toLowerCase() === req.params.sport.toLowerCase()
     );
     
-    if (results.length > 0) {
-        res.status(200).json(results);
-    } else {
-        res.status(404).json({ error: "Deporte no encontrado" });
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "Deporte no encontrado",
+            message: `No hay atletas del deporte: ${req.params.sport}`
+        });
     }
+    
+    res.status(200).json(results);
 });
 
 router.put("/sport/:sport", (req, res) => {
@@ -348,7 +422,13 @@ router.delete("/sport/:sport", (req, res) => {
     }
 });
 
+router.post("/sport/:sport", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
+);
 
+/* ================================
+    10. LISTA /city (colección)
+================================ */
 router.get("/city", (req, res) => {
     const ciudades = [...new Set(athletes.map(a => a.city).filter(Boolean))];
     res.status(200).json(ciudades.sort());
@@ -382,16 +462,22 @@ router.put("/city", (req, res) =>
     res.status(405).json({ error: "Método PUT no permitido sobre la lista de ciudades" })
 );
 
+/* ================================
+    11. RECURSOS CONCRETOS /city/:city - CORREGIDO CON 404
+================================ */
 router.get("/city/:city", (req, res) => {
     const results = athletes.filter(a => 
         a.city && a.city.toLowerCase() === req.params.city.toLowerCase()
     );
     
-    if (results.length > 0) {
-        res.status(200).json(results);
-    } else {
-        res.status(404).json({ error: "Ciudad no encontrada" });
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "Ciudad no encontrada",
+            message: `No hay atletas de la ciudad: ${req.params.city}`
+        });
     }
+    
+    res.status(200).json(results);
 });
 
 router.put("/city/:city", (req, res) => {
@@ -433,7 +519,13 @@ router.delete("/city/:city", (req, res) => {
     }
 });
 
+router.post("/city/:city", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
+);
 
+/* ================================
+    12. LISTA /year (colección)
+================================ */
 router.get("/year", (req, res) => {
     const años = [...new Set(athletes.map(a => a.year).filter(Boolean))];
     res.status(200).json(años.sort((a,b) => a - b));
@@ -467,14 +559,20 @@ router.put("/year", (req, res) =>
     res.status(405).json({ error: "Método PUT no permitido sobre la lista de años" })
 );
 
+/* ================================
+    13. RECURSOS CONCRETOS /year/:year - CORREGIDO CON 404
+================================ */
 router.get("/year/:year", (req, res) => {
     const results = athletes.filter(a => a.year == req.params.year);
     
-    if (results.length > 0) {
-        res.status(200).json(results);
-    } else {
-        res.status(404).json({ error: "Año no encontrado" });
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "Año no encontrado",
+            message: `No hay atletas del año: ${req.params.year}`
+        });
     }
+    
+    res.status(200).json(results);
 });
 
 router.put("/year/:year", (req, res) => {
@@ -515,7 +613,13 @@ router.delete("/year/:year", (req, res) => {
     }
 });
 
+router.post("/year/:year", (req, res) => 
+    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
+);
 
+/* ================================
+    14. LISTA /season (colección)
+================================ */
 router.get("/season", (req, res) => {
     const temporadas = [...new Set(athletes.map(a => a.season).filter(Boolean))];
     res.status(200).json(temporadas.sort());
@@ -549,16 +653,22 @@ router.put("/season", (req, res) =>
     res.status(405).json({ error: "Método PUT no permitido sobre la lista de temporadas" })
 );
 
+/* ================================
+    15. RECURSOS CONCRETOS /season/:season - CORREGIDO CON 404
+================================ */
 router.get("/season/:season", (req, res) => {
     const results = athletes.filter(a => 
         a.season && a.season.toLowerCase() === req.params.season.toLowerCase()
     );
     
-    if (results.length > 0) {
-        res.status(200).json(results);
-    } else {
-        res.status(404).json({ error: "Temporada no encontrada" });
+    if (results.length === 0) {
+        return res.status(404).json({ 
+            error: "Temporada no encontrada",
+            message: `No hay atletas de la temporada: ${req.params.season}`
+        });
     }
+    
+    res.status(200).json(results);
 });
 
 router.put("/season/:season", (req, res) => {
@@ -599,23 +709,6 @@ router.delete("/season/:season", (req, res) => {
         res.status(404).json({ error: "Temporada no encontrada" });
     }
 });
-
-
-router.post("/team/:team", (req, res) => 
-    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
-);
-
-router.post("/sport/:sport", (req, res) => 
-    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
-);
-
-router.post("/city/:city", (req, res) => 
-    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
-);
-
-router.post("/year/:year", (req, res) => 
-    res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
-);
 
 router.post("/season/:season", (req, res) => 
     res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
