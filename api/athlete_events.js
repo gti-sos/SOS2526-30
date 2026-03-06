@@ -1,12 +1,9 @@
-// api/athlete_events.js - VERSIÓN ADAPTADA DEL EJEMPLO
-
 const express = require("express");
 const router = express.Router();
 const { readFileSync } = require('fs');
 const { parse } = require('csv-parse/sync');
 const path = require('path');
 
-// Array en memoria
 let datos = [];
 
 // Cargar datos iniciales del CSV
@@ -29,28 +26,19 @@ try {
     console.error("❌ Error leyendo CSV:", err.message);
 }
 
-// ============================================
 // CARGA INICIAL
-// ============================================
 router.get("/loadInitialData", (req, res) => {
-  
     if (datos.length === 0) {
         datos = csvContent.slice(0, 15);
         console.log(`✅ Datos iniciales cargados: ${datos.length} registros`);
     }
-    
-    // SIEMPRE devolvemos 200 OK con los datos actuales
     res.status(200).json(datos);
 });
 
-// ============================================
-// COLECCIÓN PRINCIPAL (con filtros)
-// ============================================
+// COLECCIÓN PRINCIPAL 
 router.get("/", (req, res) => {
     const { name, team, country, year, from, to, sport, season, city, id } = req.query;
     let filtrados = [...datos];
-
-    // Filtros
     if (name) {
         filtrados = filtrados.filter(d => d.name && d.name.toLowerCase().includes(name.toLowerCase()));
     }
@@ -73,8 +61,6 @@ router.get("/", (req, res) => {
     if (id) {
         filtrados = filtrados.filter(d => d.id == id);
     }
-
-    // Rango de años
     if (from && to) {
         filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
     } else if (from) {
@@ -86,22 +72,17 @@ router.get("/", (req, res) => {
     res.status(200).json(filtrados);
 });
 
-// ============================================
 // POST - Crear nuevo atleta
-// ============================================
 router.post("/", (req, res) => {
     const newData = req.body;
-    
     if (!newData.name || !newData.year) {
         return res.status(400).json({ message: "Bad Request: Missing name or year" });
     }
-
     const existe = datos.find(d => 
         d.name === newData.name && 
         d.year === newData.year && 
         d.event === newData.event
     );
-    
     if (existe) {
         res.status(409).json({ message: "Resource already exists" });
     } else {
@@ -110,58 +91,44 @@ router.post("/", (req, res) => {
     }
 });
 
-// ============================================
-// PUT no permitido en colección
-// ============================================
 router.put("/", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
 });
 
-// ============================================
+
 // DELETE - Borrar todos
-// ============================================
 router.delete("/", (req, res) => {
     datos = [];
     res.status(200).json({ message: "All data deleted successfully" });
 });
 
-// ============================================
-// LISTAS EN SINGULAR
-// ============================================
-
-// GET /team - Lista de equipos
+// LISTAS 
 router.get("/team", (req, res) => {
     const equipos = [...new Set(datos.map(d => d.team).filter(Boolean))];
     res.status(200).json(equipos.sort());
 });
 
-// GET /sport - Lista de deportes
 router.get("/sport", (req, res) => {
     const deportes = [...new Set(datos.map(d => d.sport).filter(Boolean))];
     res.status(200).json(deportes.sort());
 });
 
-// GET /city - Lista de ciudades
 router.get("/city", (req, res) => {
     const ciudades = [...new Set(datos.map(d => d.city).filter(Boolean))];
     res.status(200).json(ciudades.sort());
 });
 
-// GET /year - Lista de años
 router.get("/year", (req, res) => {
     const años = [...new Set(datos.map(d => d.year).filter(a => a))];
     res.status(200).json(años.sort((a,b) => a - b));
 });
 
-// GET /season - Lista de temporadas
 router.get("/season", (req, res) => {
     const temporadas = [...new Set(datos.map(d => d.season).filter(Boolean))];
     res.status(200).json(temporadas.sort());
 });
 
-// ============================================
-// BÚSQUEDA POR NOMBRE (con rangos)
-// ============================================
+// BÚSQUEDA POR NOMBRE 
 router.get("/:name", (req, res) => {
     const name = req.params.name;
     const { from, to } = req.query;
@@ -176,7 +143,6 @@ router.get("/:name", (req, res) => {
         filtrados = filtrados.filter(d => d.year <= parseInt(to));
     }
 
-    // Si no hay datos y NO se usaron filtros, devolvemos 404
     if (filtrados.length === 0 && !from && !to) {
         res.status(404).json({ message: "Atleta no encontrado" });
     } else {
@@ -184,11 +150,8 @@ router.get("/:name", (req, res) => {
     }
 });
 
-// ============================================
-// RECURSO EXACTO (Nombre y Año)
-// ============================================
 
-// GET /:name/:year
+// RECURSO EXACTO
 router.get("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
@@ -201,13 +164,9 @@ router.get("/:name/:year", (req, res) => {
         res.status(404).json({ message: "Resource not found" });
     }
 });
-
-// POST no permitido
 router.post("/:name/:year", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
 });
-
-// PUT /:name/:year
 router.put("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
@@ -227,7 +186,7 @@ router.put("/:name/:year", (req, res) => {
     }
 });
 
-// DELETE /:name/:year
+// DELETE
 router.delete("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
