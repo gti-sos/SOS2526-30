@@ -7,6 +7,30 @@ const athletes_csv = path.join(__dirname, "../data/athlete_events.csv");
 
 let athletes = [];
 
+/* ================================
+    F05 - FUNCIÓN DE VALIDACIÓN DE CAMPOS
+================================ */
+function validarCamposAtleta(datos) {
+    const camposEsperados = ['id', 'name', 'sex', 'age', 'height', 'weight', 'team', 'noc', 'games', 'year', 'season', 'city', 'sport', 'event', 'medal'];
+    const camposRecibidos = Object.keys(datos);
+    
+    // Validar campos obligatorios mínimos
+    if (!datos.name || !datos.team || !datos.year) {
+        return { valido: false, error: "Faltan campos obligatorios: name, team, year" };
+    }
+    
+    // Verificar que no haya campos extraños
+    const camposInvalidos = camposRecibidos.filter(c => !camposEsperados.includes(c));
+    if (camposInvalidos.length > 0) {
+        return { valido: false, error: `Campos no válidos: ${camposInvalidos.join(', ')}` };
+    }
+    
+    return { valido: true };
+}
+
+/* ================================
+    1. CARGA INICIAL
+================================ */
 router.get("/loadInitialData", (req, res) => {
     if (athletes.length === 0) {
         csv().fromFile(athletes_csv).then((datos) => {
@@ -20,6 +44,9 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
+/* ================================
+    2. COLECCIÓN (con filtros)
+================================ */
 router.get("/", (req, res) => {
     let results = [...athletes];
 
@@ -33,12 +60,11 @@ router.get("/", (req, res) => {
         );
     }
 
-    // DESPUÉS (con team)
-    if (req.query.team) {  // Cambiado de country a team
+    if (req.query.team) {
         results = results.filter(a => 
-            a.team && a.team.toLowerCase() === req.query.team.toLowerCase()  // Cambiado aquí también
+            a.team && a.team.toLowerCase() === req.query.team.toLowerCase()
         );
-}
+    }
     
     if (req.query.year) {
         results = results.filter(a => a.year == req.query.year);
@@ -54,15 +80,19 @@ router.get("/", (req, res) => {
     res.status(200).json(results);
 });
 
+/* ================================
+    F05 - POST en colección principal
+================================ */
 router.post("/", (req, res) => {
     const nuevo = req.body;
 
-    if (!nuevo.name || !nuevo.year) {
-        return res.status(400).json({ error: "name y year son obligatorios" });
+    const validacion = validarCamposAtleta(nuevo);
+    if (!validacion.valido) {
+        return res.status(400).json({ error: validacion.error });
     }
     
     const existe = athletes.find(a => 
-        a.name === nuevo.name && a.year == nuevo.year
+        a.name === nuevo.name && a.year == nuevo.year && a.event === nuevo.event
     );
     
     if (existe) {
@@ -73,10 +103,20 @@ router.post("/", (req, res) => {
     res.status(201).send();
 });
 
+/* ================================
+    F05 - DELETE en colección principal
+================================ */
 router.delete("/", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Colección borrada" });
 });
+
+/* ================================
+    F05 - PUT NO PERMITIDO en colección principal
+================================ */
+router.put("/", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido sobre la colección" })
+);
 
 /* ================================
     3. RECURSOS POR ID
@@ -86,10 +126,18 @@ router.get("/id/:id", (req, res) => {
     res.status(200).json(results);
 });
 
+/* ================================
+    F05 - PUT por ID
+================================ */
 router.put("/id/:id", (req, res) => {
     const index = athletes.findIndex(a => a.id == req.params.id);
     
     if (index !== -1) {
+        // Validar que el ID en el body coincide con la URL
+        if (req.body.id && req.body.id != req.params.id) {
+            return res.status(400).json({ error: "El ID en el body no coincide con la URL" });
+        }
+        
         athletes[index] = { ...req.body, id: athletes[index].id };
         res.status(200).send();
     } else {
@@ -97,6 +145,9 @@ router.put("/id/:id", (req, res) => {
     }
 });
 
+/* ================================
+    F05 - DELETE por ID
+================================ */
 router.delete("/id/:id", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => a.id != req.params.id);
@@ -123,12 +174,24 @@ router.get("/name/:name/year/:year", (req, res) => {
     }
 });
 
+/* ================================
+    F05 - PUT por nombre/año
+================================ */
 router.put("/name/:name/year/:year", (req, res) => {
     const index = athletes.findIndex(a => 
         a.name === req.params.name && a.year == req.params.year
     );
     
     if (index !== -1) {
+        // Validar que el nombre en el body coincide con la URL
+        if (req.body.name && req.body.name !== req.params.name) {
+            return res.status(400).json({ error: "El nombre en el body no coincide con la URL" });
+        }
+        // Validar que el año en el body coincide con la URL
+        if (req.body.year && req.body.year != req.params.year) {
+            return res.status(400).json({ error: "El año en el body no coincide con la URL" });
+        }
+        
         athletes[index] = req.body;
         res.status(200).send();
     } else {
@@ -136,6 +199,9 @@ router.put("/name/:name/year/:year", (req, res) => {
     }
 });
 
+/* ================================
+    F05 - DELETE por nombre/año
+================================ */
 router.delete("/name/:name/year/:year", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
@@ -163,29 +229,49 @@ router.get("/name/:name", (req, res) => {
 });
 
 /* ================================
-    5. LISTAS EN SINGULAR (TEAM)
+    5. LISTAS EN SINGULAR (TEAM) - F05
 ================================ */
+/* F05 - GET /team */
 router.get("/team", (req, res) => {
     const equipos = [...new Set(athletes.map(a => a.team).filter(Boolean))];
     res.status(200).json(equipos.sort());
 });
 
+/* F05 - POST /team */
 router.post("/team", (req, res) => {
     const nuevoEquipo = req.body;
     
-    if (!nuevoEquipo.team || !nuevoEquipo.name) {
-        return res.status(400).json({ error: "team y name son obligatorios" });
+    const validacion = validarCamposAtleta(nuevoEquipo);
+    if (!validacion.valido) {
+        return res.status(400).json({ error: validacion.error });
+    }
+    
+    const existe = athletes.find(a => 
+        a.name === nuevoEquipo.name && 
+        a.year == nuevoEquipo.year && 
+        a.event === nuevoEquipo.event
+    );
+    
+    if (existe) {
+        return res.status(409).json({ error: "Ese atleta/participación ya existe" });
     }
     
     athletes.push(nuevoEquipo);
     res.status(201).send();
 });
 
+/* F05 - DELETE /team */
 router.delete("/team", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todos los equipos borrados" });
 });
 
+/* F05 - PUT NO PERMITIDO en lista /team */
+router.put("/team", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido sobre la lista de equipos" })
+);
+
+/* F05 - GET /team/:team */
 router.get("/team/:team", (req, res) => {
     const results = athletes.filter(a => 
         a.team && a.team.toLowerCase() === req.params.team.toLowerCase()
@@ -198,11 +284,19 @@ router.get("/team/:team", (req, res) => {
     }
 });
 
+/* F05 - PUT /team/:team */
 router.put("/team/:team", (req, res) => {
     const teamActual = req.params.team;
     const nuevosDatos = req.body;
-    let actualizados = 0;
     
+    // Validar que el team en el body coincide con la URL
+    if (nuevosDatos.team && nuevosDatos.team.toLowerCase() !== teamActual.toLowerCase()) {
+        return res.status(400).json({ 
+            error: "El campo 'team' en el body no coincide con el de la URL" 
+        });
+    }
+    
+    let actualizados = 0;
     athletes = athletes.map(a => {
         if (a.team && a.team.toLowerCase() === teamActual.toLowerCase()) {
             actualizados++;
@@ -218,6 +312,7 @@ router.put("/team/:team", (req, res) => {
     }
 });
 
+/* F05 - DELETE /team/:team */
 router.delete("/team/:team", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
@@ -232,29 +327,49 @@ router.delete("/team/:team", (req, res) => {
 });
 
 /* ================================
-    6. LISTAS EN SINGULAR (SPORT)
+    6. LISTAS EN SINGULAR (SPORT) - F05
 ================================ */
+/* F05 - GET /sport */
 router.get("/sport", (req, res) => {
     const deportes = [...new Set(athletes.map(a => a.sport).filter(Boolean))];
     res.status(200).json(deportes.sort());
 });
 
+/* F05 - POST /sport */
 router.post("/sport", (req, res) => {
     const nuevoDeporte = req.body;
     
-    if (!nuevoDeporte.sport || !nuevoDeporte.name) {
-        return res.status(400).json({ error: "sport y name son obligatorios" });
+    const validacion = validarCamposAtleta(nuevoDeporte);
+    if (!validacion.valido) {
+        return res.status(400).json({ error: validacion.error });
+    }
+    
+    const existe = athletes.find(a => 
+        a.name === nuevoDeporte.name && 
+        a.year == nuevoDeporte.year && 
+        a.event === nuevoDeporte.event
+    );
+    
+    if (existe) {
+        return res.status(409).json({ error: "Ese atleta/participación ya existe" });
     }
     
     athletes.push(nuevoDeporte);
     res.status(201).send();
 });
 
+/* F05 - DELETE /sport */
 router.delete("/sport", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todos los deportes borrados" });
 });
 
+/* F05 - PUT NO PERMITIDO en lista /sport */
+router.put("/sport", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido sobre la lista de deportes" })
+);
+
+/* F05 - GET /sport/:sport */
 router.get("/sport/:sport", (req, res) => {
     const results = athletes.filter(a => 
         a.sport && a.sport.toLowerCase() === req.params.sport.toLowerCase()
@@ -267,11 +382,19 @@ router.get("/sport/:sport", (req, res) => {
     }
 });
 
+/* F05 - PUT /sport/:sport */
 router.put("/sport/:sport", (req, res) => {
     const sportActual = req.params.sport;
     const nuevosDatos = req.body;
-    let actualizados = 0;
     
+    // Validar que el sport en el body coincide con la URL
+    if (nuevosDatos.sport && nuevosDatos.sport.toLowerCase() !== sportActual.toLowerCase()) {
+        return res.status(400).json({ 
+            error: "El campo 'sport' en el body no coincide con el de la URL" 
+        });
+    }
+    
+    let actualizados = 0;
     athletes = athletes.map(a => {
         if (a.sport && a.sport.toLowerCase() === sportActual.toLowerCase()) {
             actualizados++;
@@ -287,6 +410,7 @@ router.put("/sport/:sport", (req, res) => {
     }
 });
 
+/* F05 - DELETE /sport/:sport */
 router.delete("/sport/:sport", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
@@ -301,29 +425,49 @@ router.delete("/sport/:sport", (req, res) => {
 });
 
 /* ================================
-    7. LISTAS EN SINGULAR (CITY)
+    7. LISTAS EN SINGULAR (CITY) - F05
 ================================ */
+/* F05 - GET /city */
 router.get("/city", (req, res) => {
     const ciudades = [...new Set(athletes.map(a => a.city).filter(Boolean))];
     res.status(200).json(ciudades.sort());
 });
 
+/* F05 - POST /city */
 router.post("/city", (req, res) => {
     const nuevaCiudad = req.body;
     
-    if (!nuevaCiudad.city || !nuevaCiudad.name) {
-        return res.status(400).json({ error: "city y name son obligatorios" });
+    const validacion = validarCamposAtleta(nuevaCiudad);
+    if (!validacion.valido) {
+        return res.status(400).json({ error: validacion.error });
+    }
+    
+    const existe = athletes.find(a => 
+        a.name === nuevaCiudad.name && 
+        a.year == nuevaCiudad.year && 
+        a.event === nuevaCiudad.event
+    );
+    
+    if (existe) {
+        return res.status(409).json({ error: "Ese atleta/participación ya existe" });
     }
     
     athletes.push(nuevaCiudad);
     res.status(201).send();
 });
 
+/* F05 - DELETE /city */
 router.delete("/city", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todas las ciudades borradas" });
 });
 
+/* F05 - PUT NO PERMITIDO en lista /city */
+router.put("/city", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido sobre la lista de ciudades" })
+);
+
+/* F05 - GET /city/:city */
 router.get("/city/:city", (req, res) => {
     const results = athletes.filter(a => 
         a.city && a.city.toLowerCase() === req.params.city.toLowerCase()
@@ -336,11 +480,19 @@ router.get("/city/:city", (req, res) => {
     }
 });
 
+/* F05 - PUT /city/:city */
 router.put("/city/:city", (req, res) => {
     const cityActual = req.params.city;
     const nuevosDatos = req.body;
-    let actualizados = 0;
     
+    // Validar que el city en el body coincide con la URL
+    if (nuevosDatos.city && nuevosDatos.city.toLowerCase() !== cityActual.toLowerCase()) {
+        return res.status(400).json({ 
+            error: "El campo 'city' en el body no coincide con el de la URL" 
+        });
+    }
+    
+    let actualizados = 0;
     athletes = athletes.map(a => {
         if (a.city && a.city.toLowerCase() === cityActual.toLowerCase()) {
             actualizados++;
@@ -356,6 +508,7 @@ router.put("/city/:city", (req, res) => {
     }
 });
 
+/* F05 - DELETE /city/:city */
 router.delete("/city/:city", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
@@ -370,29 +523,49 @@ router.delete("/city/:city", (req, res) => {
 });
 
 /* ================================
-    8. LISTAS EN SINGULAR (YEAR)
+    8. LISTAS EN SINGULAR (YEAR) - F05
 ================================ */
+/* F05 - GET /year */
 router.get("/year", (req, res) => {
     const años = [...new Set(athletes.map(a => a.year).filter(Boolean))];
     res.status(200).json(años.sort((a,b) => a - b));
 });
 
+/* F05 - POST /year */
 router.post("/year", (req, res) => {
     const nuevoAño = req.body;
     
-    if (!nuevoAño.year || !nuevoAño.name) {
-        return res.status(400).json({ error: "year y name son obligatorios" });
+    const validacion = validarCamposAtleta(nuevoAño);
+    if (!validacion.valido) {
+        return res.status(400).json({ error: validacion.error });
+    }
+    
+    const existe = athletes.find(a => 
+        a.name === nuevoAño.name && 
+        a.year == nuevoAño.year && 
+        a.event === nuevoAño.event
+    );
+    
+    if (existe) {
+        return res.status(409).json({ error: "Ese atleta/participación ya existe" });
     }
     
     athletes.push(nuevoAño);
     res.status(201).send();
 });
 
+/* F05 - DELETE /year */
 router.delete("/year", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todos los años borrados" });
 });
 
+/* F05 - PUT NO PERMITIDO en lista /year */
+router.put("/year", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido sobre la lista de años" })
+);
+
+/* F05 - GET /year/:year */
 router.get("/year/:year", (req, res) => {
     const results = athletes.filter(a => a.year == req.params.year);
     
@@ -403,11 +576,19 @@ router.get("/year/:year", (req, res) => {
     }
 });
 
+/* F05 - PUT /year/:year */
 router.put("/year/:year", (req, res) => {
     const yearActual = parseInt(req.params.year);
     const nuevosDatos = req.body;
-    let actualizados = 0;
     
+    // Validar que el year en el body coincide con la URL
+    if (nuevosDatos.year && nuevosDatos.year != yearActual) {
+        return res.status(400).json({ 
+            error: "El campo 'year' en el body no coincide con el de la URL" 
+        });
+    }
+    
+    let actualizados = 0;
     athletes = athletes.map(a => {
         if (a.year == yearActual) {
             actualizados++;
@@ -423,6 +604,7 @@ router.put("/year/:year", (req, res) => {
     }
 });
 
+/* F05 - DELETE /year/:year */
 router.delete("/year/:year", (req, res) => {
     const yearActual = parseInt(req.params.year);
     const longitud = athletes.length;
@@ -436,29 +618,49 @@ router.delete("/year/:year", (req, res) => {
 });
 
 /* ================================
-    9. LISTAS EN SINGULAR (SEASON)
+    9. LISTAS EN SINGULAR (SEASON) - F05
 ================================ */
+/* F05 - GET /season */
 router.get("/season", (req, res) => {
     const temporadas = [...new Set(athletes.map(a => a.season).filter(Boolean))];
     res.status(200).json(temporadas.sort());
 });
 
+/* F05 - POST /season */
 router.post("/season", (req, res) => {
     const nuevaTemporada = req.body;
     
-    if (!nuevaTemporada.season || !nuevaTemporada.name) {
-        return res.status(400).json({ error: "season y name son obligatorios" });
+    const validacion = validarCamposAtleta(nuevaTemporada);
+    if (!validacion.valido) {
+        return res.status(400).json({ error: validacion.error });
+    }
+    
+    const existe = athletes.find(a => 
+        a.name === nuevaTemporada.name && 
+        a.year == nuevaTemporada.year && 
+        a.event === nuevaTemporada.event
+    );
+    
+    if (existe) {
+        return res.status(409).json({ error: "Ese atleta/participación ya existe" });
     }
     
     athletes.push(nuevaTemporada);
     res.status(201).send();
 });
 
+/* F05 - DELETE /season */
 router.delete("/season", (req, res) => {
     athletes = [];
     res.status(200).json({ message: "Todas las temporadas borradas" });
 });
 
+/* F05 - PUT NO PERMITIDO en lista /season */
+router.put("/season", (req, res) => 
+    res.status(405).json({ error: "Método PUT no permitido sobre la lista de temporadas" })
+);
+
+/* F05 - GET /season/:season */
 router.get("/season/:season", (req, res) => {
     const results = athletes.filter(a => 
         a.season && a.season.toLowerCase() === req.params.season.toLowerCase()
@@ -471,11 +673,19 @@ router.get("/season/:season", (req, res) => {
     }
 });
 
+/* F05 - PUT /season/:season */
 router.put("/season/:season", (req, res) => {
     const seasonActual = req.params.season;
     const nuevosDatos = req.body;
-    let actualizados = 0;
     
+    // Validar que el season en el body coincide con la URL
+    if (nuevosDatos.season && nuevosDatos.season.toLowerCase() !== seasonActual.toLowerCase()) {
+        return res.status(400).json({ 
+            error: "El campo 'season' en el body no coincide con el de la URL" 
+        });
+    }
+    
+    let actualizados = 0;
     athletes = athletes.map(a => {
         if (a.season && a.season.toLowerCase() === seasonActual.toLowerCase()) {
             actualizados++;
@@ -491,6 +701,7 @@ router.put("/season/:season", (req, res) => {
     }
 });
 
+/* F05 - DELETE /season/:season */
 router.delete("/season/:season", (req, res) => {
     const longitud = athletes.length;
     athletes = athletes.filter(a => 
@@ -505,24 +716,29 @@ router.delete("/season/:season", (req, res) => {
 });
 
 /* ================================
-    10. MÉTODOS NO PERMITIDOS
+    10. MÉTODOS NO PERMITIDOS (F05)
 ================================ */
+/* F05 - POST no permitido en recursos concretos */
 router.post("/team/:team", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
+/* F05 - POST no permitido en recursos concretos */
 router.post("/sport/:sport", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
+/* F05 - POST no permitido en recursos concretos */
 router.post("/city/:city", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
+/* F05 - POST no permitido en recursos concretos */
 router.post("/year/:year", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
 
+/* F05 - POST no permitido en recursos concretos */
 router.post("/season/:season", (req, res) => 
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" })
 );
