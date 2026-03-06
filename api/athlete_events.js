@@ -1,14 +1,11 @@
-// IMPORT PARA USAR REQUIRE
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
 // FUNCIONES PARA LEER Y PARSEAR EL CSV
 const { readFileSync } = require('fs');
 const { parse } = require('csv-parse/sync');
 
-// IMPORTAMOS LAS FUNCIONES PARA LA BASE DE DATOS
-import dataStore from "nedb";
-import path from "path";
+const { createRequire } = require('module');
+const dataStore = require('nedb');
+const path = require('path');
+const request = require('request')
 
 // LEEMOS EL CSV
 const __dirname = path.resolve();
@@ -316,4 +313,4 @@ function loadBackendGGG(app) {
 }
 
 // EXPORTAMOS
-export { loadBackendGGG, csvContent };
+module.exports = { loadBackendGGG, csvContent };
