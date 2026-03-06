@@ -26,7 +26,7 @@ router.get("/loadInitialData", (req, res) => {
 });
 
 
-// GET GENERAL INTELIGENTE (Actualizado con el estilo de growth-stats)
+// GET GENERAL INTELIGENTE 
 
 router.get("/", (req, res) => {
     const { country, genre, year, from, to } = req.query;
@@ -93,7 +93,7 @@ router.delete("/", (req, res) => {
 });
 
 
-// GET ESPECÍFICO CON RANGOS (Adaptado de growth-stats :country)
+// GET ESPECÍFICO CON RANGOS 
 
 router.get("/:game_name", (req, res) => {
     const game = req.params.game_name;
@@ -160,6 +160,11 @@ router.put("/:game_name/:year", (req, res) => {
         res.status(404).json({ message: "Resource not found" });
     }
 });
+
+router.post("/:game_name/:year", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
+});
+
 
 router.delete("/:game_name/:year", (req, res) => {
     const game = req.params.game_name;
