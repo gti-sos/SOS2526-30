@@ -7,9 +7,6 @@ const athletes_csv = path.join(__dirname, "../data/athlete_events.csv");
 
 let athletes = [];
 
-/* ================================
-    F05 - FUNCIÓN DE VALIDACIÓN DE CAMPOS
-================================ */
 function validarCamposAtleta(datos) {
     const camposEsperados = ['id', 'name', 'sex', 'age', 'height', 'weight', 'team', 'noc', 'games', 'year', 'season', 'city', 'sport', 'event', 'medal'];
     const camposRecibidos = Object.keys(datos);
@@ -26,9 +23,6 @@ function validarCamposAtleta(datos) {
     return { valido: true };
 }
 
-/* ================================
-    1. CARGA INICIAL
-================================ */
 router.get("/loadInitialData", (req, res) => {
     if (athletes.length === 0) {
         csv().fromFile(athletes_csv).then((datos) => {
@@ -42,9 +36,7 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-/* ================================
-    2. COLECCIÓN PRINCIPAL
-================================ */
+
 router.get("/", (req, res) => {
     let results = [...athletes];
 
@@ -94,16 +86,11 @@ router.delete("/", (req, res) => {
     res.status(200).json({ message: "Colección borrada" });
 });
 
-/* ================================
-    F05 - PUT NO PERMITIDO en colección principal
-================================ */
+
 router.put("/", (req, res) => 
     res.status(405).json({ error: "Método PUT no permitido sobre la colección" })
 );
 
-/* ================================
-    3. RECURSOS POR ID
-================================ */
 router.get("/id/:id", (req, res) => {
     const results = athletes.filter(a => a.id == req.params.id);
     res.status(200).json(results);
@@ -134,9 +121,7 @@ router.delete("/id/:id", (req, res) => {
     }
 });
 
-/* ================================
-    4. RECURSOS POR NOMBRE/AÑO
-================================ */
+
 router.get("/name/:name/year/:year", (req, res) => {
     const recurso = athletes.find(a => 
         a.name === req.params.name && a.year == req.params.year
@@ -192,10 +177,7 @@ router.get("/name/:name", (req, res) => {
     res.status(200).json(results);
 });
 
-/* ================================
-    5. LISTA /team (PRIMERO LAS COLECCIONES, DESPUÉS LOS RECURSOS CONCRETOS)
-================================ */
-/* COLECCIÓN /team */
+
 router.get("/team", (req, res) => {
     const equipos = [...new Set(athletes.map(a => a.team).filter(Boolean))];
     res.status(200).json(equipos.sort());
@@ -225,12 +207,12 @@ router.delete("/team", (req, res) => {
     res.status(200).json({ message: "Todos los equipos borrados" });
 });
 
-/* F05 - PUT NO PERMITIDO en colección /team (ANTES de /team/:team) */
+
 router.put("/team", (req, res) => 
     res.status(405).json({ error: "Método PUT no permitido sobre la lista de equipos" })
 );
 
-/* RECURSOS CONCRETOS /team/:team (DESPUÉS de la colección) */
+
 router.get("/team/:team", (req, res) => {
     const results = athletes.filter(a => 
         a.team && a.team.toLowerCase() === req.params.team.toLowerCase()
@@ -282,9 +264,6 @@ router.delete("/team/:team", (req, res) => {
     }
 });
 
-/* ================================
-    6. LISTA /sport
-================================ */
 router.get("/sport", (req, res) => {
     const deportes = [...new Set(athletes.map(a => a.sport).filter(Boolean))];
     res.status(200).json(deportes.sort());
@@ -369,9 +348,7 @@ router.delete("/sport/:sport", (req, res) => {
     }
 });
 
-/* ================================
-    7. LISTA /city
-================================ */
+
 router.get("/city", (req, res) => {
     const ciudades = [...new Set(athletes.map(a => a.city).filter(Boolean))];
     res.status(200).json(ciudades.sort());
@@ -456,9 +433,7 @@ router.delete("/city/:city", (req, res) => {
     }
 });
 
-/* ================================
-    8. LISTA /year
-================================ */
+
 router.get("/year", (req, res) => {
     const años = [...new Set(athletes.map(a => a.year).filter(Boolean))];
     res.status(200).json(años.sort((a,b) => a - b));
@@ -540,9 +515,7 @@ router.delete("/year/:year", (req, res) => {
     }
 });
 
-/* ================================
-    9. LISTA /season
-================================ */
+
 router.get("/season", (req, res) => {
     const temporadas = [...new Set(athletes.map(a => a.season).filter(Boolean))];
     res.status(200).json(temporadas.sort());
@@ -627,9 +600,7 @@ router.delete("/season/:season", (req, res) => {
     }
 });
 
-/* ================================
-    10. MÉTODOS NO PERMITIDOS (POST en recursos concretos)
-================================ */
+
 router.post("/team/:team", (req, res) => 
     res.status(405).json({ error: "Método POST no permitido sobre un recurso concreto" })
 );
