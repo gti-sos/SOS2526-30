@@ -23,7 +23,7 @@ try {
     });
     console.log(`✅ CSV cargado: ${csvContent.length} atletas totales`);
 } catch (err) {
-    console.error("❌ Error leyendo CSV:", err.message);
+    console.error("Error leyendo CSV:", err.message);
 }
 
 // CARGA INICIAL
