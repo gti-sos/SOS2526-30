@@ -1,4 +1,3 @@
-// api/cheaters-stats.js - VERSIÓN CON COLECCIONES EN SINGULAR
 
 const express = require("express");
 const router = express.Router();
@@ -9,9 +8,7 @@ const cheaters_csv = path.join(__dirname, "../data/video_game_cheaters_dataset_e
 
 let datos = [];
 
-// ============================================
-// CARGA INICIAL - SIEMPRE 200 OK
-// ============================================
+
 router.get("/loadInitialData", (req, res) => {
     if (datos.length === 0) {
         csv().fromFile(cheaters_csv).then((datosCSV) => {
@@ -26,9 +23,7 @@ router.get("/loadInitialData", (req, res) => {
     }
 });
 
-// ============================================
-// COLECCIÓN PRINCIPAL (con filtros)
-// ============================================
+
 router.get("/", (req, res) => {
     const { country, year, from, to } = req.query;
     let filtrados = [...datos];
@@ -52,9 +47,6 @@ router.get("/", (req, res) => {
     res.status(200).json(filtrados);
 });
 
-// ============================================
-// POST - Crear nuevo registro
-// ============================================
 router.post("/", (req, res) => {
     const newData = req.body;
 
@@ -75,32 +67,25 @@ router.post("/", (req, res) => {
     res.status(201).json(newData);
 });
 
-// ============================================
-// PUT no permitido en colección
-// ============================================
+
 router.put("/", (req, res) => {
     res.status(405).json({ error: "Método no permitido sobre la colección" });
 });
 
-// ============================================
-// DELETE - Borrar todos
-// ============================================
+
 router.delete("/", (req, res) => {
     datos = [];
     res.status(200).json({ message: "Todos los datos borrados" });
 });
 
-// ============================================
-// LISTAS EN SINGULAR
-// ============================================
 
-// GET /country - Lista de países (SINGULAR)
+
 router.get("/country", (req, res) => {
     const paises = [...new Set(datos.map(d => d.country).filter(Boolean))];
     res.status(200).json(paises.sort());
 });
 
-// POST /country - Crear nuevo país (nuevo registro)
+
 router.post("/country", (req, res) => {
     const newData = req.body;
 
@@ -121,24 +106,23 @@ router.post("/country", (req, res) => {
     res.status(201).json(newData);
 });
 
-// DELETE /country - Borrar todos los países
+
 router.delete("/country", (req, res) => {
     datos = [];
     res.status(200).json({ message: "Todos los países borrados" });
 });
 
-// PUT no permitido en /country
+
 router.put("/country", (req, res) => {
     res.status(405).json({ error: "Método no permitido sobre la lista de países" });
 });
 
-// GET /year - Lista de años (SINGULAR)
 router.get("/year", (req, res) => {
     const años = [...new Set(datos.map(d => d.year).filter(a => a))];
     res.status(200).json(años.sort((a,b) => a - b));
 });
 
-// POST /year - Crear nuevo año (nuevo registro)
+
 router.post("/year", (req, res) => {
     const newData = req.body;
 
@@ -159,22 +143,19 @@ router.post("/year", (req, res) => {
     res.status(201).json(newData);
 });
 
-// DELETE /year - Borrar todos los años
+
 router.delete("/year", (req, res) => {
     datos = [];
     res.status(200).json({ message: "Todos los años borrados" });
 });
 
-// PUT no permitido en /year
+
 router.put("/year", (req, res) => {
     res.status(405).json({ error: "Método no permitido sobre la lista de años" });
 });
 
-// ============================================
-// RECURSOS CONCRETOS (SIN PREFIJOS)
-// ============================================
 
-// GET /:country - Ver todos los registros de un país
+
 router.get("/:country", (req, res) => {
     const countryParam = req.params.country;
     const { from, to } = req.query;
@@ -198,7 +179,7 @@ router.get("/:country", (req, res) => {
     }
 });
 
-// PUT /:country - Actualizar todos los registros de un país
+
 router.put("/:country", (req, res) => {
     const countryParam = req.params.country;
     const nuevosDatos = req.body;
@@ -223,7 +204,7 @@ router.put("/:country", (req, res) => {
     }
 });
 
-// DELETE /:country - Borrar todos los registros de un país
+
 router.delete("/:country", (req, res) => {
     const countryParam = req.params.country;
     const longitud = datos.length;
@@ -239,16 +220,13 @@ router.delete("/:country", (req, res) => {
     }
 });
 
-// POST no permitido en /:country
 router.post("/:country", (req, res) => {
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" });
 });
 
-// ============================================
-// RECURSO EXACTO (país/año)
-// ============================================
 
-// GET /:country/:year - Recurso exacto
+
+
 router.get("/:country/:year", (req, res) => {
     const countryParam = req.params.country;
     const yearParam = parseInt(req.params.year);
@@ -265,12 +243,12 @@ router.get("/:country/:year", (req, res) => {
     }
 });
 
-// POST no permitido en /:country/:year
+
 router.post("/:country/:year", (req, res) => {
     res.status(405).json({ error: "Método no permitido: Use POST /country para crear" });
 });
 
-// PUT /:country/:year - Actualizar registro exacto
+
 router.put("/:country/:year", (req, res) => {
     const countryParam = req.params.country;
     const yearParam = parseInt(req.params.year);
@@ -296,7 +274,6 @@ router.put("/:country/:year", (req, res) => {
     }
 });
 
-// DELETE /:country/:year - Borrar registro exacto
 router.delete("/:country/:year", (req, res) => {
     const countryParam = req.params.country;
     const yearParam = parseInt(req.params.year);
@@ -304,7 +281,6 @@ router.delete("/:country/:year", (req, res) => {
         d.country && d.country.toLowerCase() === countryParam.toLowerCase() && 
         d.year == yearParam
     );
-
     if (index !== -1) {
         const eliminado = datos.splice(index, 1)[0];
         res.status(200).json({ message: "Registro eliminado", data: eliminado });
