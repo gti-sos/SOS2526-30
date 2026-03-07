@@ -1,4 +1,4 @@
-// api/cheaters-stats.js - VERSIÓN ADAPTADA AL MODELO DE GGG
+// api/cheaters-stats.js - VERSIÓN CON COLECCIONES EN SINGULAR
 
 const express = require("express");
 const router = express.Router();
@@ -7,22 +7,22 @@ const csv = require('csvtojson');
 
 const cheaters_csv = path.join(__dirname, "../data/video_game_cheaters_dataset_en.csv");
 
-let cheaters = [];
+let datos = [];
 
 // ============================================
 // CARGA INICIAL - SIEMPRE 200 OK
 // ============================================
 router.get("/loadInitialData", (req, res) => {
-    if (cheaters.length === 0) {
-        csv().fromFile(cheaters_csv).then((datos) => {
-            cheaters = datos.slice(0, 15);
-            console.log(`✅ Datos de FMGP cargados: ${cheaters.length} registros`);
-            res.status(200).json(cheaters);
+    if (datos.length === 0) {
+        csv().fromFile(cheaters_csv).then((datosCSV) => {
+            datos = datosCSV.slice(0, 15);
+            console.log(`✅ Datos de FMGP cargados: ${datos.length} registros`);
+            res.status(200).json(datos);
         }).catch(() => {
             res.status(500).json({ error: "Error al cargar CSV" });
         });
     } else {
-        res.status(200).json(cheaters);
+        res.status(200).json(datos);
     }
 });
 
@@ -30,26 +30,23 @@ router.get("/loadInitialData", (req, res) => {
 // COLECCIÓN PRINCIPAL (con filtros)
 // ============================================
 router.get("/", (req, res) => {
-    const { country, year, from, to, id } = req.query;
-    let filtrados = [...cheaters];
+    const { country, year, from, to } = req.query;
+    let filtrados = [...datos];
 
-    if (id) {
-        filtrados = filtrados.filter(a => String(a.id) === String(id));
-    }
     if (country) {
-        filtrados = filtrados.filter(a => 
-            a.country && a.country.toLowerCase() === country.toLowerCase()
+        filtrados = filtrados.filter(d => 
+            d.country && d.country.toLowerCase() === country.toLowerCase()
         );
     }
     if (year) {
-        filtrados = filtrados.filter(a => a.year == year);
+        filtrados = filtrados.filter(d => d.year == year);
     }
     if (from && to) {
-        filtrados = filtrados.filter(a => a.year >= parseInt(from) && a.year <= parseInt(to));
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
     } else if (from) {
-        filtrados = filtrados.filter(a => a.year >= parseInt(from));
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
     } else if (to) {
-        filtrados = filtrados.filter(a => a.year <= parseInt(to));
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
     }
 
     res.status(200).json(filtrados);
@@ -59,23 +56,23 @@ router.get("/", (req, res) => {
 // POST - Crear nuevo registro
 // ============================================
 router.post("/", (req, res) => {
-    const nuevo = req.body;
+    const newData = req.body;
 
-    if (!nuevo.country || !nuevo.year) {
+    if (!newData.country || !newData.year) {
         return res.status(400).json({ error: "country y year son obligatorios" });
     }
-    
-    const existe = cheaters.find(a => 
-        a.country && a.country.toLowerCase() === nuevo.country.toLowerCase() && 
-        a.year == nuevo.year
+
+    const existe = datos.find(d => 
+        d.country && d.country.toLowerCase() === newData.country.toLowerCase() && 
+        d.year == newData.year
     );
-    
+
     if (existe) {
         return res.status(409).json({ error: "Ya existe un registro para ese país y año" });
     }
-    
-    cheaters.push(nuevo);
-    res.status(201).send();
+
+    datos.push(newData);
+    res.status(201).json(newData);
 });
 
 // ============================================
@@ -89,44 +86,44 @@ router.put("/", (req, res) => {
 // DELETE - Borrar todos
 // ============================================
 router.delete("/", (req, res) => {
-    cheaters = [];
-    res.status(200).json({ message: "Colección borrada" });
+    datos = [];
+    res.status(200).json({ message: "Todos los datos borrados" });
 });
 
 // ============================================
 // LISTAS EN SINGULAR
 // ============================================
 
-// GET /country - Lista de países
+// GET /country - Lista de países (SINGULAR)
 router.get("/country", (req, res) => {
-    const paises = [...new Set(cheaters.map(c => c.country).filter(Boolean))];
+    const paises = [...new Set(datos.map(d => d.country).filter(Boolean))];
     res.status(200).json(paises.sort());
 });
 
 // POST /country - Crear nuevo país (nuevo registro)
 router.post("/country", (req, res) => {
-    const nuevoPais = req.body;
-    
-    if (!nuevoPais.country || !nuevoPais.year) {
+    const newData = req.body;
+
+    if (!newData.country || !newData.year) {
         return res.status(400).json({ error: "country y year son obligatorios" });
     }
-    
-    const existe = cheaters.find(a => 
-        a.country && a.country.toLowerCase() === nuevoPais.country.toLowerCase() && 
-        a.year == nuevoPais.year
+
+    const existe = datos.find(d => 
+        d.country && d.country.toLowerCase() === newData.country.toLowerCase() && 
+        d.year == newData.year
     );
-    
+
     if (existe) {
         return res.status(409).json({ error: "Ya existe un registro para ese país y año" });
     }
-    
-    cheaters.push(nuevoPais);
-    res.status(201).send();
+
+    datos.push(newData);
+    res.status(201).json(newData);
 });
 
 // DELETE /country - Borrar todos los países
 router.delete("/country", (req, res) => {
-    cheaters = [];
+    datos = [];
     res.status(200).json({ message: "Todos los países borrados" });
 });
 
@@ -135,36 +132,36 @@ router.put("/country", (req, res) => {
     res.status(405).json({ error: "Método no permitido sobre la lista de países" });
 });
 
-// GET /year - Lista de años
+// GET /year - Lista de años (SINGULAR)
 router.get("/year", (req, res) => {
-    const años = [...new Set(cheaters.map(c => c.year).filter(a => a))];
+    const años = [...new Set(datos.map(d => d.year).filter(a => a))];
     res.status(200).json(años.sort((a,b) => a - b));
 });
 
-// POST /year - Crear nuevo año
+// POST /year - Crear nuevo año (nuevo registro)
 router.post("/year", (req, res) => {
-    const nuevoAño = req.body;
-    
-    if (!nuevoAño.country || !nuevoAño.year) {
+    const newData = req.body;
+
+    if (!newData.country || !newData.year) {
         return res.status(400).json({ error: "country y year son obligatorios" });
     }
-    
-    const existe = cheaters.find(a => 
-        a.country && a.country.toLowerCase() === nuevoAño.country.toLowerCase() && 
-        a.year == nuevoAño.year
+
+    const existe = datos.find(d => 
+        d.country && d.country.toLowerCase() === newData.country.toLowerCase() && 
+        d.year == newData.year
     );
-    
+
     if (existe) {
         return res.status(409).json({ error: "Ya existe un registro para ese país y año" });
     }
-    
-    cheaters.push(nuevoAño);
-    res.status(201).send();
+
+    datos.push(newData);
+    res.status(201).json(newData);
 });
 
 // DELETE /year - Borrar todos los años
 router.delete("/year", (req, res) => {
-    cheaters = [];
+    datos = [];
     res.status(200).json({ message: "Todos los años borrados" });
 });
 
@@ -174,151 +171,93 @@ router.put("/year", (req, res) => {
 });
 
 // ============================================
-// RECURSOS CONCRETOS
+// RECURSOS CONCRETOS (SIN PREFIJOS)
 // ============================================
 
-// GET /country/:country - Ver país específico
-router.get("/country/:country", (req, res) => {
+// GET /:country - Ver todos los registros de un país
+router.get("/:country", (req, res) => {
     const countryParam = req.params.country;
-    
-    const results = cheaters.filter(a => 
-        a.country && a.country.toLowerCase() === countryParam.toLowerCase()
+    const { from, to } = req.query;
+
+    let filtrados = datos.filter(d => 
+        d.country && d.country.toLowerCase() === countryParam.toLowerCase()
     );
-    
-    if (results.length === 0) {
-        return res.status(404).json({ error: "País no encontrado" });
+
+    if (from && to) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+    } else if (from) {
+        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+    } else if (to) {
+        filtrados = filtrados.filter(d => d.year <= parseInt(to));
     }
-    
-    // Aplicar filtros opcionales de año
-    let filtrados = [...results];
-    if (req.query.from && req.query.to) {
-        filtrados = filtrados.filter(a => a.year >= parseInt(req.query.from) && a.year <= parseInt(req.query.to));
-    } else if (req.query.from) {
-        filtrados = filtrados.filter(a => a.year >= parseInt(req.query.from));
-    } else if (req.query.to) {
-        filtrados = filtrados.filter(a => a.year <= parseInt(req.query.to));
+
+    if (filtrados.length === 0 && !from && !to) {
+        res.status(404).json({ error: "País no encontrado" });
+    } else {
+        res.status(200).json(filtrados);
     }
-    
-    res.status(200).json(filtrados);
 });
 
-// PUT /country/:country - Actualizar país
-router.put("/country/:country", (req, res) => {
+// PUT /:country - Actualizar todos los registros de un país
+router.put("/:country", (req, res) => {
     const countryParam = req.params.country;
     const nuevosDatos = req.body;
-    
+
     if (nuevosDatos.country && nuevosDatos.country.toLowerCase() !== countryParam.toLowerCase()) {
         return res.status(400).json({ error: "El país en el body no coincide con la URL" });
     }
 
     let actualizados = 0;
-    cheaters = cheaters.map(c => {
-        if (c.country && c.country.toLowerCase() === countryParam.toLowerCase()) {
+    datos = datos.map(d => {
+        if (d.country && d.country.toLowerCase() === countryParam.toLowerCase()) {
             actualizados++;
-            return { ...c, ...nuevosDatos, country: c.country };
+            return { ...d, ...nuevosDatos, country: d.country };
         }
-        return c;
+        return d;
     });
-    
+
     if (actualizados > 0) {
-        res.status(200).send();
+        res.status(200).json({ message: "Registros actualizados", count: actualizados });
     } else {
         res.status(404).json({ error: "País no encontrado" });
     }
 });
 
-// DELETE /country/:country - Borrar país específico
-router.delete("/country/:country", (req, res) => {
+// DELETE /:country - Borrar todos los registros de un país
+router.delete("/:country", (req, res) => {
     const countryParam = req.params.country;
-    const longitud = cheaters.length;
-    
-    cheaters = cheaters.filter(c => 
-        !(c.country && c.country.toLowerCase() === countryParam.toLowerCase())
+    const longitud = datos.length;
+
+    datos = datos.filter(d => 
+        !(d.country && d.country.toLowerCase() === countryParam.toLowerCase())
     );
-    
-    if (cheaters.length < longitud) {
-        res.status(200).send();
+
+    if (datos.length < longitud) {
+        res.status(200).json({ message: "Registros eliminados", count: longitud - datos.length });
     } else {
         res.status(404).json({ error: "País no encontrado" });
     }
 });
 
-// POST no permitido en /country/:country
-router.post("/country/:country", (req, res) => {
-    res.status(405).json({ error: "Método no permitido sobre un recurso concreto" });
-});
-
-// GET /year/:year - Ver año específico
-router.get("/year/:year", (req, res) => {
-    const yearParam = parseInt(req.params.year);
-    
-    const results = cheaters.filter(c => c.year == yearParam);
-    
-    if (results.length === 0) {
-        return res.status(404).json({ error: "Año no encontrado" });
-    }
-    
-    res.status(200).json(results);
-});
-
-// PUT /year/:year - Actualizar año
-router.put("/year/:year", (req, res) => {
-    const yearParam = parseInt(req.params.year);
-    const nuevosDatos = req.body;
-    
-    if (nuevosDatos.year && nuevosDatos.year != yearParam) {
-        return res.status(400).json({ error: "El año en el body no coincide con la URL" });
-    }
-
-    let actualizados = 0;
-    cheaters = cheaters.map(c => {
-        if (c.year == yearParam) {
-            actualizados++;
-            return { ...c, ...nuevosDatos, year: c.year };
-        }
-        return c;
-    });
-    
-    if (actualizados > 0) {
-        res.status(200).send();
-    } else {
-        res.status(404).json({ error: "Año no encontrado" });
-    }
-});
-
-// DELETE /year/:year - Borrar año específico
-router.delete("/year/:year", (req, res) => {
-    const yearParam = parseInt(req.params.year);
-    const longitud = cheaters.length;
-    
-    cheaters = cheaters.filter(c => c.year != yearParam);
-    
-    if (cheaters.length < longitud) {
-        res.status(200).send();
-    } else {
-        res.status(404).json({ error: "Año no encontrado" });
-    }
-});
-
-// POST no permitido en /year/:year
-router.post("/year/:year", (req, res) => {
+// POST no permitido en /:country
+router.post("/:country", (req, res) => {
     res.status(405).json({ error: "Método no permitido sobre un recurso concreto" });
 });
 
 // ============================================
-// RECURSOS POR PAÍS/AÑO
+// RECURSO EXACTO (país/año)
 // ============================================
 
-// GET /country/:country/year/:year - Recurso exacto
-router.get("/country/:country/year/:year", (req, res) => {
+// GET /:country/:year - Recurso exacto
+router.get("/:country/:year", (req, res) => {
     const countryParam = req.params.country;
     const yearParam = parseInt(req.params.year);
-    
-    const recurso = cheaters.find(a => 
-        a.country && a.country.toLowerCase() === countryParam.toLowerCase() && 
-        a.year == yearParam
+
+    const recurso = datos.find(d => 
+        d.country && d.country.toLowerCase() === countryParam.toLowerCase() && 
+        d.year == yearParam
     );
-    
+
     if (recurso) {
         res.status(200).json(recurso);
     } else {
@@ -326,12 +265,17 @@ router.get("/country/:country/year/:year", (req, res) => {
     }
 });
 
-// PUT /country/:country/year/:year - Actualizar registro exacto
-router.put("/country/:country/year/:year", (req, res) => {
+// POST no permitido en /:country/:year
+router.post("/:country/:year", (req, res) => {
+    res.status(405).json({ error: "Método no permitido: Use POST /country para crear" });
+});
+
+// PUT /:country/:year - Actualizar registro exacto
+router.put("/:country/:year", (req, res) => {
     const countryParam = req.params.country;
     const yearParam = parseInt(req.params.year);
     const nuevosDatos = req.body;
-    
+
     if (nuevosDatos.country && nuevosDatos.country.toLowerCase() !== countryParam.toLowerCase()) {
         return res.status(400).json({ error: "El país en el body no coincide con la URL" });
     }
@@ -339,61 +283,34 @@ router.put("/country/:country/year/:year", (req, res) => {
         return res.status(400).json({ error: "El año en el body no coincide con la URL" });
     }
 
-    const index = cheaters.findIndex(a => 
-        a.country && a.country.toLowerCase() === countryParam.toLowerCase() && 
-        a.year == yearParam
+    const index = datos.findIndex(d => 
+        d.country && d.country.toLowerCase() === countryParam.toLowerCase() && 
+        d.year == yearParam
     );
-    
+
     if (index !== -1) {
-        cheaters[index] = { ...nuevosDatos, country: cheaters[index].country, year: cheaters[index].year };
-        res.status(200).send();
+        datos[index] = { ...nuevosDatos, country: datos[index].country, year: datos[index].year };
+        res.status(200).json(datos[index]);
     } else {
         res.status(404).json({ error: "Registro no encontrado" });
     }
 });
 
-// DELETE /country/:country/year/:year - Borrar registro exacto
-router.delete("/country/:country/year/:year", (req, res) => {
+// DELETE /:country/:year - Borrar registro exacto
+router.delete("/:country/:year", (req, res) => {
     const countryParam = req.params.country;
     const yearParam = parseInt(req.params.year);
-    const longitud = cheaters.length;
-    
-    cheaters = cheaters.filter(a => 
-        !(a.country && a.country.toLowerCase() === countryParam.toLowerCase() && 
-          a.year == yearParam)
+    const index = datos.findIndex(d => 
+        d.country && d.country.toLowerCase() === countryParam.toLowerCase() && 
+        d.year == yearParam
     );
-    
-    if (cheaters.length < longitud) {
-        res.status(200).send();
+
+    if (index !== -1) {
+        const eliminado = datos.splice(index, 1)[0];
+        res.status(200).json({ message: "Registro eliminado", data: eliminado });
     } else {
         res.status(404).json({ error: "Registro no encontrado" });
     }
-});
-
-// POST no permitido
-router.post("/country/:country/year/:year", (req, res) => {
-    res.status(405).json({ error: "Método no permitido" });
-});
-
-
-router.get("/id/:id", (req, res) => {
-    const results = cheaters.filter(a => a.id == req.params.id);
-    if (results.length === 0) {
-        return res.status(404).json({ error: "ID no encontrado" });
-    }
-    res.status(200).json(results);
-});
-
-router.put("/id/:id", (req, res) => {
-    res.status(404).json({ error: "No encontrado - este dataset no tiene IDs" });
-});
-
-router.delete("/id/:id", (req, res) => {
-    res.status(404).json({ error: "No encontrado - este dataset no tiene IDs" });
-});
-
-router.post("/id/:id", (req, res) => {
-    res.status(405).json({ error: "Método no permitido" });
 });
 
 module.exports = router;
