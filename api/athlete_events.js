@@ -21,7 +21,7 @@ try {
             return value;
         }
     });
-    console.log(`✅ CSV cargado: ${csvContent.length} atletas totales`);
+    console.log(` CSV cargado: ${csvContent.length} atletas totales`);
 } catch (err) {
     console.error("Error leyendo CSV:", err.message);
 }
@@ -30,7 +30,7 @@ try {
 router.get("/loadInitialData", (req, res) => {
     if (datos.length === 0) {
         datos = csvContent.slice(0, 15);
-        console.log(`✅ Datos iniciales cargados: ${datos.length} registros`);
+        console.log(`Datos iniciales cargados: ${datos.length} registros`);
     }
     res.status(200).json(datos);
 });

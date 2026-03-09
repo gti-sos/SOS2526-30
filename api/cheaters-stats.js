@@ -13,7 +13,7 @@ router.get("/loadInitialData", (req, res) => {
     if (datos.length === 0) {
         csv().fromFile(cheaters_csv).then((datosCSV) => {
             datos = datosCSV.slice(0, 15);
-            console.log(`✅ Datos de FMGP cargados: ${datos.length} registros`);
+            console.log(`✅Datos de FMGP cargados: ${datos.length} registros`);
             res.status(200).json(datos);
         }).catch(() => {
             res.status(500).json({ error: "Error al cargar CSV" });
