@@ -58,11 +58,25 @@ router.get("/", (req, res) => {
 router.post("/", (req, res) => {
     const newData = req.body;
     
-    // Validación básica: que traiga los campos clave
-    if (!newData.country || !newData.year) {
-        return res.status(400).json({ message: "Bad Request: Missing country or year" });
+    // 1. Definimos los 10 campos exactos que esperamos recibir
+    const camposEsperados = [
+        "year", "country", "active_player_no", "viewership", 
+        "top_genre", "top_platform", "tournament_no", 
+        "pro_player_no", "internet_penetration", "company_no"
+    ];
+
+    // 2. Comprobamos que el objeto tiene exactamente todos los campos esperados
+    const tieneTodosLosCampos = camposEsperados.every(campo => newData.hasOwnProperty(campo));
+    
+    // 3. Comprobamos que no nos estén enviando campos extra inventados
+    const tieneLongitudExacta = Object.keys(newData).length === camposEsperados.length;
+
+    // VALIDACIÓN ESTRICTA: Si falta algún campo o sobran campos -> Error 400
+    if (!tieneTodosLosCampos || !tieneLongitudExacta) {
+        return res.status(400).json({ message: "Bad Request: Missing or incorrect fields" });
     }
 
+    // Comprobamos si ya existe para evitar duplicados (Error 409)
     const existe = datos.find(d => d.country === newData.country && d.year === newData.year);
     
     if (existe) {

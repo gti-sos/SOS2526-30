@@ -66,21 +66,38 @@ router.get("/", (req, res) => {
 router.post("/", (req, res) => {
     const newData = req.body;
 
-    if (!newData.game_name || !newData.year) {
-        return res.status(400).json({ message: "Bad Request: Missing game_name or year" });
+    const requiredFields = [
+        "total_money",
+        "game_name",
+        "genre",
+        "player_no",
+        "tournament_no",
+        "country",
+        "top_country_earnings",
+        "year"
+    ];
+
+    const bodyFields = Object.keys(newData);
+
+    // comprobar si faltan campos o hay campos extra
+    if (requiredFields.length !== bodyFields.length ||
+        !requiredFields.every(field => bodyFields.includes(field))) {
+        return res.status(400).json({
+            message: "Bad Request: JSON fields do not match expected structure"
+        });
     }
 
-    const existe = datos.find(d => 
-        d.game_name === newData.game_name && 
+    const existe = datos.find(d =>
+        d.game_name === newData.game_name &&
         d.year === newData.year
     );
 
     if (existe) {
-        res.status(409).json({ message: "Resource already exists" });
-    } else {
-        datos.push(newData);
-        res.status(201).json(newData);
+        return res.status(409).json({ message: "Resource already exists" });
     }
+
+    datos.push(newData);
+    res.status(201).json(newData);
 });
 
 router.put("/", (req, res) => {
@@ -164,6 +181,7 @@ router.put("/:game_name/:year", (req, res) => {
 router.post("/:game_name/:year", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
 });
+
 
 
 router.delete("/:game_name/:year", (req, res) => {
