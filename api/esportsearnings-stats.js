@@ -164,6 +164,42 @@ router.put("/:game_name/:year", (req, res) => {
 router.post("/:game_name/:year", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
 });
+router.post("/", (req, res) => {
+    const newData = req.body;
+
+    const requiredFields = [
+        "total_money",
+        "game_name",
+        "genre",
+        "player_no",
+        "tournament_no",
+        "country",
+        "top_country_earnings",
+        "year"
+    ];
+
+    const bodyFields = Object.keys(newData);
+
+    // comprobar si faltan campos o hay campos extra
+    if (requiredFields.length !== bodyFields.length ||
+        !requiredFields.every(field => bodyFields.includes(field))) {
+        return res.status(400).json({
+            message: "Bad Request: JSON fields do not match expected structure"
+        });
+    }
+
+    const existe = datos.find(d =>
+        d.game_name === newData.game_name &&
+        d.year === newData.year
+    );
+
+    if (existe) {
+        return res.status(409).json({ message: "Resource already exists" });
+    }
+
+    datos.push(newData);
+    res.status(201).json(newData);
+});
 
 
 router.delete("/:game_name/:year", (req, res) => {
