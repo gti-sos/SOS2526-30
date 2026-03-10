@@ -1,7 +1,8 @@
-import express from 'express';
+const express = require("express");
+const Datastore = require("nedb");
 const router = express.Router();
 
-let datos = [];
+const db = new Datastore();
 
 const datosIniciales = [
   { year: 2010, country: "United States", active_player_no: 11, viewership: 17.9, top_genre: "Sports", top_platform: "Console", tournament_no: 104, pro_player_no: 15912, internet_penetration: 82.5, company_no: 395 },
@@ -16,75 +17,82 @@ const datosIniciales = [
   { year: 2019, country: "Spain", active_player_no: 27.3, viewership: 73.5, top_genre: "FPS", top_platform: "PC", tournament_no: 86, pro_player_no: 17458, internet_penetration: 82.9, company_no: 282 }
 ];
 
+db.insert(datosIniciales);
+
+const camposEsperados = [
+    "year", "country", "active_player_no", "viewership", 
+    "top_genre", "top_platform", "tournament_no", 
+    "pro_player_no", "internet_penetration", "company_no"
+];
+
+function cleanId(doc) {
+    if (doc) delete doc._id;
+    return doc;
+}
+
 router.get("/loadInitialData", (req, res) => {
-    if (datos.length === 0) {
-        datos = [...datosIniciales];
-        res.status(201).json(datos);
-    } else {
-        res.status(200).json({ message: "Data is already loaded" });
-    }
+    db.find({}, (err, docs) => {
+        if (docs.length === 0) {
+            db.insert(datosIniciales, (err, newDocs) => {
+                res.status(201).json(newDocs.map(cleanId));
+            });
+        } else {
+            res.status(200).json({ message: "Data is already loaded" });
+        }
+    });
 });
 
-
-// GET GENERAL INTELIGENTE
-
 router.get("/", (req, res) => {
-    const { country, year, from, to } = req.query;
-    let filtrados = [...datos];
+    const { limit, offset, from, to, ...queryFields } = req.query;
+    let query = {};
 
-    // Filtro por país (ej: ?country=Spain)
-    if (country) {
-        filtrados = filtrados.filter(d => d.country === country);
+    for (const [campo, valor] of Object.entries(queryFields)) {
+        if (!isNaN(valor) && valor.trim() !== "") {
+            query[campo] = parseFloat(valor);
+        } else {
+            query[campo] = valor;
+        }
     }
 
-    // Filtro por año exacto (ej: ?year=2010)
-    if (year) {
-        filtrados = filtrados.filter(d => d.year === parseInt(year));
-    }
-
-    // Filtro por rango de años (ej: ?from=2010&to=2015)
     if (from && to) {
-        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+        query.year = { $gte: parseInt(from), $lte: parseInt(to) };
     } else if (from) {
-        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+        query.year = { $gte: parseInt(from) };
     } else if (to) {
-        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+        query.year = { $lte: parseInt(to) };
     }
 
-    // El patrón exige devolver un array (incluso vacío si no hay resultados)
-    res.status(200).json(filtrados); 
+    const limitValue = limit ? parseInt(limit) : 0;
+    const offsetValue = offset ? parseInt(offset) : 0;
+
+    db.find(query).skip(offsetValue).limit(limitValue).exec((err, docs) => {
+        if (err) {
+            return res.status(500).json({ message: "Internal Server Error" });
+        }
+        res.status(200).json(docs.map(cleanId));
+    });
 });
 
 router.post("/", (req, res) => {
     const newData = req.body;
     
-    // 1. Definimos los 10 campos exactos que esperamos recibir
-    const camposEsperados = [
-        "year", "country", "active_player_no", "viewership", 
-        "top_genre", "top_platform", "tournament_no", 
-        "pro_player_no", "internet_penetration", "company_no"
-    ];
-
-    // 2. Comprobamos que el objeto tiene exactamente todos los campos esperados
     const tieneTodosLosCampos = camposEsperados.every(campo => newData.hasOwnProperty(campo));
-    
-    // 3. Comprobamos que no nos estén enviando campos extra inventados
     const tieneLongitudExacta = Object.keys(newData).length === camposEsperados.length;
 
-    // VALIDACIÓN ESTRICTA: Si falta algún campo o sobran campos -> Error 400
     if (!tieneTodosLosCampos || !tieneLongitudExacta) {
         return res.status(400).json({ message: "Bad Request: Missing or incorrect fields" });
     }
 
-    // Comprobamos si ya existe para evitar duplicados (Error 409)
-    const existe = datos.find(d => d.country === newData.country && d.year === newData.year);
-    
-    if (existe) {
-        res.status(409).json({ message: "Resource already exists" });
-    } else {
-        datos.push(newData);
-        res.status(201).json(newData);
-    }
+    db.find({ country: newData.country, year: parseInt(newData.year) }, (err, docs) => {
+        if (docs.length > 0) {
+            res.status(409).json({ message: "Resource already exists" });
+        } else {
+            newData.year = parseInt(newData.year);
+            db.insert(newData, (err, newDoc) => {
+                res.status(201).json(cleanId(newDoc));
+            });
+        }
+    });
 });
 
 router.put("/", (req, res) => {
@@ -92,56 +100,49 @@ router.put("/", (req, res) => {
 });
 
 router.delete("/", (req, res) => {
-    datos = [];
-    res.status(200).json({ message: "All data deleted successfully" });
+    db.remove({}, { multi: true }, (err, numRemoved) => {
+        res.status(200).json({ message: "All data deleted successfully" });
+    });
 });
-
-
-
-// GET ESPECÍFICO CON RANGOS
 
 router.get("/:country", (req, res) => {
     const country = req.params.country;
     const { from, to } = req.query;
     
-    let filtrados = datos.filter(d => d.country === country);
+    let query = { country: country };
 
-    // Si tiene parámetros from/to, filtramos el resultado
     if (from && to) {
-        filtrados = filtrados.filter(d => d.year >= parseInt(from) && d.year <= parseInt(to));
+        query.year = { $gte: parseInt(from), $lte: parseInt(to) };
     } else if (from) {
-        filtrados = filtrados.filter(d => d.year >= parseInt(from));
+        query.year = { $gte: parseInt(from) };
     } else if (to) {
-        filtrados = filtrados.filter(d => d.year <= parseInt(to));
+        query.year = { $lte: parseInt(to) };
     }
 
-    // Si no hay datos Y NO SE USARON FILTROS, devolvemos 404 (recurso no existe).
-    // Si se usaron filtros (from/to) y no hay datos, el patrón dice que devolvamos un array vacío [] con 200 OK.
-    if (filtrados.length === 0 && !from && !to) {
-        res.status(404).json({ message: "Resource not found" });
-    } else {
-        res.status(200).json(filtrados);
-    }
+    db.find(query, (err, docs) => {
+        if (docs.length === 0 && !from && !to) {
+            res.status(404).json({ message: "Resource not found" });
+        } else {
+            res.status(200).json(docs.map(cleanId));
+        }
+    });
 });
-
-
-
-// RUTAS DE RECURSO EXACTO (País y Año)
 
 router.get("/:country/:year", (req, res) => {
     const country = req.params.country;
     const year = parseInt(req.params.year); 
-    const recurso = datos.find(d => d.country === country && d.year === year);
     
-    if (recurso) {
-        res.status(200).json(recurso);
-    } else {
-        res.status(404).json({ message: "Resource not found" });
-    }
+    db.find({ country: country, year: year }, (err, docs) => {
+        if (docs.length > 0) {
+            res.status(200).json(cleanId(docs[0]));
+        } else {
+            res.status(404).json({ message: "Resource not found" });
+        }
+    });
 });
 
 router.post("/:country/:year", (req, res) => {
-    res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
+    res.status(405).json({ message: "Method Not Allowed" });
 });
 
 router.put("/:country/:year", (req, res) => {
@@ -153,27 +154,35 @@ router.put("/:country/:year", (req, res) => {
         return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
     }
 
-    const index = datos.findIndex(d => d.country === country && d.year === year);
-    
-    if (index !== -1) {
-        datos[index] = body;
-        res.status(200).json(datos[index]);
-    } else {
-        res.status(404).json({ message: "Resource not found" });
+    const tieneTodosLosCampos = camposEsperados.every(campo => body.hasOwnProperty(campo));
+    const tieneLongitudExacta = Object.keys(body).length === camposEsperados.length;
+
+    if (!tieneTodosLosCampos || !tieneLongitudExacta) {
+        return res.status(400).json({ message: "Bad Request: Missing or incorrect fields" });
     }
+
+    db.find({ country: country, year: year }, (err, docs) => {
+        if (docs.length > 0) {
+            db.update({ country: country, year: year }, body, {}, (err, numReplaced) => {
+                res.status(200).json(body);
+            });
+        } else {
+            res.status(404).json({ message: "Resource not found" });
+        }
+    });
 });
 
 router.delete("/:country/:year", (req, res) => {
     const country = req.params.country;
     const year = parseInt(req.params.year);
-    const index = datos.findIndex(d => d.country === country && d.year === year);
     
-    if (index !== -1) {
-        datos.splice(index, 1);
-        res.status(200).json({ message: "Resource deleted successfully" });
-    } else {
-        res.status(404).json({ message: "Resource not found" });
-    }
+    db.remove({ country: country, year: year }, {}, (err, numRemoved) => {
+        if (numRemoved > 0) {
+            res.status(200).json({ message: "Resource deleted successfully" });
+        } else {
+            res.status(404).json({ message: "Resource not found" });
+        }
+    });
 });
 
 module.exports = router;
