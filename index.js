@@ -1,16 +1,16 @@
-const express = require('express');
-const path = require('path');
+import express from 'express';
+import path from 'path';
 
-const FMPG = require("./index-FMGP.js");
-const GGG = require("./index-GGG.js");
-const DRP = require("./index-DRP.js");
-const MRT = require("./index-MRT.js");
-const cool = require("cool-ascii-faces"); 
+import FMPG from './index-FMGP.js';
+import GGG from './index-GGG.js';
+import DRP from './index-DRP.js';
+import MRT from './index-MRT.js';
+import cool from 'cool-ascii-faces'; 
 
-const athleteEventsAPI = require('./api/athlete_events.js');
-const cheatersStatsAPI = require("./api/cheaters-stats.js");
-const esportsgrowthAPI = require("./api/esportsgrowth-stats.js");
-const esportsearningsAPI = require("./api/esportsearnings-stats.js");
+import athleteEventsAPI from './api/athlete_events.js';
+import cheatersStatsAPI from './api/cheaters-stats.js';
+import esportsgrowthAPI from './api/esportsgrowth-stats.js';
+import esportsearningsAPI from './api/esportsearnings-stats.js';
 
 const app = express();
 const BASE_URL_API = "/api/v1";

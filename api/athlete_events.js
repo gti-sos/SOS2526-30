@@ -1,8 +1,9 @@
-const express = require("express");
+import express from 'express';
+import { readFileSync } from 'fs';
+import { parse } from 'csv-parse/sync';
+import path from 'path';
+
 const router = express.Router();
-const { readFileSync } = require('fs');
-const { parse } = require('csv-parse/sync');
-const path = require('path');
 
 let datos = [];
 
