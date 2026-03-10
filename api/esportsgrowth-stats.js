@@ -30,6 +30,11 @@ function cleanId(doc) {
     return doc;
 }
 
+router.get("/docs", (req, res) => {
+    res.redirect("https://documenter.getpostman.com/view/52302165/2sBXieqtYQ");
+});
+
+
 router.get("/loadInitialData", (req, res) => {
     db.find({}, (err, docs) => {
         if (docs.length === 0) {
@@ -183,10 +188,6 @@ router.delete("/:country/:year", (req, res) => {
             res.status(404).json({ message: "Resource not found" });
         }
     });
-});
-
-router.get("/docs", (req, res) => {
-    res.redirect("https://documenter.getpostman.com/view/52302165/2sBXieqtYQ");
 });
 
 module.exports = router;
