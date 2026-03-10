@@ -11,7 +11,7 @@
 
 - **Live URL**: https://sos2526-30.onrender.com/
 
-- **APIs**: https://sos2526-30.onrender.com/
+- **APIs**:
     - http://sos2526-30.onrender.com/api/v1/esportsgrowth-stats/docs (developed by David Real Pérez)
     - http://sos2526-30.onrender.com/api/v1/esportsearnings-stats/docs (developed by Mario Ramos Tuñón)
     - http://sos2526-30.onrender.com/api/v1/cheaters-stats/docs (developed by Francisco Manuel Gracía Patino)
