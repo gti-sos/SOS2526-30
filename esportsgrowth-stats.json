@@ -1,0 +1,606 @@
+{
+  "info": {
+    "_postman_id": "669c7820-6019-418f-bec9-60e27b4f7ba6",
+    "name": "esportsgrowth-stats",
+    "description": "Colección completa de la api esportsearnings-stats",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52302165",
+    "_collection_link": "https://go.postman.co/collection/52302165-669c7820-6019-418f-bec9-60e27b4f7ba6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. DELETE Borrar Toda la Lista (Reset)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. GET Cargar Datos Iniciales 201 Creado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 201 (Creado)\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"La respuesta es un array con los 10 datos iniciales\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "    pm.expect(jsonData.length).to.eql(10);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/loadInitialData",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "loadInitialData"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. GET Obtener Todos los Datos 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve un array\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. GET Buscar país 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve un array con resultados\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "    pm.expect(jsonData.length).to.be.above(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats?country=Japan",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ],
+          "query": [
+            {
+              "key": "country",
+              "value": "Japan"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. GET Obtener Recurso Exacto 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve un objeto (no un array) con el país correcto\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('object');",
+              "    pm.expect(jsonData.country).to.eql(\"Spain\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Spain/2010",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "Spain",
+            "2010"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. GET Obtener datos periodo Inexistente 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve un array vacío\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array').that.is.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats?from=2050&to=2070",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "2050"
+            },
+            {
+              "key": "to",
+              "value": "2070"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. GET Recurso Inexistente 404 No Encontrado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 404 (No Encontrado)\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Narnia/2050",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "Narnia",
+            "2050"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. POST Crear Nuevo Dato 201 Creado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"El recurso se ha creado correctamente\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.country).to.eql(\"France\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 2024,\r\n  \"country\": \"France\",\r\n  \"active_player_no\": 25.5,\r\n  \"viewership\": 60.2,\r\n  \"top_genre\": \"MOBA\",\r\n  \"top_platform\": \"PC\",\r\n  \"tournament_no\": 45,\r\n  \"pro_player_no\": 8000,\r\n  \"internet_penetration\": 90.1,\r\n  \"company_no\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. PUT Actualizar Dato 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"El campo se actualizó correctamente\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.active_player_no).to.eql(99.9);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 2024,\r\n  \"country\": \"France\",\r\n  \"active_player_no\": 99.9,\r\n  \"viewership\": 60.2,\r\n  \"top_genre\": \"MOBA\",\r\n  \"top_platform\": \"PC\",\r\n  \"tournament_no\": 45,\r\n  \"pro_player_no\": 8000,\r\n  \"internet_penetration\": 90.1,\r\n  \"company_no\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/France/2024",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "France",
+            "2024"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. POST Dato Duplicado 409 Conflicto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 409 (Conflicto por duplicado)\", function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 2010,\r\n  \"country\": \"Spain\",\r\n  \"active_player_no\": 16,\r\n  \"viewership\": 53.3,\r\n  \"top_genre\": \"RPG\",\r\n  \"top_platform\": \"PC\",\r\n  \"tournament_no\": 85,\r\n  \"pro_player_no\": 12665,\r\n  \"internet_penetration\": 83.1,\r\n  \"company_no\": 277\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11. POST Campo Inesperado 400 Petición Incorrecta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"año\": 2010,\r\n  \"country\": \"Spain\",\r\n  \"active_player_no\": 16,\r\n  \"viewership\": 53.3,\r\n  \"top_genre\": \"RPG\",\r\n  \"top_platform\": \"PC\",\r\n  \"tournament_no\": 85,\r\n  \"pro_player_no\": 12665,\r\n  \"internet_penetration\": 83.1,\r\n  \"company_no\": 277\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12. PUT IDs No Coinciden 400 Petición Incorrecta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 2025, \r\n  \"country\": \"Spain\",\r\n  \"active_player_no\": 99.9\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Spain/2010",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "Spain",
+            "2010"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "13. PUT Ruta Base 405 Método No Permitido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 405 (Método No Permitido)\", function () {",
+              "    pm.response.to.have.status(405);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "14. POST Recurso Concreto 405 Método No Permitido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 405 (Método No Permitido)\", function () {",
+              "    pm.response.to.have.status(405);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"year\": 2010, \"country\": \"Japan\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Japan/2010",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "Japan",
+            "2010"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15. DELETE Borrar Dato Concreto 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/France/2024",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "France",
+            "2024"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
