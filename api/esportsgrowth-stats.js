@@ -185,4 +185,8 @@ router.delete("/:country/:year", (req, res) => {
     });
 });
 
+router.get("/docs", (req, res) => {
+    res.redirect("https://documenter.getpostman.com/view/52302165/2sBXieqtYQ");
+});
+
 module.exports = router;
