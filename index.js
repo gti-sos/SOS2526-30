@@ -25,44 +25,11 @@ app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 app.use(`${BASE_URL_API}/olympics-athlete-events`, athleteEventsAPI);
 
 app.get('/', (req, res) => {
-    res.json({
-        message: "SOS2526-30 running correctly",
-        endpoints: {
-            samples: {
-                FMGP: "/samples/FMGP",
-                GGG: "/samples/GGG",
-                DRP: "/samples/DRP",
-                MRT: "/samples/MRT"
-            },
-            apis: {
-                cheaters: {
-                    base: "/api/v1/cheaters-stats",
-                    countries: "/api/v1/cheaters-stats/countries",
-                    years: "/api/v1/cheaters-stats/years"
-                },
-                athletes: {
-                    base: "/api/v1/olympics-athlete-events",
-                    teams: "/api/v1/olympics-athlete-events/team",      
-                    sports: "/api/v1/olympics-athlete-events/sport",    
-                    cities: "/api/v1/olympics-athlete-events/city",     
-                    years: "/api/v1/olympics-athlete-events/year",      
-                    seasons: "/api/v1/olympics-athlete-events/season"  
-                },
-                esports: "/api/v1/esportsgrowth-stats",
-                earnings: "/api/v1/esportsearnings-stats"  
-            },
-            about: "/about",
-            cool: "/cool"
-        }
-    });
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 app.get('/about', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/about.html'));
-});
-
-app.get('/cool', (req, res) => {
-    res.send(`<html><body><h1>${cool()}</h1></body></html>`);
 });
 
 app.get("/samples/FMGP", (req, res) => {
@@ -85,15 +52,6 @@ app.get("/samples/GGG", (req, res) => {
     }
 });
 
-app.get('/samples/DRP', (req, res) => {
-    try {
-        const resultado = DRP.calcularMediaViewership(); 
-        res.send(`<h1>Media de Viewership de Esports en España</h1>
-                  <p>${resultado}</p>`); 
-    } catch (error) {
-        res.status(500).send("Error calculando la media de viewership");
-    }
-});
 
 app.get("/samples/MRT", (req, res) => {
     try {
