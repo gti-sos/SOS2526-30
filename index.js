@@ -3,9 +3,7 @@ const path = require('path');
 
 const FMPG = require("./index-FMGP.js");
 const GGG = require("./index-GGG.js");
-const DRP = require("./index-DRP.js");
 const MRT = require("./index-MRT.js");
-const cool = require("cool-ascii-faces"); 
 
 const athleteEventsAPI = require('./api/athlete_events.js');
 const cheatersStatsAPI = require("./api/cheaters-stats.js");
@@ -69,7 +67,6 @@ app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
     console.log(`- /samples/FMGP`);
     console.log(`- /samples/GGG`);
-    console.log(`- /samples/DRP`);
     console.log(`- /samples/MRT`);
     console.log(`- /api/v1/cheaters-stats`);
     console.log(`- /api/v1/olympics-athlete-events`);  
