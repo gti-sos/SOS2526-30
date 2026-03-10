@@ -10,3 +10,6 @@
 - **Repository**: [gti-sos/SOS2526-30](https://github.com/gti-sos/SOS2526-30)
 
 - **Live URL**: https://sos2526-30.onrender.com/
+
+- **APIs**: https://sos2526-30.onrender.com/
+    - http://sos2526-30.onrender.com/api/v1/esportsgrowth-stats/docs (developed by David Real Pérez)
