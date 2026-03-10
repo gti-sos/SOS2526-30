@@ -1,8 +1,8 @@
-import express from 'express';
-import path from 'path';
-import csv from 'csvtojson';
 
+const express = require("express");
 const router = express.Router();
+const path = require("path");
+const csv = require('csvtojson');
 
 const cheaters_csv = path.join(__dirname, "../data/video_game_cheaters_dataset_en.csv");
 
