@@ -1,8 +1,8 @@
-const express = require("express");
-const Datastore = require("nedb");
-const router = express.Router();
+import express from 'express';
+import dataStore from 'nedb';
 
-const db = new Datastore();
+const router = express.Router();
+let db = new dataStore();
 
 const datosIniciales = [
   { year: 2010, country: "United States", active_player_no: 11, viewership: 17.9, top_genre: "Sports", top_platform: "Console", tournament_no: 104, pro_player_no: 15912, internet_penetration: 82.5, company_no: 395 },
