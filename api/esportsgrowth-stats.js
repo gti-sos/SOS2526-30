@@ -1,5 +1,5 @@
-const express = require("express");
-const Datastore = require("nedb");
+import express from "express";
+import Datastore from "nedb";
 
 const router = express.Router();
 let db = new Datastore();
@@ -190,4 +190,4 @@ router.delete("/:country/:year", (req, res) => {
     });
 });
 
-module.exports = router;
+export default router;
