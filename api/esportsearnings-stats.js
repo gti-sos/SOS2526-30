@@ -30,7 +30,7 @@ function cleanId(doc) {
 
 // Redirección a documentación (ajusta el link si tienes uno propio)
 router.get("/docs", (req, res) => {
-    res.redirect("https://documenter.getpostman.com/view/YOUR_LINK"); 
+    res.redirect("https://documenter.getpostman.com/view/52332561/2sBXiesa6t"); 
 });
 
 /* ---------------- LOAD INITIAL DATA ---------------- */
