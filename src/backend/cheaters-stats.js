@@ -8,44 +8,52 @@ import Datastore from 'nedb';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Función principal que recibe app y registra las rutas
+// Configurar base de datos NeDB
+const db = new Datastore({
+    filename: path.join(__dirname, '..', '..', 'data', 'cheaters.db'),
+    autoload: true
+});
+
+// Crear índices para búsquedas eficientes
+db.ensureIndex({ fieldName: 'country' });
+db.ensureIndex({ fieldName: 'year' });
+
+// Cargar datos iniciales del CSV (solo una vez)
+const cheaters_csv = path.join(__dirname, '..', '..', 'data', 'video_game_cheaters_dataset_en.csv');
+
+let csvContent = [];
+try {
+    const fileContent = readFileSync(cheaters_csv, 'utf-8');
+    csvContent = parse(fileContent, {
+        columns: true,
+        cast: (value, context) => {
+            if (context.column === 'year') return Number(value);
+            if (context.column === 'cheater_report') return Number(value);
+            if (context.column === 'confirmed_ban') return Number(value);
+            if (context.column === 'estimated_cheater') return Number(value);
+            if (context.column === 'suspended_account') return Number(value);
+            if (context.column === 'repeat_offender') return Number(value);
+            return value;
+        }
+    });
+    console.log(`✅ CSV de FMGP cargado: ${csvContent.length} registros totales`);
+} catch (err) {
+    console.error("Error leyendo CSV de FMGP:", err.message);
+}
+
 function loadBackendFMGP(app) {
     const router = express.Router();
-    
-    // Configurar base de datos NeDB
-    const db = new Datastore({ 
-        filename: path.join(__dirname, '..', '..', 'data', 'cheaters.db'),
-        autoload: true 
+
+    // ============================================
+    // DOCUMENTACIÓN
+    // ============================================
+    router.get("/docs", (req, res) => {
+        res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR7"); // Cambia por tu URL de documentación
     });
 
-    // Crear índices para mejorar rendimiento en búsquedas frecuentes
-    db.ensureIndex({ fieldName: 'country' });
-    db.ensureIndex({ fieldName: 'year' });
-
-    // Cargar datos iniciales del CSV
-    const cheaters_csv = path.join(__dirname, '..', '..', 'data', 'video_game_cheaters_dataset_en.csv');
-    
-    let csvContent = [];
-    try {
-        const fileContent = readFileSync(cheaters_csv, 'utf-8');
-        csvContent = parse(fileContent, {
-            columns: true,
-            cast: (value, context) => {
-                if (context.column === 'year') return Number(value);
-                if (context.column === 'cheater_report') return Number(value);
-                if (context.column === 'confirmed_ban') return Number(value);
-                if (context.column === 'estimated_cheater') return Number(value);
-                if (context.column === 'suspended_account') return Number(value);
-                if (context.column === 'repeat_offender') return Number(value);
-                return value;
-            }
-        });
-        console.log(`✅ CSV de FMGP cargado: ${csvContent.length} registros totales`);
-    } catch (err) {
-        console.error("Error leyendo CSV de FMGP:", err.message);
-    }
-
-    // CARGA INICIAL
+    // ============================================
+    // CARGA INICIAL (SOLO SI LA BD ESTÁ VACÍA)
+    // ============================================
     router.get("/loadInitialData", (req, res) => {
         db.count({}, (err, count) => {
             if (err) {
@@ -60,16 +68,16 @@ function loadBackendFMGP(app) {
                     }
                     console.log(`✅ Datos iniciales de FMGP cargados: ${newDocs.length} registros`);
                     
-                    db.find({}).exec((err, data) => {
+                    db.find({}).sort({ country: 1, year: 1 }).exec((err, data) => {
                         if (err) {
                             return res.status(500).json({ error: "Error al recuperar datos" });
                         }
                         const resultado = data.map(({ _id, ...rest }) => rest);
-                        res.status(201).json(resultado);
+                        res.status(200).json(resultado);
                     });
                 });
             } else {
-                db.find({}).limit(15).exec((err, data) => {
+                db.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
                     if (err) {
                         return res.status(500).json({ error: "Error al recuperar datos" });
                     }
@@ -80,16 +88,18 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // COLECCIÓN PRINCIPAL CON FILTROS Y PAGINACIÓN
+    // ============================================
+    // COLECCIÓN PRINCIPAL CON BÚSQUEDAS Y PAGINACIÓN
+    // ============================================
     router.get("/", (req, res) => {
         const { 
             country, year, from, to,
-            page = 1, limit = 20, offset
+            page = 1, limit = 20
         } = req.query;
         
         let query = {};
         
-        // Construir query basado en filtros
+        // Construir query con búsquedas por todos los campos
         if (country) {
             query.country = { $regex: new RegExp(`^${country}$`, 'i') };
         }
@@ -97,23 +107,25 @@ function loadBackendFMGP(app) {
             query.year = parseInt(year);
         }
         
-        // Filtro por rango de años
+        // Búsqueda por rango de años
         if (from || to) {
             query.year = {};
             if (from) query.year.$gte = parseInt(from);
             if (to) query.year.$lte = parseInt(to);
         }
 
-        // Calcular paginación
-        const pageNum = parseInt(page);
-        const limitNum = Math.min(parseInt(limit), 100);
-        const skipNum = offset !== undefined ? parseInt(offset) : (pageNum - 1) * limitNum;
+        // Paginación
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, parseInt(limit) || 20);
+        const skipNum = (pageNum - 1) * limitNum;
 
+        // Contar total para metadatos de paginación
         db.count(query, (err, totalCount) => {
             if (err) {
                 return res.status(500).json({ error: "Error al contar resultados" });
             }
 
+            // Ejecutar consulta con paginación
             db.find(query)
                 .sort({ country: 1, year: 1 })
                 .skip(skipNum)
@@ -125,41 +137,46 @@ function loadBackendFMGP(app) {
                     
                     const resultado = data.map(({ _id, ...rest }) => rest);
                     
+                    // Respuesta con metadatos de paginación
                     res.status(200).json({
                         data: resultado,
                         pagination: {
                             total: totalCount,
                             page: pageNum,
                             limit: limitNum,
-                            offset: skipNum,
+                            totalPages: Math.ceil(totalCount / limitNum),
                             nextPage: skipNum + limitNum < totalCount ? pageNum + 1 : null,
-                            prevPage: pageNum > 1 ? pageNum - 1 : null,
-                            totalPages: Math.ceil(totalCount / limitNum)
+                            prevPage: pageNum > 1 ? pageNum - 1 : null
                         }
                     });
                 });
         });
     });
 
+    // ============================================
     // POST - Crear nuevo registro
+    // ============================================
     router.post("/", (req, res) => {
         const newData = req.body;
 
-        if (!newData.country || !newData.year) {
+        if (!newData || !newData.country || !newData.year) {
             return res.status(400).json({ message: "Bad Request: Missing country or year" });
         }
 
+        // Verificar si ya existe
         db.findOne({ 
             country: { $regex: new RegExp(`^${newData.country}$`, 'i') }, 
             year: newData.year 
-        }, (err, existing) => {
+        }, (err, existe) => {
             if (err) {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
             }
-            if (existing) {
+            
+            if (existe) {
                 return res.status(409).json({ message: "Resource already exists for this country and year" });
             }
 
+            // Insertar nuevo registro
             db.insert(newData, (err, newDoc) => {
                 if (err) {
                     return res.status(500).json({ error: "Error al insertar el dato" });
@@ -170,11 +187,16 @@ function loadBackendFMGP(app) {
         });
     });
 
+    // ============================================
+    // PUT no permitido en colección
+    // ============================================
     router.put("/", (req, res) => {
         res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
     });
 
+    // ============================================
     // DELETE - Borrar todos
+    // ============================================
     router.delete("/", (req, res) => {
         db.remove({}, { multi: true }, (err, numRemoved) => {
             if (err) {
@@ -184,7 +206,11 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // LISTAS
+    // ============================================
+    // LISTAS (colecciones de valores únicos)
+    // ============================================
+    
+    // Países
     router.get("/country", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
@@ -195,6 +221,7 @@ function loadBackendFMGP(app) {
         });
     });
 
+    // Años
     router.get("/year", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
@@ -205,7 +232,9 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // BÚSQUEDA POR PAÍS (con paginación)
+    // ============================================
+    // BÚSQUEDA POR PAÍS CON PAGINACIÓN
+    // ============================================
     router.get("/:country", (req, res) => {
         const countryParam = req.params.country;
         const { from, to, page = 1, limit = 20 } = req.query;
@@ -218,8 +247,8 @@ function loadBackendFMGP(app) {
             if (to) query.year.$lte = parseInt(to);
         }
 
-        const pageNum = parseInt(page);
-        const limitNum = Math.min(parseInt(limit), 100);
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, parseInt(limit) || 20);
         const skipNum = (pageNum - 1) * limitNum;
 
         db.count(query, (err, totalCount) => {
@@ -257,10 +286,12 @@ function loadBackendFMGP(app) {
         });
     });
 
+    // POST no permitido en recurso específico
     router.post("/:country", (req, res) => {
         res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
     });
 
+    // PUT en recurso por país (actualiza todos los registros de ese país)
     router.put("/:country", (req, res) => {
         const countryParam = req.params.country;
         const nuevosDatos = req.body;
@@ -286,6 +317,7 @@ function loadBackendFMGP(app) {
         );
     });
 
+    // DELETE en recurso por país
     router.delete("/:country", (req, res) => {
         const countryParam = req.params.country;
         
@@ -304,11 +336,13 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // RECURSO EXACTO (PAÍS + AÑO)
+    // ============================================
+    // RECURSO EXACTO (país/año)
+    // ============================================
     router.get("/:country/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
-        
+
         db.findOne({ 
             country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
             year: yearParam 
@@ -324,27 +358,31 @@ function loadBackendFMGP(app) {
         });
     });
 
+    // POST no permitido
     router.post("/:country/:year", (req, res) => {
         res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
     });
 
+    // PUT en recurso exacto
     router.put("/:country/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
         const body = req.body;
 
-        if (body.country && body.country.toLowerCase() !== countryParam.toLowerCase()) {
-            return res.status(400).json({ message: "Bad Request: Country in URL and body do not match" });
+        if (!body) {
+            return res.status(400).json({ message: "Bad Request: No data provided" });
         }
-        if (body.year && body.year != yearParam) {
-            return res.status(400).json({ message: "Bad Request: Year in URL and body do not match" });
+
+        if ((body.country && body.country.toLowerCase() !== countryParam.toLowerCase()) || 
+            (body.year && parseInt(body.year) !== yearParam)) {
+            return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
         }
 
         db.update(
             { country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, year: yearParam },
             { $set: body },
-            {},
-            (err, numReplaced) => {
+            { returnUpdatedDocs: true },
+            (err, numReplaced, affectedDoc) => {
                 if (err) {
                     return res.status(500).json({ error: "Error al actualizar" });
                 }
@@ -352,21 +390,17 @@ function loadBackendFMGP(app) {
                     return res.status(404).json({ message: "Resource not found" });
                 }
                 
-                db.findOne({ country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, year: yearParam }, (err, updated) => {
-                    if (err) {
-                        return res.status(500).json({ error: "Error al recuperar el dato actualizado" });
-                    }
-                    const { _id, ...result } = updated;
-                    res.status(200).json(result);
-                });
+                const { _id, ...result } = affectedDoc;
+                res.status(200).json(result);
             }
         );
     });
 
+    // DELETE en recurso exacto
     router.delete("/:country/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
-        
+
         db.remove(
             { country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, year: yearParam },
             {},
@@ -382,7 +416,7 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // ✅ REGISTRAR EL ROUTER EN LA APP
+    // Registrar el router
     app.use('/api/v1/cheaters-stats', router);
 }
 
