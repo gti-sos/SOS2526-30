@@ -9,7 +9,7 @@
 
     import loadBackendGGG from './src/backend/indexGGG.js';
     import loadBackendFMGP from './src/backend/cheaters-stats.js';
-    // import esportsgrowthAPI from './api/esportsgrowth-stats.js';
+    import esportsgrowthAPI from './api/esportsgrowth-stats.js';
     // import esportsearningsAPI from './api/esportsearnings-stats.js';
 
     const app = express();
@@ -25,7 +25,7 @@
 
 
     // app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
-    // app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
+    app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     // app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 
     app.get('/', (req, res) => {
