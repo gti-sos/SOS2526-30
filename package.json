@@ -38,7 +38,7 @@
     
     "newman-local-DRP": "npx newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
     "test-local-DRP": "start-server-and-test start http://localhost:3000 newman-local-DRP",
-    "test-esportsgrowth-stats": "npm run test-local-SMJ"
+    "test-esportsgrowth-stats": "npm run test-local-DRP"
     
     "test-FMGP": "npm run test-FMGP:local && npm run test-FMGP:render",
     "test-FMGP:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
