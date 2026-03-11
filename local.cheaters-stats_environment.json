@@ -1,0 +1,13 @@
+{
+  "id": "local-cheaters-stats-environment",
+  "name": "local",
+  "values": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
