@@ -2,10 +2,7 @@ import express from "express";
 import Datastore from "nedb";
 
 const router = express.Router();
-const db = new Datastore({
-    filename: "./esportsearnings.db",
-    autoload: true
-});
+const db = new Datastore({});
 
 const datosIniciales = [
     { total_money: 31, game_name: "Acceleration of SUGURI 2", genre: "Fighting Game", player_no: 6, tournament_no: 2, country: "United States", top_country_earnings: 31, year: 2018 },
