@@ -7,10 +7,10 @@
 
     //const MRT = require("./index-MRT.js");
 
-    import {loadBackendGGG} from './src/backend/indexGGG.js';
-    import cheatersStatsAPI from './api/cheaters-stats.js';
-    import esportsgrowthAPI from './api/esportsgrowth-stats.js';
-    import esportsearningsAPI from './api/esportsearnings-stats.js';
+    import loadBackendGGG from './src/backend/indexGGG.js';
+    // import cheatersStatsAPI from './api/cheaters-stats.js';
+    // import esportsgrowthAPI from './api/esportsgrowth-stats.js';
+    // import esportsearningsAPI from './api/esportsearnings-stats.js';
 
     const app = express();
     const BASE_URL_API = "/api/v1";
@@ -21,9 +21,9 @@
     app.use(express.static("public"));
 
 
-    app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
-    app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
-    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+    // app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
+    // app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
+    // app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 
     app.get('/', (req, res) => {
         res.sendFile(path.join(__dirname, 'public/index.html'));
