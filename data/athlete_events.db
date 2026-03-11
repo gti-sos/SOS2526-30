@@ -16,3 +16,38 @@
 {"$$indexCreated":{"fieldName":"name","unique":false,"sparse":false}}
 {"$$indexCreated":{"fieldName":"year","unique":false,"sparse":false}}
 {"$$indexCreated":{"fieldName":"team","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"sport","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"season","unique":false,"sparse":false}}
+{"$$deleted":true,"_id":"72NzmDLzyd6fE0Rb"}
+{"$$deleted":true,"_id":"98gBmTTlqLUFOn5V"}
+{"$$deleted":true,"_id":"9Zi82J3nE9Y4WQpP"}
+{"$$deleted":true,"_id":"9zWOynN3VifLBadt"}
+{"$$deleted":true,"_id":"CdzD4s3mYmjWovER"}
+{"$$deleted":true,"_id":"FOzJFHNds7XgNg1u"}
+{"$$deleted":true,"_id":"P8UNKbpY0gbbYlW8"}
+{"$$deleted":true,"_id":"PZDfHULvYx8cC55R"}
+{"$$deleted":true,"_id":"PwnCakaBkDcZpdeg"}
+{"$$deleted":true,"_id":"T8FogBv5h9OKx9St"}
+{"$$deleted":true,"_id":"V7KSlfJXNOTO8ZeK"}
+{"$$deleted":true,"_id":"fIbuCah0cWdwBNqL"}
+{"$$deleted":true,"_id":"fh68BLoCfxXAK3b4"}
+{"$$deleted":true,"_id":"k17tD3iXtdZd59Td"}
+{"$$deleted":true,"_id":"lBJQ1jNkZJg1rqAw"}
+{"id":1,"name":"A Dijiang","sex":"M","age":24,"height":180,"weight":80,"team":"China","noc":"CHN","games":"1992 Summer","year":1992,"season":"Summer","city":"Barcelona","sport":"Basketball","event":"Basketball Men's Basketball","medal":"NA","_id":"m7DdHFtRXqjMvxmd"}
+{"id":2,"name":"A Lamusi","sex":"M","age":23,"height":170,"weight":60,"team":"China","noc":"CHN","games":"2012 Summer","year":2012,"season":"Summer","city":"London","sport":"Judo","event":"Judo Men's Extra-Lightweight","medal":"NA","_id":"yJdPXwtRhv0VAYU7"}
+{"id":3,"name":"Gunnar Nielsen Aaby","sex":"M","age":24,"height":null,"weight":null,"team":"Denmark","noc":"DEN","games":"1920 Summer","year":1920,"season":"Summer","city":"Antwerpen","sport":"Football","event":"Football Men's Football","medal":"NA","_id":"mKDGFTMh4YAIFgEs"}
+{"id":4,"name":"Edgar Lindenau Aabye","sex":"M","age":34,"height":null,"weight":null,"team":"Denmark/Sweden","noc":"DEN","games":"1900 Summer","year":1900,"season":"Summer","city":"Paris","sport":"Tug-Of-War","event":"Tug-Of-War Men's Tug-Of-War","medal":"Gold","_id":"wWoTbWvVsBepn0n0"}
+{"id":5,"name":"Christine Jacoba Aaftink","sex":"F","age":21,"height":185,"weight":82,"team":"Netherlands","noc":"NED","games":"1988 Winter","year":1988,"season":"Winter","city":"Calgary","sport":"Speed Skating","event":"Speed Skating Women's 500 metres","medal":"NA","_id":"DuzBz1Fni4sIgzsz"}
+{"id":5,"name":"Christine Jacoba Aaftink","sex":"F","age":21,"height":185,"weight":82,"team":"Netherlands","noc":"NED","games":"1988 Winter","year":1988,"season":"Winter","city":"Calgary","sport":"Speed Skating","event":"Speed Skating Women's 1,000 metres","medal":"NA","_id":"RyBCmVDrag46S6HF"}
+{"id":5,"name":"Christine Jacoba Aaftink","sex":"F","age":25,"height":185,"weight":82,"team":"Netherlands","noc":"NED","games":"1992 Winter","year":1992,"season":"Winter","city":"Albertville","sport":"Speed Skating","event":"Speed Skating Women's 500 metres","medal":"NA","_id":"VBzSfm0w8rDlegli"}
+{"id":5,"name":"Christine Jacoba Aaftink","sex":"F","age":25,"height":185,"weight":82,"team":"Netherlands","noc":"NED","games":"1992 Winter","year":1992,"season":"Winter","city":"Albertville","sport":"Speed Skating","event":"Speed Skating Women's 1,000 metres","medal":"NA","_id":"pkIlZyxc36E589NW"}
+{"id":5,"name":"Christine Jacoba Aaftink","sex":"F","age":27,"height":185,"weight":82,"team":"Netherlands","noc":"NED","games":"1994 Winter","year":1994,"season":"Winter","city":"Lillehammer","sport":"Speed Skating","event":"Speed Skating Women's 500 metres","medal":"NA","_id":"XgWSwgTIr1glWWKv"}
+{"id":5,"name":"Christine Jacoba Aaftink","sex":"F","age":27,"height":185,"weight":82,"team":"Netherlands","noc":"NED","games":"1994 Winter","year":1994,"season":"Winter","city":"Lillehammer","sport":"Speed Skating","event":"Speed Skating Women's 1,000 metres","medal":"NA","_id":"rymm6H2WLxUURjHG"}
+{"id":6,"name":"Per Knut Aaland","sex":"M","age":31,"height":188,"weight":75,"team":"United States","noc":"USA","games":"1992 Winter","year":1992,"season":"Winter","city":"Albertville","sport":"Cross Country Skiing","event":"Cross Country Skiing Men's 10 kilometres","medal":"NA","_id":"FgpE0dV3Lmc2avyS"}
+{"id":6,"name":"Per Knut Aaland","sex":"M","age":31,"height":188,"weight":75,"team":"United States","noc":"USA","games":"1992 Winter","year":1992,"season":"Winter","city":"Albertville","sport":"Cross Country Skiing","event":"Cross Country Skiing Men's 50 kilometres","medal":"NA","_id":"eVxo74S93S8t7xco"}
+{"id":6,"name":"Per Knut Aaland","sex":"M","age":31,"height":188,"weight":75,"team":"United States","noc":"USA","games":"1992 Winter","year":1992,"season":"Winter","city":"Albertville","sport":"Cross Country Skiing","event":"Cross Country Skiing Men's 10/15 kilometres Pursuit","medal":"NA","_id":"PzPFmgRGUQDy1P2U"}
+{"id":6,"name":"Per Knut Aaland","sex":"M","age":31,"height":188,"weight":75,"team":"United States","noc":"USA","games":"1992 Winter","year":1992,"season":"Winter","city":"Albertville","sport":"Cross Country Skiing","event":"Cross Country Skiing Men's 4 x 10 kilometres Relay","medal":"NA","_id":"08gdPQiwcJ17Fwd8"}
+{"id":6,"name":"Per Knut Aaland","sex":"M","age":33,"height":188,"weight":75,"team":"United States","noc":"USA","games":"1994 Winter","year":1994,"season":"Winter","city":"Lillehammer","sport":"Cross Country Skiing","event":"Cross Country Skiing Men's 10 kilometres","medal":"NA","_id":"YorNlHrXGS6qSomB"}
+{"name":"Atleta Prueba","team":"PaisNuevo","year":2024,"sport":"Futbol","event":"Torneo Nuevo","medal":"Gold","_id":"lYaeHNQ0fNeCRh17"}
+{"name":"Atleta Prueba","team":"PaisNuevo","year":2024,"sport":"Futbol","event":"Torneo Nuevo","medal":"Gold","_id":"lYaeHNQ0fNeCRh17"}
+{"$$deleted":true,"_id":"lYaeHNQ0fNeCRh17"}

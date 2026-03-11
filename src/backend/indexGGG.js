@@ -8,42 +8,45 @@ import Datastore from 'nedb';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Función principal que recibe app y registra las rutas
+// Configurar base de datos NeDB
+const db = new Datastore({
+    filename: path.join(__dirname, '..', '..', 'data', 'athlete_events.db'),
+    autoload: true
+});
+
+// Crear índices para búsquedas eficientes
+db.ensureIndex({ fieldName: 'name' });
+db.ensureIndex({ fieldName: 'year' });
+db.ensureIndex({ fieldName: 'team' });
+db.ensureIndex({ fieldName: 'sport' });
+db.ensureIndex({ fieldName: 'season' });
+
+// Cargar datos iniciales del CSV (solo una vez)
+let csvContent = [];
+try {
+    const fileContent = readFileSync(path.join(__dirname, '..', '..', 'data', 'athlete_events.csv'), 'utf-8');
+    csvContent = parse(fileContent, {
+        columns: true,
+        cast: (value, context) => {
+            if (context.column == 'id') return Number(value);
+            if (context.column == 'age') return value === 'NA' ? null : Number(value);
+            if (context.column == 'height') return value === 'NA' ? null : Number(value);
+            if (context.column == 'weight') return value === 'NA' ? null : Number(value);
+            if (context.column == 'year') return Number(value);
+            return value;
+        }
+    });
+    console.log(`✅ CSV cargado: ${csvContent.length} atletas totales`);
+} catch (err) {
+    console.error("Error leyendo CSV:", err.message);
+}
+
 function loadBackendGGG(app) {
     const router = express.Router();
-    
-    // Configurar base de datos NeDB
-    const db = new Datastore({ 
-        filename: path.join(__dirname, '..', '..', 'data', 'athlete_events.db'),
-        autoload: true 
-    });
 
-    // Crear índices para mejorar rendimiento en búsquedas frecuentes
-    db.ensureIndex({ fieldName: 'name' });
-    db.ensureIndex({ fieldName: 'year' });
-    db.ensureIndex({ fieldName: 'team' });
-
-    // Cargar datos iniciales del CSV
-    let csvContent = [];
-    try {
-        const fileContent = readFileSync(path.join(__dirname, '..', '..', 'data', 'athlete_events.csv'), 'utf-8');
-        csvContent = parse(fileContent, {
-            columns: true,
-            cast: (value, context) => {
-                if (context.column == 'id') return Number(value);
-                if (context.column == 'age') return value === 'NA' ? null : Number(value);
-                if (context.column == 'height') return value === 'NA' ? null : Number(value);
-                if (context.column == 'weight') return value === 'NA' ? null : Number(value);
-                if (context.column == 'year') return Number(value);
-                return value;
-            }
-        });
-        console.log(`✅ CSV cargado: ${csvContent.length} atletas totales`);
-    } catch (err) {
-        console.error("Error leyendo CSV:", err.message);
-    }
-
-    // CARGA INICIAL
+    // ============================================
+    // CARGA INICIAL (SOLO SI LA BD ESTÁ VACÍA)
+    // ============================================
     router.get("/loadInitialData", (req, res) => {
         db.count({}, (err, count) => {
             if (err) {
@@ -58,16 +61,16 @@ function loadBackendGGG(app) {
                     }
                     console.log(`✅ Datos iniciales cargados: ${newDocs.length} registros`);
                     
-                    db.find({}).exec((err, data) => {
+                    db.find({}).sort({ id: 1 }).exec((err, data) => {
                         if (err) {
                             return res.status(500).json({ error: "Error al recuperar datos" });
                         }
                         const resultado = data.map(({ _id, ...rest }) => rest);
-                        res.status(201).json(resultado);
+                        res.status(200).json(resultado);
                     });
                 });
             } else {
-                db.find({}).limit(15).exec((err, data) => {
+                db.find({}).sort({ id: 1 }).limit(15).exec((err, data) => {
                     if (err) {
                         return res.status(500).json({ error: "Error al recuperar datos" });
                     }
@@ -78,21 +81,23 @@ function loadBackendGGG(app) {
         });
     });
 
-    // COLECCIÓN PRINCIPAL CON PAGINACIÓN
+    // ============================================
+    // COLECCIÓN PRINCIPAL CON BÚSQUEDAS Y PAGINACIÓN
+    // ============================================
     router.get("/", (req, res) => {
         const { 
             name, team, country, year, from, to, sport, season, city, id,
-            page = 1, limit = 20, offset
+            page = 1, limit = 20
         } = req.query;
         
         let query = {};
         
-        // Construir query basado en filtros
+        // Construir query con búsquedas por todos los campos
         if (name) {
             query.name = { $regex: new RegExp(name, 'i') };
         }
         if (team || country) {
-            const teamFilter = team || country;
+            const teamFilter = (team || country);
             query.team = { $regex: new RegExp(`^${teamFilter}$`, 'i') };
         }
         if (year) {
@@ -111,25 +116,27 @@ function loadBackendGGG(app) {
             query.id = parseInt(id);
         }
         
-        // Filtro por rango de años
+        // Búsqueda por rango de años
         if (from || to) {
             query.year = {};
             if (from) query.year.$gte = parseInt(from);
             if (to) query.year.$lte = parseInt(to);
         }
 
-        // Calcular paginación
-        const pageNum = parseInt(page);
-        const limitNum = Math.min(parseInt(limit), 100);
-        const skipNum = offset !== undefined ? parseInt(offset) : (pageNum - 1) * limitNum;
+        // Paginación
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, parseInt(limit) || 20);
+        const skipNum = (pageNum - 1) * limitNum;
 
+        // Contar total para metadatos de paginación
         db.count(query, (err, totalCount) => {
             if (err) {
                 return res.status(500).json({ error: "Error al contar resultados" });
             }
 
+            // Ejecutar consulta con paginación
             db.find(query)
-                .sort({ id: 1 }) // Ordenar por nombre y año para consistencia
+                .sort({ id: 1 })
                 .skip(skipNum)
                 .limit(limitNum)
                 .exec((err, data) => {
@@ -139,42 +146,47 @@ function loadBackendGGG(app) {
                     
                     const resultado = data.map(({ _id, ...rest }) => rest);
                     
+                    // Respuesta con metadatos de paginación
                     res.status(200).json({
                         data: resultado,
                         pagination: {
                             total: totalCount,
                             page: pageNum,
                             limit: limitNum,
-                            offset: skipNum,
+                            totalPages: Math.ceil(totalCount / limitNum),
                             nextPage: skipNum + limitNum < totalCount ? pageNum + 1 : null,
-                            prevPage: pageNum > 1 ? pageNum - 1 : null,
-                            totalPages: Math.ceil(totalCount / limitNum)
+                            prevPage: pageNum > 1 ? pageNum - 1 : null
                         }
                     });
                 });
         });
     });
 
+    // ============================================
     // POST - Crear nuevo atleta
+    // ============================================
     router.post("/", (req, res) => {
         const newData = req.body;
-        
-        if (!newData.name || !newData.year) {
+
+        if (!newData || !newData.name || !newData.year) {
             return res.status(400).json({ message: "Bad Request: Missing name or year" });
         }
 
+        // Verificar si ya existe
         db.findOne({ 
             name: newData.name, 
             year: newData.year, 
             event: newData.event 
-        }, (err, existing) => {
+        }, (err, existe) => {
             if (err) {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
             }
-            if (existing) {
+            
+            if (existe) {
                 return res.status(409).json({ message: "Resource already exists" });
             }
 
+            // Insertar nuevo registro
             db.insert(newData, (err, newDoc) => {
                 if (err) {
                     return res.status(500).json({ error: "Error al insertar el dato" });
@@ -185,11 +197,16 @@ function loadBackendGGG(app) {
         });
     });
 
+    // ============================================
+    // PUT no permitido en colección
+    // ============================================
     router.put("/", (req, res) => {
         res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
     });
 
+    // ============================================
     // DELETE - Borrar todos
+    // ============================================
     router.delete("/", (req, res) => {
         db.remove({}, { multi: true }, (err, numRemoved) => {
             if (err) {
@@ -199,7 +216,11 @@ function loadBackendGGG(app) {
         });
     });
 
-    // LISTAS
+    // ============================================
+    // LISTAS (colecciones de valores únicos)
+    // ============================================
+    
+    // Equipos
     router.get("/team", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
@@ -210,6 +231,7 @@ function loadBackendGGG(app) {
         });
     });
 
+    // Deportes
     router.get("/sport", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
@@ -220,6 +242,7 @@ function loadBackendGGG(app) {
         });
     });
 
+    // Ciudades
     router.get("/city", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
@@ -230,16 +253,18 @@ function loadBackendGGG(app) {
         });
     });
 
+    // Años
     router.get("/year", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
             }
             const años = [...new Set(data.map(d => d.year).filter(a => a))];
-            res.status(200).json(años.sort((a,b) => a - b));
+            res.status(200).json(años.sort((a, b) => a - b));
         });
     });
 
+    // Temporadas
     router.get("/season", (req, res) => {
         db.find({}).exec((err, data) => {
             if (err) {
@@ -250,7 +275,9 @@ function loadBackendGGG(app) {
         });
     });
 
-    // BÚSQUEDA POR NOMBRE (con paginación)
+    // ============================================
+    // BÚSQUEDA POR NOMBRE CON PAGINACIÓN
+    // ============================================
     router.get("/:name", (req, res) => {
         const name = req.params.name;
         const { from, to, page = 1, limit = 20 } = req.query;
@@ -263,8 +290,8 @@ function loadBackendGGG(app) {
             if (to) query.year.$lte = parseInt(to);
         }
 
-        const pageNum = parseInt(page);
-        const limitNum = Math.min(parseInt(limit), 100);
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, parseInt(limit) || 20);
         const skipNum = (pageNum - 1) * limitNum;
 
         db.count(query, (err, totalCount) => {
@@ -302,11 +329,13 @@ function loadBackendGGG(app) {
         });
     });
 
-    // RECURSO EXACTO
+    // ============================================
+    // RECURSO EXACTO (nombre/año)
+    // ============================================
     router.get("/:name/:year", (req, res) => {
         const name = req.params.name;
         const year = parseInt(req.params.year);
-        
+
         db.findOne({ name: name, year: year }, (err, recurso) => {
             if (err) {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
@@ -319,20 +348,27 @@ function loadBackendGGG(app) {
         });
     });
 
+    // POST no permitido
     router.post("/:name/:year", (req, res) => {
-        res.status(405).json({ message: "Method Not Allowed: Cannot create a specific resource like this. Use POST / instead." });
+        res.status(405).json({ message: "Method Not Allowed" });
     });
 
+    // PUT en recurso exacto
     router.put("/:name/:year", (req, res) => {
         const name = req.params.name;
         const year = parseInt(req.params.year);
         const body = req.body;
 
-        if (name !== body.name || year !== parseInt(body.year)) {
+        if (!body) {
+            return res.status(400).json({ message: "Bad Request: No data provided" });
+        }
+
+        if ((body.name && body.name !== name) || 
+            (body.year && parseInt(body.year) !== year)) {
             return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
         }
 
-        db.update({ name: name, year: year }, { $set: body }, {}, (err, numReplaced) => {
+        db.update({ name: name, year: year }, { $set: body }, { returnUpdatedDocs: true }, (err, numReplaced, affectedDoc) => {
             if (err) {
                 return res.status(500).json({ error: "Error al actualizar" });
             }
@@ -340,21 +376,16 @@ function loadBackendGGG(app) {
                 return res.status(404).json({ message: "Resource not found" });
             }
             
-            db.findOne({ name: name, year: year }, (err, updated) => {
-                if (err) {
-                    return res.status(500).json({ error: "Error al recuperar el dato actualizado" });
-                }
-                const { _id, ...result } = updated;
-                res.status(200).json(result);
-            });
+            const { _id, ...result } = affectedDoc;
+            res.status(200).json(result);
         });
     });
 
-    // DELETE
+    // DELETE en recurso exacto
     router.delete("/:name/:year", (req, res) => {
         const name = req.params.name;
         const year = parseInt(req.params.year);
-        
+
         db.remove({ name: name, year: year }, {}, (err, numRemoved) => {
             if (err) {
                 return res.status(500).json({ error: "Error al eliminar" });
@@ -366,7 +397,7 @@ function loadBackendGGG(app) {
         });
     });
 
-    // ✅ REGISTRAR EL ROUTER EN LA APP
+    // Registrar el router
     app.use('/api/v1/olympics-athlete-events', router);
 }
 
