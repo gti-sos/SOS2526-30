@@ -34,7 +34,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "npm run test-FMGP && npm run test-GGG",
+    "test": "npm run test-FMGP:render && npm run test-GGG:render",
     "test-FMGP": "npm run test-FMGP:local && npm run test-FMGP:render",
     "test-FMGP:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
     "test-FMGP:render": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
