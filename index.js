@@ -2,6 +2,10 @@
     import path from 'path';
     import { fileURLToPath } from 'url';
 
+    // Parche para que NeDB funcione en Node v24 (No me iba el rango de fechas)
+    import util from 'util';
+    util.isDate = function(d) { return d instanceof Date; };
+
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
