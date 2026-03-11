@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <title>SOS2526-30 - Panel de Control</title>
     <style>
-        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; }
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 900px; margin: auto; }
         h1 { color: #2c3e50; border-bottom: 2px solid #eee; }
-        .endpoint-group { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 25px; }
+        .endpoint-group { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         a { color: #3498db; text-decoration: none; }
         a:hover { text-decoration: underline; }
         ul { list-style-type: none; padding: 0; }
-        li { margin: 10px 0; padding: 5px; border-left: 3px solid #3498db; background: white; }
+        li { margin: 12px 0; padding: 8px; border-left: 3px solid #3498db; background: white; }
+        .developer { color: #7f8c8d; font-size: 0.9em; margin-left: 10px; font-style: italic; }
     </style>
 </head>
 <body>
     <h1>🚀 SOS2526-30 en funcionamiento</h1>
     
     <div class="endpoint-group">
-        <h3>📊 APIs Disponibles:</h3>
+        <h2>📊 APIs Disponibles:</h2>
         <ul>
             <li><b>Esports Growth:</b> <a href="/api/v1/esportsgrowth-stats">/api/v1/esportsgrowth-stats</a></li>
             <li><b>Esports Earnings:</b> <a href="/api/v1/esportsearnings-stats">/api/v1/esportsearnings-stats</a></li>
@@ -27,33 +29,37 @@
     </div>
 
     <div class="endpoint-group">
-        <h3>📄 Documentación de las APIs (Postman):</h3>
+        <h2>📄 Documentación de las APIs (Postman):</h2>
         <ul>
             <li>
                 <a href="/api/v1/esportsgrowth-stats/docs" target="_blank">
-                    📊 Esports Growth Stats (DRP)
+                    📊 Esports Growth Stats
                 </a>
+                <span class="developer">(developed by David Real Pérez)</span>
             </li>
             <li>
                 <a href="/api/v1/esportsearnings-stats/docs" target="_blank">
-                    💰 Esports Earnings Stats (MRT)
+                    💰 Esports Earnings Stats
                 </a>
+                <span class="developer">(developed by Mario Ramos Tuñón)</span>
             </li>
             <li>
                 <a href="/api/v1/cheaters-stats/docs" target="_blank">
-                    🎮 Cheaters Stats (FMGP)
+                    🎮 Cheaters Stats
                 </a>
+                <span class="developer">(developed by Francisco Manuel García Patino)</span>
             </li>
             <li>
                 <a href="/api/v1/olympics-athlete-events/docs" target="_blank">
-                    🏅 Olympics Athlete Events (GGG)
+                    🏅 Olympics Athlete Events
                 </a>
+                <span class="developer">(developed by Gonzalo García Gómez)</span>
             </li>
         </ul>
     </div>
 
     <div class="endpoint-group">
-        <h3>ℹ️ Información:</h3>
+        <h2>ℹ️ Información:</h2>
         <p><a href="/about">Sobre nosotros (About)</a></p>
     </div>
 </body>
