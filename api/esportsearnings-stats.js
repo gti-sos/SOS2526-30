@@ -17,6 +17,7 @@ const datosIniciales = [
     { total_money: 114467.372, game_name: "FIFA 20", genre: "Sports", player_no: 248, tournament_no: 39, country: "United Kingdom", top_country_earnings: 20561.304, year: 2019 },
     { total_money: 9750842.500, game_name: "Fortnite", genre: "Battle Royale", player_no: 4347, tournament_no: 660, country: "United States", top_country_earnings: 3342275.637, year: 2017 }
 ];
+db.insert(datosIniciales);
 
 const camposEsperados = [
     "total_money", "game_name", "genre", "player_no", 
