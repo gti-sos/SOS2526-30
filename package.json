@@ -25,6 +25,9 @@
     "nedb-promises": "^6.2.3",
     "path": "^0.12.7",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "start-server-and-test": "^2.1.5"
   }
 
   ,"scripts": {
