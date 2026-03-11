@@ -30,14 +30,15 @@
     "newman": "^6.2.2",
     "start-server-and-test": "^2.1.5"
   },
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test:local": "newman run postman/cheaters-stats.postman_collection.json -e postman/environments/local.postman_environment.json",
-    "test:render": "newman run postman/cheaters-stats.postman_collection.json -e postman/environments/render.postman_environment.json",
-    "test:local:report": "newman run postman/cheaters-stats.postman_collection.json -e postman/environments/local.postman_environment.json -r htmlextra --reporter-htmlextra-export test-reports/local-report.html",
-    "test:render:report": "newman run postman/cheaters-stats.postman_collection.json -e postman/environments/render.postman_environment.json -r htmlextra --reporter-htmlextra-export test-reports/render-report.html",
-    "test:all": "npm run test:local && npm run test:render",
-    "test:environments": "node test-environments.js"
-  }
+ "scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js",
+  "test": "npm run test:local && npm run test:render",
+  "test:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
+  "test:render": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
+  "test:local:report": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json -r htmlextra --reporter-htmlextra-export test-reports/local-report.html",
+  "test:render:report": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json -r htmlextra --reporter-htmlextra-export test-reports/render-report.html",
+  "test:all": "npm run test:local && npm run test:render",
+  "test:environments": "node test-environments.js"
+}
 }
