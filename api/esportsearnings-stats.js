@@ -35,9 +35,18 @@ router.get("/docs", (req, res) => {
 /* ---------------- LOAD INITIAL DATA ---------------- */
 router.get("/loadInitialData", (req, res) => {
     db.find({}, (err, docs) => {
+        if (err) {
+            return res.status(500).json({ message: "Error interno de la base de datos" });
+        }
+
         if (docs.length === 0) {
             db.insert(datosIniciales, (err, newDocs) => {
-                res.status(201).json(newDocs.map(cleanId));
+                if (err) {
+                    return res.status(500).json({ message: "Error al insertar los datos" });
+                }
+                // Si NeDB no devuelve newDocs, usamos datosIniciales como respaldo
+                const datosParaEnviar = newDocs || datosIniciales;
+                res.status(201).json(datosParaEnviar.map(cleanId));
             });
         } else {
             res.status(200).json({ message: "Data is already loaded" });
