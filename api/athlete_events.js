@@ -6,6 +6,10 @@ const path = require('path');
 
 let datos = [];
 
+// router.get("/docs", (req, res) => {
+//     res.redirect("");
+// });
+
 // Cargar datos iniciales del CSV
 let csvContent = [];
 try {
