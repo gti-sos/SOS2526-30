@@ -13,7 +13,7 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "dependencies": {
     "cool-ascii-faces": "^1.3.4",
@@ -22,6 +22,7 @@
     "express": "^5.2.1",
     "nedb": "^1.8.0",
     "nedb-promises": "^6.2.3",
+    "nvm": "^0.0.4",
     "path": "^0.12.7",
     "request": "^2.88.2"
   },
