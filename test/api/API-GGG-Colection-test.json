@@ -8,6 +8,35 @@
   },
   "item": [
     {
+      "name": "Borrar todo (reset)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/olympics-athlete-events",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Carga Datos iniciales 200 OK",
       "request": {
         "method": "GET",
@@ -186,7 +215,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"year\": 1992, \r\n  \"country\": \"China\",\r\n  \"medal\": \"notiene\"\r\n}",
+          "raw": "{\r\n  \"year\": 1002, \r\n  \"country\": \"China\",\r\n  \"medal\": \"Gold\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

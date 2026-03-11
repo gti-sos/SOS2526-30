@@ -8,6 +8,7 @@
     //const MRT = require("./index-MRT.js");
 
     import loadBackendGGG from './src/backend/indexGGG.js';
+    // import loadBackendFMGP from './src/backend/cheaters-stats.js';
     // import cheatersStatsAPI from './api/cheaters-stats.js';
     // import esportsgrowthAPI from './api/esportsgrowth-stats.js';
     // import esportsearningsAPI from './api/esportsearnings-stats.js';
@@ -15,10 +16,13 @@
     const app = express();
     const BASE_URL_API = "/api/v1";
 
-    loadBackendGGG(app)
-
+ 
     app.use(express.json());
     app.use(express.static("public"));
+
+    loadBackendGGG(app)
+    //loadBackendFMGP(app)
+
 
 
     // app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
