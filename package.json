@@ -42,7 +42,7 @@
     
     "test-esportsearnings-stats": "npm run test-local-earnings",
     "newman-local-earnings": "npx newman run test/api/esportsearnings-stats.postman_collection.json -e test/api/local.esportsearnings-stats_environment.json",
-    "test-local-earnings": "start-server-and-test start http://localhost:3000 newman-local-earnings"
+    "test-local-earnings": "start-server-and-test start http://localhost:3000 newman-local-earnings",
     
     "test-FMGP": "npm run test-FMGP:local && npm run test-FMGP:render",
     "test-FMGP:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
