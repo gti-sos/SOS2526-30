@@ -93,7 +93,7 @@ function loadBackendGGG(app) {
         let query = {};
         
         // Construir query con búsquedas por todos los campos
-        if (name) {
+        if (name) { 
             query.name = { $regex: new RegExp(name, 'i') };
         }
         if (team || country) {

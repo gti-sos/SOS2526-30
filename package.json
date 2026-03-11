@@ -39,7 +39,8 @@
     "test-FMGP:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
     "test-FMGP:render": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
     "test-GGG": "npm run test-GGG:local && npm run test-GGG:render",
-    "test-GGG:local": "newman run test/api/API-GGG-Colection-test.json -e  test/api/GGG-local-environment.json",
+    "test-olympics-athlete-events": "newman run test/api/API-GGG-Colection-test.json -e  test/api/GGG-local-environment.json",
     "test-GGG:render": "newman run test/api/API-GGG-Colection-test.json -e test/api/GGG-render-environment.json"
+    
   }
 }
