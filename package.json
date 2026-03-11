@@ -33,12 +33,13 @@
  "scripts": {
   "start": "node index.js",
   "dev": "nodemon index.js",
-  "test": "npm run test:local && npm run test:render",
-  "FMGP:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
-  "FMGP:render": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
-  "test:local:report": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json -r htmlextra --reporter-htmlextra-export test-reports/local-report.html",
-  "test:render:report": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json -r htmlextra --reporter-htmlextra-export test-reports/render-report.html",
-  "test:all": "npm run test:local && npm run test:render",
-  "test:environments": "node test-environments.js"
+  "test": "npm run test-FMGP && npm run test-GGG",
+  "test-FMGP": "npm run test-FMGP:local && npm run test-FMGP:render",
+  "test-FMGP:local": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
+  "test-FMGP:render": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
+  "test-GGG": "npm run test-GGG:local && npm run test-GGG:render",
+  "test-GGG:local": "newman run test/api/API-GGG-Colection-test.json -e  test/api/GGG-local-environment.json",
+  "test-GGG:render": "newman run test/api/API-GGG-Colection-test.json -e test/api/GGG-render-environment.json"
+  
 }
 }
