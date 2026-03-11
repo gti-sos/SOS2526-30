@@ -47,6 +47,14 @@ function loadBackendGGG(app) {
     // ============================================
     // CARGA INICIAL (SOLO SI LA BD ESTÁ VACÍA)
     // ============================================
+
+
+    router.get("/docs", (req, res) => {
+        res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR7"); 
+    });
+
+
+
     router.get("/loadInitialData", (req, res) => {
         db.count({}, (err, count) => {
             if (err) {
@@ -399,6 +407,7 @@ function loadBackendGGG(app) {
 
     // Registrar el router
     app.use('/api/v1/olympics-athlete-events', router);
+    
 }
 
 export default loadBackendGGG;
