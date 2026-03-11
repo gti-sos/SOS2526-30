@@ -1,5 +1,6 @@
 import express from "express";
-import Datastore from "nedb";
+//import Datastore from "nedb";
+import Datastore from "@seald-io/nedb";
 
 const router = express.Router();
 const db = new Datastore();
