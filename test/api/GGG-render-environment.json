@@ -1,0 +1,13 @@
+{
+  "id": "GGG-render-environment",
+  "name": "GGG-render",
+  "values": [
+    {
+      "key": "BASE_URL",
+      "value": "https://sos2526-30.onrender.com",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
