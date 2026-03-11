@@ -1,7 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const Datastore = require("nedb");
+import express from "express";
+import Datastore from "nedb";
 
+const router = express.Router();
+
+// Configuración de la base de datos (NeDB)
 const db = new Datastore({
     filename: "./esportsearnings.db",
     autoload: true
@@ -32,54 +34,45 @@ const requiredFields = [
 ];
 
 function cleanId(doc) {
-    delete doc._id;
+    if (doc) {
+        const newDoc = { ...doc };
+        delete newDoc._id;
+        return newDoc;
+    }
     return doc;
 }
 
 /* ---------------- LOAD INITIAL DATA ---------------- */
-
 router.get("/loadInitialData", (req, res) => {
-
     db.find({}, (err, docs) => {
-
         if (docs.length === 0) {
-
             db.insert(datosIniciales, (err, newDocs) => {
                 res.status(201).json(newDocs.map(cleanId));
             });
-
         } else {
             res.status(200).json({ message: "Data already loaded" });
         }
-
     });
-
 });
 
 /* ---------------- GET GENERAL ---------------- */
-
 router.get("/", (req, res) => {
-
     const { limit, offset, from, to, ...queryFields } = req.query;
     let query = {};
 
     for (const [campo, valor] of Object.entries(queryFields)) {
-
         if (!isNaN(valor) && valor.trim() !== "") {
             query[campo] = parseFloat(valor);
         } else {
             query[campo] = valor;
         }
-
     }
 
     if (from && to) {
         query.year = { $gte: parseInt(from), $lte: parseInt(to) };
-    } 
-    else if (from) {
+    } else if (from) {
         query.year = { $gte: parseInt(from) };
-    } 
-    else if (to) {
+    } else if (to) {
         query.year = { $lte: parseInt(to) };
     }
 
@@ -90,153 +83,84 @@ router.get("/", (req, res) => {
       .skip(offsetValue)
       .limit(limitValue)
       .exec((err, docs) => {
-
         if (err) return res.status(500).json({ message: "Internal Server Error" });
-
         res.status(200).json(docs.map(cleanId));
-
       });
-
 });
 
 /* ---------------- POST GENERAL ---------------- */
-
 router.post("/", (req, res) => {
-
     const newData = req.body;
-
     const tieneTodos = requiredFields.every(c => newData.hasOwnProperty(c));
     const longitudCorrecta = Object.keys(newData).length === requiredFields.length;
 
     if (!tieneTodos || !longitudCorrecta) {
-        return res.status(400).json({
-            message: "Bad Request: JSON fields do not match expected structure"
-        });
+        return res.status(400).json({ message: "Bad Request" });
     }
 
     newData.year = parseInt(newData.year);
 
-    db.find({
-        game_name: newData.game_name,
-        year: newData.year
-    }, (err, docs) => {
-
+    db.find({ game_name: newData.game_name, year: newData.year }, (err, docs) => {
         if (docs.length > 0) {
             return res.status(409).json({ message: "Resource already exists" });
         }
-
         db.insert(newData, (err, newDoc) => {
             res.status(201).json(cleanId(newDoc));
         });
-
     });
-
 });
 
 /* ---------------- DELETE GENERAL ---------------- */
-
 router.delete("/", (req, res) => {
-
     db.remove({}, { multi: true }, (err, numRemoved) => {
-        res.status(200).json({ message: "All data deleted successfully" });
+        res.status(200).json({ message: "All data deleted" });
     });
-
 });
 
 /* ---------------- GET ESPECÍFICO ---------------- */
-
 router.get("/:game_name/:year", (req, res) => {
-
     const game = req.params.game_name;
     const year = parseInt(req.params.year);
 
     db.findOne({ game_name: game, year: year }, (err, doc) => {
-
         if (doc) {
             res.status(200).json(cleanId(doc));
         } else {
             res.status(404).json({ message: "Resource not found" });
         }
-
     });
-
 });
 
 /* ---------------- PUT ESPECÍFICO ---------------- */
-
 router.put("/:game_name/:year", (req, res) => {
-
     const game = req.params.game_name;
     const year = parseInt(req.params.year);
     const body = req.body;
 
     if (game !== body.game_name || year !== parseInt(body.year)) {
-        return res.status(400).json({
-            message: "Bad Request: IDs in URL and body do not match"
-        });
+        return res.status(400).json({ message: "Bad Request: ID mismatch" });
     }
 
-    const tieneTodos = requiredFields.every(c => body.hasOwnProperty(c));
-    const longitudCorrecta = Object.keys(body).length === requiredFields.length;
-
-    if (!tieneTodos || !longitudCorrecta) {
-        return res.status(400).json({
-            message: "Bad Request: JSON fields do not match expected structure"
-        });
-    }
-
-    db.update(
-        { game_name: game, year: year },
-        body,
-        {},
-        (err, numReplaced) => {
-
-            if (numReplaced === 0) {
-                return res.status(404).json({ message: "Resource not found" });
-            }
-
-            res.status(200).json(body);
-
-        }
-    );
-
+    db.update({ game_name: game, year: year }, body, {}, (err, numReplaced) => {
+        if (numReplaced === 0) return res.status(404).json({ message: "Not found" });
+        res.status(200).json(body);
+    });
 });
 
 /* ---------------- DELETE ESPECÍFICO ---------------- */
-
 router.delete("/:game_name/:year", (req, res) => {
-
     const game = req.params.game_name;
     const year = parseInt(req.params.year);
-
-    db.remove(
-        { game_name: game, year: year },
-        {},
-        (err, numRemoved) => {
-
-            if (numRemoved === 0) {
-                return res.status(404).json({ message: "Resource not found" });
-            }
-
-            res.status(200).json({ message: "Resource deleted successfully" });
-
-        }
-    );
-
-});
-
-router.post("/:game_name/:year", (req, res) => {
-    res.status(405).json({
-        message: "Method Not Allowed: Cannot create specific resource"
+    db.remove({ game_name: game, year: year }, {}, (err, numRemoved) => {
+        if (numRemoved === 0) return res.status(404).json({ message: "Not found" });
+        res.status(200).json({ message: "Deleted" });
     });
 });
 
-router.put("/", (req, res) => {
-    res.status(405).json({
-        message: "Method Not Allowed"
-    });
-});
+// Metodos no permitidos
+router.post("/:game_name/:year", (req, res) => res.status(405).json({ message: "Method Not Allowed" }));
+router.put("/", (req, res) => res.status(405).json({ message: "Method Not Allowed" }));
 
-module.exports = router;
-
+// EXPORTACIÓN USANDO ES MODULES
+export default router;
 
