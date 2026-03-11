@@ -15,7 +15,6 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
- 
   "dependencies": {
     "cool-ascii-faces": "^1.3.4",
     "csv-parse": "^6.1.0",
@@ -28,9 +27,8 @@
   },
   "devDependencies": {
     "start-server-and-test": "^2.1.5"
-  }
-
-  ,"scripts": {
+  },
+  "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test:local": "newman run postman/cheaters-stats.postman_collection.json -e postman/environments/local.postman_environment.json",
@@ -40,7 +38,4 @@
     "test:all": "npm run test:local && npm run test:render",
     "test:environments": "node test-environments.js"
   }
-
-
-  
 }
