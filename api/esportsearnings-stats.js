@@ -146,7 +146,12 @@ router.get("/:game_name/:year", (req, res) => {
     const year = parseInt(req.params.year); 
     
     db.find({ game_name: game, year: year }, (err, docs) => {
-        if (docs.length > 0) {
+        // 1. Manejamos el error interno
+        if (err) {
+            return res.status(500).json({ message: "Error interno" });
+        }
+        // 2. Nos aseguramos de que docs existe antes de mirar su length
+        if (docs && docs.length > 0) {
             res.status(200).json(cleanId(docs[0]));
         } else {
             res.status(404).json({ message: "Resource not found" });
