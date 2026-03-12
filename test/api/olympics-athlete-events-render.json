@@ -1,9 +1,9 @@
 {
-  "id": "GGG-render-environment",
-  "name": "GGG-render",
+  "id": "olympics-athlete-events-render",
+  "name": "olympics-athlete-events-render",
   "values": [
     {
-      "key": "BASE_URL",
+      "key": "base_url",
       "value": "https://sos2526-30.onrender.com",
       "type": "default",
       "enabled": true

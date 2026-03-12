@@ -1,9 +1,9 @@
 {
-  "id": "GGG-local-environment",
-  "name": "GGG-local",
+  "id": "olympics-athlete-events-local",
+  "name": "olympics-athlete-events-local",
   "values": [
     {
-      "key": "BASE_URL",
+      "key": "base_url",
       "value": "http://localhost:3000",
       "type": "default",
       "enabled": true

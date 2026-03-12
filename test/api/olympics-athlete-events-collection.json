@@ -1,0 +1,875 @@
+{
+  "info": {
+    "_postman_id": "7e934809-8408-4f88-a989-0b59bfbd60cf",
+    "name": "olympics-athlete-events",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52768258",
+    "_collection_link": "https://go.postman.co/collection/52768258-7e934809-8408-4f88-a989-0b59bfbd60cf?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Borrar todo (reset)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Carga Datos iniciales 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El codigo de estado debe ser 200 OK\", function() {\r",
+              "    pm.response.to.have.status(200)\r",
+              "})\r",
+              "pm.test(\"La respuesta debe ser un array\", function(){\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).is.an(\"array\");\r",
+              "    pm.expect(jsonData.length).eql(15);\r",
+              "})\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/loadInitialData",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "loadInitialData"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Datos 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"La respuesta tiene estructura correcta\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData).to.have.property('data');\r",
+              "    pm.expect(jsonData.data).to.be.an('array');\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events?page=1&limit=3",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtro Pais 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"La respuesta tiene estructura correcta\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData).to.have.property('data');\r",
+              "    pm.expect(jsonData.data).to.be.an('array');\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events?country=China",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ],
+          "query": [
+            {
+              "key": "country",
+              "value": "China"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtro collecion 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El codigo de estado es 200 OK\", function(){\r",
+              "    pm.response.to.have.status(200)\r",
+              "})\r",
+              "pm.test(\"Devuelve un array con resultados\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('array');\r",
+              "    pm.expect(jsonData.length).to.be.above(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/year",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "year"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recurso especifico 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Devuelve un objeto (no un array) con el país correcto\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.team).to.eql(\"China\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/A Dijiang/1992",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "A Dijiang",
+            "1992"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtro Rango de tiempo 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"La respuesta tiene estructura correcta\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData).to.have.property('data');\r",
+              "    pm.expect(jsonData.data).to.be.an('array');\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events?from=1990&to=1994",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "1990"
+            },
+            {
+              "key": "to",
+              "value": "1994"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Id no coincidentes 400 Bad Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 1002, \r\n  \"country\": \"China\",\r\n  \"medal\": \"Gold\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/China/1992",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "China",
+            "1992"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT coleccion no permitido 405 Method not allowed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 405 (Método No Permitido)\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.message).to.include(\"Not Allowed\");\r",
+              "});\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 2025, \r\n  \"country\": \"China\",\r\n  \"medal\": \"Gold\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST recurso especifico 405 not allowed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 405 (Método No Permitido)\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.message).to.include(\"Not Allowed\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/China/2026",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "China",
+            "2026"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Atleta ya existente 409 conflict",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 409 (Conflicto por duplicado)\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
+              "});\r",
+              "pm.test(\"Devuelve un mensaje de elemento ya existente\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.message).to.include(\"exists\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"A Dijiang\",\r\n    \"team\": \"China\",\r\n    \"year\": 1992,\r\n    \"sport\": \"Basketball\",\r\n    \"event\": \"Basketball Men's Basketball\",\r\n    \"medal\": \"NA\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Creacion nuevo Atleta 201 Created",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "pm.test(\"El recurso se ha creado correctamente\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.team).to.eql(\"PaisNuevo\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Faltan campos 400 Bad Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "pm.test(\"El recurso se ha creado correctamente\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Actualizar Atleta creado 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"El campo se actualizó correctamente\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.event).to.eql(\"Torneo Mod\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Mod\",\r\n    \"medal\": \"Gold\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Atleta Prueba/2024",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "Atleta Prueba",
+            "2024"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Borrar dato concreto 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El codigo de estado es 200 OK\",function(){\r",
+              "    pm.response.to.have.status(200);\r",
+              "    })\r",
+              "\r",
+              "pm.test(\"Devuelve un mensaje de elemento borrado\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.message).to.include(\"deleted\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Atleta Prueba/2024",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "Atleta Prueba",
+            "2024"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Dato inexistente 404 NOT found",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 404 (No Encontrado)\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});\r",
+              "pm.test(\"Devuelve un mensaje de elemetno no Encontrado\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData.message).to.include(\"no encontrado\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Atleta Prueba",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "Atleta Prueba"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
