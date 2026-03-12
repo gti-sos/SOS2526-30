@@ -1,11 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const Datastore = require("nedb");
+import express from "express";
+//import Datastore from "nedb";
+import Datastore from "@seald-io/nedb";
 
-const db = new Datastore({
-    filename: "./esportsearnings.db",
-    autoload: true
-});
+const router = express.Router();
+const db = new Datastore();
 
 const datosIniciales = [
     { total_money: 31, game_name: "Acceleration of SUGURI 2", genre: "Fighting Game", player_no: 6, tournament_no: 2, country: "United States", top_country_earnings: 31, year: 2018 },
@@ -19,224 +17,194 @@ const datosIniciales = [
     { total_money: 114467.372, game_name: "FIFA 20", genre: "Sports", player_no: 248, tournament_no: 39, country: "United Kingdom", top_country_earnings: 20561.304, year: 2019 },
     { total_money: 9750842.500, game_name: "Fortnite", genre: "Battle Royale", player_no: 4347, tournament_no: 660, country: "United States", top_country_earnings: 3342275.637, year: 2017 }
 ];
+db.insert(datosIniciales);
 
-const requiredFields = [
-    "total_money",
-    "game_name",
-    "genre",
-    "player_no",
-    "tournament_no",
-    "country",
-    "top_country_earnings",
-    "year"
+const camposEsperados = [
+    "total_money", "game_name", "genre", "player_no", 
+    "tournament_no", "country", "top_country_earnings", "year"
 ];
 
 function cleanId(doc) {
-    delete doc._id;
+    if (doc) delete doc._id;
     return doc;
 }
 
-/* ---------------- LOAD INITIAL DATA ---------------- */
-
-router.get("/loadInitialData", (req, res) => {
-
-    db.find({}, (err, docs) => {
-
-        if (docs.length === 0) {
-
-            db.insert(datosIniciales, (err, newDocs) => {
-                res.status(201).json(newDocs.map(cleanId));
-            });
-
-        } else {
-            res.status(200).json({ message: "Data already loaded" });
-        }
-
-    });
-
+// Redirección a documentación (ajusta el link si tienes uno propio)
+router.get("/docs", (req, res) => {
+    res.redirect("https://documenter.getpostman.com/view/52332561/2sBXiesa6t"); 
 });
 
-/* ---------------- GET GENERAL ---------------- */
+/* ---------------- LOAD INITIAL DATA ---------------- */
+router.get("/loadInitialData", (req, res) => {
+    db.find({}, (err, docs) => {
+        if (err) {
+            return res.status(500).json({ message: "Error interno de la base de datos" });
+        }
 
+        if (docs.length === 0) {
+            db.insert(datosIniciales, (err, newDocs) => {
+                if (err) {
+                    return res.status(500).json({ message: "Error al insertar los datos" });
+                }
+                // Si NeDB no devuelve newDocs, usamos datosIniciales como respaldo
+                const datosParaEnviar = newDocs || datosIniciales;
+                res.status(201).json(datosParaEnviar.map(cleanId));
+            });
+        } else {
+            res.status(200).json({ message: "Data is already loaded" });
+        }
+    });
+});
+
+/* ---------------- GET GENERAL (Con filtros y paginación) ---------------- */
 router.get("/", (req, res) => {
-
     const { limit, offset, from, to, ...queryFields } = req.query;
     let query = {};
 
     for (const [campo, valor] of Object.entries(queryFields)) {
-
         if (!isNaN(valor) && valor.trim() !== "") {
             query[campo] = parseFloat(valor);
         } else {
             query[campo] = valor;
         }
-
     }
 
     if (from && to) {
         query.year = { $gte: parseInt(from), $lte: parseInt(to) };
-    } 
-    else if (from) {
+    } else if (from) {
         query.year = { $gte: parseInt(from) };
-    } 
-    else if (to) {
+    } else if (to) {
         query.year = { $lte: parseInt(to) };
     }
 
     const limitValue = limit ? parseInt(limit) : 0;
     const offsetValue = offset ? parseInt(offset) : 0;
 
-    db.find(query)
-      .skip(offsetValue)
-      .limit(limitValue)
-      .exec((err, docs) => {
-
+    db.find(query).skip(offsetValue).limit(limitValue).exec((err, docs) => {
         if (err) return res.status(500).json({ message: "Internal Server Error" });
-
         res.status(200).json(docs.map(cleanId));
-
-      });
-
+    });
 });
 
 /* ---------------- POST GENERAL ---------------- */
-
 router.post("/", (req, res) => {
-
     const newData = req.body;
+    const tieneTodosLosCampos = camposEsperados.every(campo => newData.hasOwnProperty(campo));
+    const tieneLongitudExacta = Object.keys(newData).length === camposEsperados.length;
 
-    const tieneTodos = requiredFields.every(c => newData.hasOwnProperty(c));
-    const longitudCorrecta = Object.keys(newData).length === requiredFields.length;
-
-    if (!tieneTodos || !longitudCorrecta) {
-        return res.status(400).json({
-            message: "Bad Request: JSON fields do not match expected structure"
-        });
+    if (!tieneTodosLosCampos || !tieneLongitudExacta) {
+        return res.status(400).json({ message: "Bad Request: Missing or incorrect fields" });
     }
 
-    newData.year = parseInt(newData.year);
-
-    db.find({
-        game_name: newData.game_name,
-        year: newData.year
-    }, (err, docs) => {
-
+    db.find({ game_name: newData.game_name, year: parseInt(newData.year) }, (err, docs) => {
         if (docs.length > 0) {
-            return res.status(409).json({ message: "Resource already exists" });
+            res.status(409).json({ message: "Resource already exists" });
+        } else {
+            newData.year = parseInt(newData.year);
+            db.insert(newData, (err, newDoc) => {
+                res.status(201).json(cleanId(newDoc));
+            });
         }
-
-        db.insert(newData, (err, newDoc) => {
-            res.status(201).json(cleanId(newDoc));
-        });
-
     });
+});
 
+router.put("/", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed" });
 });
 
 /* ---------------- DELETE GENERAL ---------------- */
-
 router.delete("/", (req, res) => {
-
     db.remove({}, { multi: true }, (err, numRemoved) => {
         res.status(200).json({ message: "All data deleted successfully" });
     });
-
 });
 
-/* ---------------- GET ESPECÍFICO ---------------- */
+/* ---------------- GET POR PAÍS ---------------- */
+router.get("/:country", (req, res) => {
+    const country = req.params.country;
+    const { from, to } = req.query;
+    let query = { country: country };
 
+    if (from && to) {
+        query.year = { $gte: parseInt(from), $lte: parseInt(to) };
+    } else if (from) {
+        query.year = { $gte: parseInt(from) };
+    } else if (to) {
+        query.year = { $lte: parseInt(to) };
+    }
+
+    db.find(query, (err, docs) => {
+        if (docs.length === 0 && !from && !to) {
+            res.status(404).json({ message: "Resource not found" });
+        } else {
+            res.status(200).json(docs.map(cleanId));
+        }
+    });
+});
+
+/* ---------------- GET POR JUEGO Y AÑO ---------------- */
 router.get("/:game_name/:year", (req, res) => {
-
     const game = req.params.game_name;
-    const year = parseInt(req.params.year);
-
-    db.findOne({ game_name: game, year: year }, (err, doc) => {
-
-        if (doc) {
-            res.status(200).json(cleanId(doc));
+    const year = parseInt(req.params.year); 
+    
+    db.find({ game_name: game, year: year }, (err, docs) => {
+        // 1. Manejamos el error interno
+        if (err) {
+            return res.status(500).json({ message: "Error interno" });
+        }
+        // 2. Nos aseguramos de que docs existe antes de mirar su length
+        if (docs && docs.length > 0) {
+            res.status(200).json(cleanId(docs[0]));
         } else {
             res.status(404).json({ message: "Resource not found" });
         }
-
     });
-
 });
 
-/* ---------------- PUT ESPECÍFICO ---------------- */
+router.post("/:game_name/:year", (req, res) => {
+    res.status(405).json({ message: "Method Not Allowed" });
+});
 
+/* ---------------- PUT POR JUEGO Y AÑO ---------------- */
 router.put("/:game_name/:year", (req, res) => {
-
     const game = req.params.game_name;
     const year = parseInt(req.params.year);
     const body = req.body;
 
     if (game !== body.game_name || year !== parseInt(body.year)) {
-        return res.status(400).json({
-            message: "Bad Request: IDs in URL and body do not match"
-        });
+        return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
     }
 
-    const tieneTodos = requiredFields.every(c => body.hasOwnProperty(c));
-    const longitudCorrecta = Object.keys(body).length === requiredFields.length;
+    const tieneTodosLosCampos = camposEsperados.every(campo => body.hasOwnProperty(campo));
+    const tieneLongitudExacta = Object.keys(body).length === camposEsperados.length;
 
-    if (!tieneTodos || !longitudCorrecta) {
-        return res.status(400).json({
-            message: "Bad Request: JSON fields do not match expected structure"
-        });
+    if (!tieneTodosLosCampos || !tieneLongitudExacta) {
+        return res.status(400).json({ message: "Bad Request: Missing or incorrect fields" });
     }
 
-    db.update(
-        { game_name: game, year: year },
-        body,
-        {},
-        (err, numReplaced) => {
-
-            if (numReplaced === 0) {
-                return res.status(404).json({ message: "Resource not found" });
-            }
-
-            res.status(200).json(body);
-
+    db.find({ game_name: game, year: year }, (err, docs) => {
+        if (docs.length > 0) {
+            db.update({ game_name: game, year: year }, body, {}, (err, numReplaced) => {
+                res.status(200).json(body);
+            });
+        } else {
+            res.status(404).json({ message: "Resource not found" });
         }
-    );
-
+    });
 });
 
-/* ---------------- DELETE ESPECÍFICO ---------------- */
-
+/* ---------------- DELETE POR JUEGO Y AÑO ---------------- */
 router.delete("/:game_name/:year", (req, res) => {
-
     const game = req.params.game_name;
     const year = parseInt(req.params.year);
-
-    db.remove(
-        { game_name: game, year: year },
-        {},
-        (err, numRemoved) => {
-
-            if (numRemoved === 0) {
-                return res.status(404).json({ message: "Resource not found" });
-            }
-
+    
+    db.remove({ game_name: game, year: year }, {}, (err, numRemoved) => {
+        if (numRemoved > 0) {
             res.status(200).json({ message: "Resource deleted successfully" });
-
+        } else {
+            res.status(404).json({ message: "Resource not found" });
         }
-    );
-
-});
-
-router.post("/:game_name/:year", (req, res) => {
-    res.status(405).json({
-        message: "Method Not Allowed: Cannot create specific resource"
     });
 });
 
-router.put("/", (req, res) => {
-    res.status(405).json({
-        message: "Method Not Allowed"
-    });
-});
-
-module.exports = router;
-
-
+export default router;
