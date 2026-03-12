@@ -1,8 +1,6 @@
     import express from 'express';
     import path from 'path';
     import { fileURLToPath } from 'url';
-
-    // Parche para que NeDB funcione en Node v24 (No me iba el rango de fechas)
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
 
@@ -25,9 +23,6 @@
     loadBackendGGG(app)
     loadBackendFMGP(app)
 
-
-
-    // app.use(`${BASE_URL_API}/cheaters-stats`, cheatersStatsAPI);
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 
