@@ -45,16 +45,15 @@ function loadBackendGGG(app) {
     const router = express.Router();
 
     // ============================================
-    // CARGA INICIAL (SOLO SI LA BD ESTÁ VACÍA)
+    // DOCUMENTACIÓN
     // ============================================
-
-
     router.get("/docs", (req, res) => {
         res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR7"); 
     });
 
-
-
+    // ============================================
+    // CARGA INICIAL (SOLO SI LA BD ESTÁ VACÍA)
+    // ============================================
     router.get("/loadInitialData", (req, res) => {
         db.count({}, (err, count) => {
             if (err) {
@@ -154,7 +153,7 @@ function loadBackendGGG(app) {
                     
                     const resultado = data.map(({ _id, ...rest }) => rest);
                     
-                    // Respuesta con metadatos de paginación
+                    // ✅ SOLO AQUÍ DEVOLVEMOS CON PAGINACIÓN
                     res.status(200).json({
                         data: resultado,
                         pagination: {
@@ -171,7 +170,7 @@ function loadBackendGGG(app) {
     });
 
     // ============================================
-    // POST - Crear nuevo atleta
+    // POST - Crear nuevo atleta (SIN PAGINACIÓN)
     // ============================================
     router.post("/", (req, res) => {
         const newData = req.body;
@@ -213,7 +212,7 @@ function loadBackendGGG(app) {
     });
 
     // ============================================
-    // DELETE - Borrar todos
+    // DELETE - Borrar todos (SIN PAGINACIÓN)
     // ============================================
     router.delete("/", (req, res) => {
         db.remove({}, { multi: true }, (err, numRemoved) => {
@@ -225,7 +224,7 @@ function loadBackendGGG(app) {
     });
 
     // ============================================
-    // LISTAS (colecciones de valores únicos)
+    // LISTAS (colecciones de valores únicos) - SIN PAGINACIÓN
     // ============================================
     
     // Equipos
@@ -284,11 +283,11 @@ function loadBackendGGG(app) {
     });
 
     // ============================================
-    // BÚSQUEDA POR NOMBRE CON PAGINACIÓN
+    // BÚSQUEDA POR NOMBRE (SIN PAGINACIÓN)
     // ============================================
     router.get("/:name", (req, res) => {
         const name = req.params.name;
-        const { from, to, page = 1, limit = 20 } = req.query;
+        const { from, to } = req.query;
         
         let query = { name: { $regex: new RegExp(name, 'i') } };
         
@@ -298,47 +297,24 @@ function loadBackendGGG(app) {
             if (to) query.year.$lte = parseInt(to);
         }
 
-        const pageNum = Math.max(1, parseInt(page) || 1);
-        const limitNum = Math.min(100, parseInt(limit) || 20);
-        const skipNum = (pageNum - 1) * limitNum;
-
-        db.count(query, (err, totalCount) => {
-            if (err) {
-                return res.status(500).json({ error: "Error al contar resultados" });
-            }
-
-            db.find(query)
-                .sort({ id: 1 })
-                .skip(skipNum)
-                .limit(limitNum)
-                .exec((err, data) => {
-                    if (err) {
-                        return res.status(500).json({ error: "Error al acceder a la base de datos" });
-                    }
-                    
-                    if (data.length === 0 && !from && !to && page === 1) {
-                        return res.status(404).json({ message: "Atleta no encontrado" });
-                    }
-                    
-                    const resultado = data.map(({ _id, ...rest }) => rest);
-                    
-                    res.status(200).json({
-                        data: resultado,
-                        pagination: {
-                            total: totalCount,
-                            page: pageNum,
-                            limit: limitNum,
-                            totalPages: Math.ceil(totalCount / limitNum),
-                            nextPage: skipNum + limitNum < totalCount ? pageNum + 1 : null,
-                            prevPage: pageNum > 1 ? pageNum - 1 : null
-                        }
-                    });
-                });
-        });
+        db.find(query)
+            .sort({ id: 1 })
+            .exec((err, data) => {
+                if (err) {
+                    return res.status(500).json({ error: "Error al acceder a la base de datos" });
+                }
+                
+                if (data.length === 0 && !from && !to) {
+                    return res.status(404).json({ message: "Atleta no encontrado" });
+                }
+                
+                const resultado = data.map(({ _id, ...rest }) => rest);
+                res.status(200).json(resultado); // ✅ Array simple
+            });
     });
 
     // ============================================
-    // RECURSO EXACTO (nombre/año)
+    // RECURSO EXACTO (nombre/año) - SIN PAGINACIÓN
     // ============================================
     router.get("/:name/:year", (req, res) => {
         const name = req.params.name;
@@ -352,7 +328,7 @@ function loadBackendGGG(app) {
                 return res.status(404).json({ message: "Resource not found" });
             }
             const { _id, ...result } = recurso;
-            res.status(200).json(result);
+            res.status(200).json(result); // ✅ Objeto simple
         });
     });
 
