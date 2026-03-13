@@ -8,50 +8,6 @@
   },
   "item": [
     {
-      "name": "Borrar todo (reset)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"El código de estado es 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json",
-            "type": "text"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": ""
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "olympics-athlete-events"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Carga Datos iniciales 200 OK",
       "event": [
         {
@@ -842,6 +798,56 @@
             "v1",
             "olympics-athlete-events",
             "Atleta Prueba"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Borrar todo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El número de registros borrados es \" + pm.response.json().count, function(){\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.count).to.eql(15);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events"
           ]
         }
       },

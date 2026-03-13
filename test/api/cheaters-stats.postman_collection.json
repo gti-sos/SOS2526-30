@@ -3,19 +3,52 @@
     "_postman_id": "8bc1d282-2bff-4a1b-ba38-e13accd6d36f",
     "name": "cheaters-stats",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "52706289",
+    "_exporter_id": "52768258",
     "_collection_link": "https://go.postman.co/collection/52768258-8bc1d282-2bff-4a1b-ba38-e13accd6d36f?source=collection_link"
   },
   "item": [
     {
       "name": "Carga Datos iniciales 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Devuelve un array\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.be.an('array');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Array tiene al menos 10 elementos\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.length).to.be.at.least(10);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Los objetos tienen la estructura correcta\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    const primerElemento = res[0];\r",
+              "    pm.expect(primerElemento).to.have.property(\"year\");\r",
+              "    pm.expect(primerElemento).to.have.property(\"country\");\r",
+              "    pm.expect(primerElemento).to.have.property(\"cheater_reports\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats/loadInitialData",
+          "raw": "{{base_url}}/api/v1/cheaters-stats/loadInitialData",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -29,13 +62,39 @@
     },
     {
       "name": "Obtener Datos 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Devuelve un array\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.data).to.be.an('array');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Array contiene datos\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.data.length).to.be.at.least(1);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -48,13 +107,45 @@
     },
     {
       "name": "Filtro Pais 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Devuelve un array\", function () {",
+              "    const res = pm.response.json();",
+              "    pm.expect(res.data).to.be.an('array');",
+              "});",
+              "",
+              "pm.test(\"Todos los resultados son de Spain\", function () {",
+              "    const res = pm.response.json();",
+              "    pm.expect(res).to.be.an('object');",
+              "    pm.expect(res.data, 'res.data debe ser un array').to.be.an('array');",
+              "",
+              "    res.data.forEach(item => {",
+              "        pm.expect(item).to.have.property('country');",
+              "        pm.expect(item.country).to.equal(\"Spain\");",
+              "    });",
+              "});",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats?=country=Spain",
+          "raw": "{{base_url}}/api/v1/cheaters-stats?country=Spain",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -63,8 +154,8 @@
           ],
           "query": [
             {
-              "key": "",
-              "value": "country=Spain"
+              "key": "country",
+              "value": "Spain"
             }
           ]
         }
@@ -73,13 +164,53 @@
     },
     {
       "name": "Recurso especifico 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Devuelve un array\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.data).to.be.an('array');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El año es 2020\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "\r",
+              "    pm.expect(res).to.have.property(\"data\");\r",
+              "    pm.expect(res.data).to.be.an(\"array\");\r",
+              "\r",
+              "    pm.expect(res.data[0]).to.have.property(\"year\");\r",
+              "    pm.expect(res.data[0].year).to.equal(2020);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El país es Spain\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.have.property(\"data\");\r",
+              "    pm.expect(res.data).to.be.an(\"array\").that.is.not.empty;\r",
+              "\r",
+              "    pm.expect(res.data[0]).to.have.property(\"country\");\r",
+              "    pm.expect(res.data[0].country.toLowerCase()).to.equal(\"spain\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats?country=Spain&year=2020",
+          "raw": "{{base_url}}/api/v1/cheaters-stats?country=Spain&year=2020",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -102,6 +233,28 @@
     },
     {
       "name": "POST registro existente 409 conflict",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 409\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje de error existe\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    // Como no sé el formato exacto de tu error, prueba con:\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [],
@@ -115,9 +268,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -130,6 +283,34 @@
     },
     {
       "name": "Creacion nuevo recurso 201 Created",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Recurso creado devuelve datos\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    \r",
+              "    // Si devuelve el objeto creado\r",
+              "    if (Array.isArray(res)) {\r",
+              "        pm.expect(res.length).to.be.at.least(1);\r",
+              "    } else {\r",
+              "        pm.expect(res).to.have.property(\"country\");\r",
+              "        pm.expect(res.country).to.equal(\"nuevopais\");\r",
+              "    }\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -149,9 +330,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -164,6 +345,27 @@
     },
     {
       "name": "Ids no coincidentes 400 Bad Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje de error existe\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [
@@ -178,9 +380,9 @@
           "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}"
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats/Spain/2021",
+          "raw": "{{base_url}}/api/v1/cheaters-stats/Spain/2021",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -195,6 +397,27 @@
     },
     {
       "name": "Actualizar recurso 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Confirmación de actualización\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.not.be.empty;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [],
@@ -208,9 +431,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats/nuevopais/2025",
+          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -225,13 +448,34 @@
     },
     {
       "name": "POST no permitido en recurso especifico 405 Not allowed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 405\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje de método no permitido\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats/Spain/2026",
+          "raw": "{{base_url}}/api/v1/cheaters-stats/Spain/2026",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -246,6 +490,28 @@
     },
     {
       "name": "PUT no permitido en coleccion 405 not allowed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 405\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje de método no permitido\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [
@@ -260,9 +526,9 @@
           "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}"
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -275,13 +541,34 @@
     },
     {
       "name": "Borrar Dato Concreto 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Confirmación de borrado\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.not.be.empty;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats/nuevopais/2025",
+          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -296,13 +583,34 @@
     },
     {
       "name": "Borrar Todo 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Confirmación de borrado total\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.not.be.empty;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -315,13 +623,34 @@
     },
     {
       "name": "Recurso inexistente 404 not found",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje de no encontrado\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/cheaters-stats/nuevopais",
+          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",

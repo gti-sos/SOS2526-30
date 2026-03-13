@@ -36,7 +36,6 @@ try {
             return value;
         }
     });
-    console.log(`✅ CSV de FMGP cargado: ${csvContent.length} registros totales`);
 } catch (err) {
     console.error("Error leyendo CSV de FMGP:", err.message);
 }

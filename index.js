@@ -8,7 +8,7 @@
     const __dirname = path.dirname(__filename);
 
 
-    import loadBackendGGG from './src/backend/indexGGG.js';
+    import loadBackendGGG from './src/backend/olympics-athlete-events.js';
     import loadBackendFMGP from './src/backend/cheaters-stats.js';
     import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
     import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
