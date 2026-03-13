@@ -10,8 +10,8 @@
 
     import loadBackendGGG from './src/backend/indexGGG.js';
     import loadBackendFMGP from './src/backend/cheaters-stats.js';
-    import esportsgrowthAPI from './api/esportsgrowth-stats.js';
-    import esportsearningsAPI from './api/esportsearnings-stats.js';
+    import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
+    import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
 
     const app = express();
     const BASE_URL_API = "/api/v1";
