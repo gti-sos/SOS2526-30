@@ -14,6 +14,7 @@ const db = new Datastore({
     autoload: true
 });
 
+
 // Crear índices para búsquedas eficientes
 db.ensureIndex({ fieldName: 'country' });
 db.ensureIndex({ fieldName: 'year' });
@@ -49,6 +50,9 @@ function loadBackendFMGP(app) {
     router.get("/api/v1/cheaters-stats/docs", (req, res) => {
         res.redirect("https://documenter.getpostman.com/view/52768258/2sBXigNZg8"); // Cambia por tu URL de documentación
     });
+
+
+
 
     // ============================================
     // CARGA INICIAL (SOLO SI LA BD ESTÁ VACÍA)
