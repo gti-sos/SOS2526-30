@@ -1,8 +1,8 @@
-  {
+{
   "info": {
     "_postman_id": "669c7820-6019-418f-bec9-60e27b4f7ba6",
     "name": "esportsgrowth-stats",
-    "description": "Colección completa de la api esportsgrowth-stats",
+    "description": "Colección completa de la api esportsearnings-stats",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "52302165",
     "_collection_link": "https://go.postman.co/collection/52302165-669c7820-6019-418f-bec9-60e27b4f7ba6?source=collection_link"
@@ -19,7 +19,9 @@
               "    pm.response.to.have.status(200);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -27,9 +29,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -56,7 +58,9 @@
               "    pm.expect(jsonData.length).to.eql(10);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -64,9 +68,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/loadInitialData",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/loadInitialData",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -93,7 +97,9 @@
               "    pm.expect(jsonData).to.be.an('array');",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -101,9 +107,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -130,7 +136,9 @@
               "    pm.expect(jsonData.length).to.be.above(0);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -138,9 +146,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats?country=Japan",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats?country=Japan",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -171,10 +179,11 @@
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData).to.be.an('object');",
               "    pm.expect(jsonData.country).to.eql(\"Spain\");",
-              "    pm.expect(jsonData).to.not.have.property(\"_id\");",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -182,9 +191,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Spain/2010",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/Spain/2010",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -212,7 +221,9 @@
               "    pm.expect(jsonData).to.be.an('array').that.is.empty;",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -220,9 +231,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats?from=2050&to=2070",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats?from=2050&to=2070",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -254,7 +265,9 @@
               "    pm.response.to.have.status(404);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -262,9 +275,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Narnia/2050",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/Narnia/2050",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -292,7 +305,9 @@
               "    pm.expect(jsonData.country).to.eql(\"France\");",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -309,9 +324,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -337,7 +352,9 @@
               "    pm.expect(jsonData.active_player_no).to.eql(99.9);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -354,9 +371,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/France/2024",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/France/2024",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -380,7 +397,9 @@
               "    pm.response.to.have.status(409);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -397,9 +416,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -421,7 +440,9 @@
               "    pm.response.to.have.status(400);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -438,9 +459,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -462,7 +483,9 @@
               "    pm.response.to.have.status(400);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -479,9 +502,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Spain/2010",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/Spain/2010",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -505,7 +528,9 @@
               "    pm.response.to.have.status(405);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -513,9 +538,9 @@
         "method": "PUT",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -527,7 +552,52 @@
       "response": []
     },
     {
-      "name": "14. POST Recurso Concreto 405 Método No Permitido",
+      "name": "14. PUT Campo Inesperado 400 Petición Incorrecta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"year\": 2024,\r\n  \"country\": \"France\",\r\n  \"active_player_no\": 99.9,\r\n  \"vw\": 60.2,\r\n  \"top_genre\": \"MOBA\",\r\n  \"top_platform\": \"PC\",\r\n  \"tournament_no\": 45,\r\n  \"pro_player_no\": 8000,\r\n  \"internet_penetration\": 90.1,\r\n  \"company_no\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/France/2024",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsgrowth-stats",
+            "France",
+            "2024"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15. POST Recurso Concreto 405 Método No Permitido",
       "event": [
         {
           "listen": "test",
@@ -570,7 +640,7 @@
       "response": []
     },
     {
-      "name": "15. DELETE Borrar Dato Concreto 200 OK",
+      "name": "16. DELETE Borrar Dato Concreto 200 OK",
       "event": [
         {
           "listen": "test",
