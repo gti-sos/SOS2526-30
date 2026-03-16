@@ -3,7 +3,7 @@
 	"name": "local",
 	"values": [
 		{
-			"key": "BASE_URL",
+			"key": "base_url",
 			"value": "http://localhost:3000",
 			"type": "default",
 			"enabled": true
