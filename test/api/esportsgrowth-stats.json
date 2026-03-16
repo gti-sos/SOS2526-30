@@ -171,6 +171,7 @@
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData).to.be.an('object');",
               "    pm.expect(jsonData.country).to.eql(\"Spain\");",
+              "    pm.expect(jsonData).to.not.have.property(\"_id\");",
               "});"
             ],
             "type": "text/javascript"
