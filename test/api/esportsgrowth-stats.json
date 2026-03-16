@@ -624,9 +624,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/Japan/2010",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/Japan/2010",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -658,9 +658,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{BASE_URL}}/api/v1/esportsgrowth-stats/France/2024",
+          "raw": "{{base_url}}/api/v1/esportsgrowth-stats/France/2024",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
