@@ -9,7 +9,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 
-const db = new Datastore;
+const db = new Datastore({
+    filename: path.join(__dirname, '..', '..', 'data', 'athlete_events.db'),
+    autoload: true
+});
 
 db.ensureIndex({ fieldName: 'name' });
 db.ensureIndex({ fieldName: 'year' });
