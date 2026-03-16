@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "94642b19-b803-45a6-b99a-378832e6a7f5",
+    "_postman_id": "ab0bbd35-4c84-4562-b0e5-35b301a7946f",
     "name": "esportsearnings-stats",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "52332561",
-    "_collection_link": "https://go.postman.co/collection/52332561-94642b19-b803-45a6-b99a-378832e6a7f5?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/52332561-ab0bbd35-4c84-4562-b0e5-35b301a7946f?source=collection_link"
   },
   "item": [
     {
@@ -554,7 +554,57 @@
       "response": []
     },
     {
-      "name": "14. Recurso Concreto 405 Method Not Allowed",
+      "name": "14 Put campos no esperados 400 Bad Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Returns error message\", function () {\r",
+              "    const data = pm.response.json();\r",
+              "    pm.expect(data).to.have.property(\"message\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"total_money\": 114467.372,\r\n    \"game_name\": \"FIFA 21\",\r\n    \"genre\": \"Sports\",\r\n    \"player_no\": 252,\r\n    \"tournament_no\": 40,\r\n    \"pais\": \"United Kingdom\", \r\n    \"top_country_earnings\": 20561.304,\r\n    \"year\": 2021\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/esportsearnings-stats/FIFA 21/2021",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "esportsearnings-stats",
+            "FIFA 21",
+            "2021"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15. Recurso Concreto 405 Method Not Allowed",
       "event": [
         {
           "listen": "test",
@@ -599,7 +649,7 @@
       "response": []
     },
     {
-      "name": "15. Borrar dato concreto 200 OK",
+      "name": "16. Borrar dato concreto 200 OK",
       "event": [
         {
           "listen": "test",
