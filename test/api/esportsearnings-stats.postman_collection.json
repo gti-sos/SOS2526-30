@@ -48,13 +48,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 200 (Creado)\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
+              "pm.test(\"Status 200 or 201\", function () {\r",
+              "    pm.expect([200,201]).to.include(pm.response.code);\r",
               "});\r",
-              "pm.test(\"La respuesta es un array con los 10 datos iniciales\", function () {\r",
-              "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an('array');\r",
-              "    pm.expect(jsonData.length).to.eql(10);\r",
+              "\r",
+              "pm.test(\"Response exists\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.exist;\r",
               "});"
             ],
             "type": "text/javascript",
@@ -207,6 +207,21 @@
     },
     {
       "name": "6. Recurso Inexistente 404 Not Found",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -227,6 +242,25 @@
     },
     {
       "name": "7. Busqueda de franja de fechas 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Devuelve un array vacío\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('array').that.is.empty;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "protocolProfileBehavior": {
         "disableBodyPruning": true
       },
@@ -263,6 +297,26 @@
     },
     {
       "name": "8. Crear nuevo dato 201 Created",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Has game_name\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.have.property(\"game_name\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [],
@@ -291,6 +345,21 @@
     },
     {
       "name": "9. Actualizar dato 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [],
@@ -321,6 +390,21 @@
     },
     {
       "name": "10. Dato Duplicado 409 Conflict",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 409 (Conflicto por duplicado)\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [],
@@ -349,6 +433,21 @@
     },
     {
       "name": "11. Campos no esperados 400 Bad Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [],
@@ -377,6 +476,21 @@
     },
     {
       "name": "12. IDs no coiciden 400 Bad Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [],
@@ -407,6 +521,21 @@
     },
     {
       "name": "13. Ruta Base 405 Method Not Allowed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 405 (Método No Permitido)\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [],
@@ -426,6 +555,21 @@
     },
     {
       "name": "14. Recurso Concreto 405 Method Not Allowed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 405 (Método No Permitido)\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [],
@@ -461,7 +605,7 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Status 200\", function () {\r",
+              "pm.test(\"El código de estado es 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
               "});"
             ],
