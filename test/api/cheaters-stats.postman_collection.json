@@ -3,7 +3,7 @@
     "_postman_id": "8bc1d282-2bff-4a1b-ba38-e13accd6d36f",
     "name": "cheaters-stats",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "52768258",
+    "_exporter_id": "52706289",
     "_collection_link": "https://go.postman.co/collection/52768258-8bc1d282-2bff-4a1b-ba38-e13accd6d36f?source=collection_link"
   },
   "item": [
@@ -42,9 +42,21 @@
           }
         }
       ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
       "request": {
         "method": "GET",
         "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
         "url": {
           "raw": "{{base_url}}/api/v1/cheaters-stats/loadInitialData",
           "host": [
@@ -344,6 +356,53 @@
       "response": []
     },
     {
+      "name": "Campo faltante",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "pm.test(\"El recurso se ha creado correctamente\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": " {\r\n       \r\n        \"cheater_reports\": \"3786\",\r\n        \"confirmed_bans\": \"1439\",\r\n        \"estimated_cheater_percentage\": \"2.34\"\r\n }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Ids no coincidentes 400 Bad Request",
       "event": [
         {
@@ -582,46 +641,6 @@
       "response": []
     },
     {
-      "name": "Borrar Todo 200 OK",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Confirmación de borrado total\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Recurso inexistente 404 not found",
       "event": [
         {
@@ -657,6 +676,46 @@
             "v1",
             "cheaters-stats",
             "nuevopais"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Borrar Todo 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Confirmación de borrado total\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.not.be.empty;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
           ]
         }
       },

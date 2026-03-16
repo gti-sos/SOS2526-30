@@ -46,8 +46,8 @@ function loadBackendFMGP(app) {
     // ============================================
     // DOCUMENTACIÓN
     // ============================================
-    router.get("/docs", (req, res) => {
-        res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR7"); // Cambia por tu URL de documentación
+    router.get("/api/v1/cheaters-stats/docs", (req, res) => {
+        res.redirect("https://documenter.getpostman.com/view/52768258/2sBXigNZg8"); // Cambia por tu URL de documentación
     });
 
     // ============================================
