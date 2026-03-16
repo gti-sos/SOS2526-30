@@ -58,7 +58,7 @@ function loadBackendGGG(app) {
                     if (err) {
                         return res.status(500).json({ error: "Error al insertar datos iniciales" });
                     }
-                    console.log(`✅ Datos iniciales cargados: ${newDocs.length} registros`);
+                    console.log(` Datos iniciales cargados: ${newDocs.length} registros`);
                     
                     db.find({}).sort({ id: 1 }).exec((err, data) => {
                         if (err) {
