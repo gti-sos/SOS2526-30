@@ -16,6 +16,7 @@
   "type": "module",
   "main": "index.js",
   "dependencies": {
+    "@sveltejs/adapter-node": "^5.5.4",
     "cool-ascii-faces": "^1.3.4",
     "cors": "^2.8.6",
     "csv-parse": "^6.1.0",
