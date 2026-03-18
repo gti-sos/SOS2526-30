@@ -8,6 +8,8 @@
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
+    const app = express();
+    const PORT = process.env.PORT || 3000;
 
 
     import loadBackendGGG from './src/backend/olympics-athlete-events.js';
@@ -15,18 +17,22 @@
     import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
     import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
 
-    const app = express();
+
     const BASE_URL_API = "/api/v1";
+
+    app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
+    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+    
+    app.use(express.json());
     app.use(cors());    
     loadBackendGGG(app)
     loadBackendFMGP(app)
     
 
-    app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
-    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+    
     app.use(handler);
 
-    const PORT = process.env.PORT || 3000;
+   
     app.listen(PORT, () => {
         console.log("=".repeat(50));
         console.log(`Servidor corriendo en puerto ${PORT}`);
