@@ -25,10 +25,11 @@
 
     loadBackendGGG(app)
     loadBackendFMGP(app)
-    app.use(handler);
+    
 
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+    app.use(handler);
 
     // app.get('/', (req, res) => {
     //     res.sendFile(path.join(__dirname, 'public/index.html'));
