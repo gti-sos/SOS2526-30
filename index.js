@@ -10,8 +10,6 @@
     const __dirname = path.dirname(__filename);
     const app = express();
     const PORT = process.env.PORT || 3000;
-    app.use(express.static(path.join(__dirname, 'src/frontend/build')));    
-
     import loadBackendGGG from './src/backend/olympics-athlete-events.js';
     import loadBackendFMGP from './src/backend/cheaters-stats.js';
     import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
