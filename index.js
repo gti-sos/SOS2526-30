@@ -10,34 +10,26 @@
     const __dirname = path.dirname(__filename);
 
 
-    import loadBackendGGG from './src/backend/olympics-athlete-events.js';
-    import loadBackendFMGP from './src/backend/cheaters-stats.js';
-    import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
-    import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
+    // import loadBackendGGG from './src/backend/olympics-athlete-events.js';
+    // import loadBackendFMGP from './src/backend/cheaters-stats.js';
+    // import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
+    // import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
 
     const app = express();
-    const BASE_URL_API = "/api/v1";
+    // const BASE_URL_API = "/api/v1";
     app.use(cors());    
 
  
     app.use(express.json());
  
 
-    loadBackendGGG(app)
-    loadBackendFMGP(app)
+    // loadBackendGGG(app)
+    // loadBackendFMGP(app)
     
 
-    app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
-    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+    // app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
+    // app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
     app.use(handler);
-
-    // app.get('/', (req, res) => {
-    //     res.sendFile(path.join(__dirname, 'public/index.html'));
-    // });
-
-    app.get('/about', (req, res) => {
-        res.sendFile(path.join(__dirname, 'public/about.html'));
-    });
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
