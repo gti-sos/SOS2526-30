@@ -8,7 +8,9 @@
     ];
 
     const repoUrl = "https://github.com/gti-sos/SOS2526-30";
-    const baseApiUrl = "https://sos2526-30.onrender.com/api/v1";
+    
+    // ✅ Usa variable de entorno si existe, si no usa la URL por defecto
+    const baseApiUrl = import.meta.env.VITE_API_URL || "https://sos2526-30.onrender.com/api/v1";
 </script>
 
 <svelte:head>
@@ -79,7 +81,7 @@
             </ul>
         </section>
 
-        
+        <!-- Tarjeta: Repositorio -->
         <section class="card full-width">
             <h2>📦 Repositorio</h2>
             <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
@@ -92,7 +94,6 @@
 </div>
 
 <style>
-   
     :root {
         --celeste-50: #f0f9ff;
         --celeste-100: #e0f2fe;
