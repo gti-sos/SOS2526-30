@@ -1,4 +1,6 @@
     import express from 'express';
+    import cors from 'cors';
+    import {handler} from './src/front/build/handler.js';
     import path from 'path';
     import { fileURLToPath } from 'url';
     import util from 'util';
@@ -14,11 +16,12 @@
     import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
 
     const app = express();
+    app.use(cors());
     const BASE_URL_API = "/api/v1";
 
  
     app.use(express.json());
-    app.use(express.static("public"));
+    app.use(express.static(path.join(__dirname, 'front', 'build')));
 
     loadBackendGGG(app)
     loadBackendFMGP(app)
@@ -26,13 +29,15 @@
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, 'public/index.html'));
-    });
+    app.use(handler);
 
-    app.get('/about', (req, res) => {
-        res.sendFile(path.join(__dirname, 'public/about.html'));
-    });
+    // app.get('/', (req, res) => {
+    //     res.sendFile(path.join(__dirname, 'public/index.html'));
+    // });
+
+    // app.get('/about', (req, res) => {
+    //     res.sendFile(path.join(__dirname, 'public/about.html'));
+    // });
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
