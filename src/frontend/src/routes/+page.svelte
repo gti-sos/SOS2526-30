@@ -79,7 +79,7 @@
             </ul>
         </section>
 
-        <!-- Tarjeta: Repositorio (ocupa el ancho completo) -->
+        
         <section class="card full-width">
             <h2>📦 Repositorio</h2>
             <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
@@ -92,7 +92,7 @@
 </div>
 
 <style>
-    /* Variables de colores azules y celestes */
+   
     :root {
         --celeste-50: #f0f9ff;
         --celeste-100: #e0f2fe;
