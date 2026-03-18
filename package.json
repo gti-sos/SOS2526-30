@@ -38,6 +38,7 @@
     "dev": "nodemon index.js",
     "front-dev": "cd src/front && npm run dev -- --open",
     "build": "cd src/front && npm install && npm run build",
+    
     "test": " npm run test-cheaters-stats && npm run test-olympics-athlete-events && npm run test-esportsgrowth-stats && npm run test-esportsearnings-stats ",
     "newman-local-DRP": "npx newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
     "test-local-DRP": "start-server-and-test start http://localhost:3000 newman-local-DRP",
