@@ -1,6 +1,6 @@
     import express from 'express';
     import cors from 'cors';
-    import {handler} from './src/front/build/handler.js';
+    import {handler} from './front/build/handler.js';
     import path from 'path';
     import { fileURLToPath } from 'url';
     import util from 'util';
