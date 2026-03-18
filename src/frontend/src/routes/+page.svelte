@@ -8,7 +8,7 @@
     ];
 
     const repoUrl = "https://github.com/gti-sos/SOS2526-30";
-    const baseApiUrl = "https://sos2526-30-backend.onrender.com/api/v1";
+    const baseApiUrl = "https://sos2526-30.onrender.com/api/v1";
 </script>
 
 <svelte:head>
