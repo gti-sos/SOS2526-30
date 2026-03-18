@@ -1,13 +1,15 @@
 <script>
+// @ts-nocheck
+
     // @ts-ignore
     let athletes = $state([]);
     let loading = $state(false);
     let error = $state(null);
+    let successMessage = $state(null);
     let showDeleteModal = $state(false);
     let deleteTarget = $state(null);
     let showCreateForm = $state(false);
     let editingAthlete = $state(null);
-    let successMessage = $state(null);
     
     // Formulario para nuevo/editar atleta
     let formData = $state({
@@ -26,6 +28,14 @@
         medal: 'NA'
     });
 
+    // Limpiar mensajes después de un tiempo
+    function clearMessages() {
+        setTimeout(() => {
+            error = null;
+            successMessage = null;
+        }, 5000);
+    }
+
     // Cargar todos los atletas
     async function getAthletes() {
         loading = true;
@@ -35,16 +45,25 @@
             const res = await fetch('/api/v1/olympics-athlete-events');
             
             if (!res.ok) {
-                throw new Error(`Error ${res.status}`);
+                if (res.status === 404) {
+                    throw new Error('No se encontraron atletas en la base de datos');
+                } else {
+                    throw new Error(`Error del servidor: ${res.status}`);
+                }
             }
             
             const data = await res.json();
             athletes = data.data || data;
+            
+            if (athletes.length === 0) {
+                successMessage = 'La lista está vacía. Puedes cargar datos de ejemplo o añadir un nuevo atleta.';
+            }
         } catch (e) {
             // @ts-ignore
             error = e.message;
         } finally {
             loading = false;
+            clearMessages();
         }
     }
 
@@ -63,16 +82,21 @@
             const res = await fetch('/api/v1/olympics-athlete-events/loadInitialData');
             
             if (!res.ok) {
-                throw new Error(`Error ${res.status}`);
+                if (res.status === 500) {
+                    throw new Error('Error al cargar los datos de ejemplo. Por favor, inténtalo de nuevo.');
+                } else {
+                    throw new Error(`Error inesperado: ${res.status}`);
+                }
             }
             
             await getAthletes();
-            successMessage = '✅ Datos de ejemplo cargados correctamente';
+            successMessage = '✅ Se han cargado 15 atletas de ejemplo correctamente.';
         } catch (e) {
             // @ts-ignore
             error = e.message;
         } finally {
             loading = false;
+            clearMessages();
         }
     }
 
@@ -98,26 +122,38 @@
             });
             
             if (res.status === 409) {
-                alert('Ya existe un atleta con ese nombre, año y evento');
+                alert(`❌ Ya existe un atleta llamado "${formData.name}" que participó en ${formData.event} en el año ${formData.year}. No se puede crear duplicado.`);
                 return;
             }
             
-            if (!res.ok) throw new Error('Error al guardar');
+            if (res.status === 400) {
+                alert('❌ Faltan datos obligatorios o el formato es incorrecto. Revisa los campos marcados con *.');
+                return;
+            }
+            
+            if (!res.ok) {
+                throw new Error('Error al guardar el atleta');
+            }
             
             await getAthletes();
             showCreateForm = false;
             resetForm();
-            successMessage = '✅ Atleta guardado correctamente';
+            successMessage = `✅ El atleta "${formData.name}" ha sido añadido correctamente.`;
         } catch (e) {
-            alert('Error al guardar el atleta');
+            alert('❌ No se pudo guardar el atleta. Por favor, inténtalo de nuevo.');
+        } finally {
+            clearMessages();
         }
     }
 
     // Guardar cambios del atleta
     async function saveAthleteChanges() {
         try {
+            const originalName = editingAthlete.name;
+            const originalYear = editingAthlete.year;
+            
             const res = await fetch(
-                `/api/v1/olympics-athlete-events/${encodeURIComponent(editingAthlete.name)}/${editingAthlete.year}`,
+                `/api/v1/olympics-athlete-events/${encodeURIComponent(originalName)}/${originalYear}`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -131,14 +167,28 @@
                 }
             );
             
-            if (!res.ok) throw new Error('Error al guardar los cambios');
+            if (res.status === 400) {
+                alert('❌ Los datos no coinciden. No se puede cambiar el nombre o año del atleta a través de esta opción.');
+                return;
+            }
+            
+            if (res.status === 404) {
+                alert('❌ El atleta que intentas modificar ya no existe. Puede que haya sido eliminado.');
+                return;
+            }
+            
+            if (!res.ok) {
+                throw new Error('Error al guardar los cambios');
+            }
             
             await getAthletes();
             editingAthlete = null;
             resetForm();
-            successMessage = '✅ Cambios guardados correctamente';
+            successMessage = `✅ Los cambios en "${formData.name}" han sido guardados correctamente.`;
         } catch (e) {
-            alert('Error al guardar los cambios');
+            alert('❌ No se pudieron guardar los cambios. Por favor, inténtalo de nuevo.');
+        } finally {
+            clearMessages();
         }
     }
 
@@ -149,32 +199,47 @@
                 method: 'DELETE'
             });
             
-            if (!res.ok) throw new Error('Error al eliminar');
+            if (res.status === 404) {
+                alert(`❌ No se encontró el atleta "${name}" del año ${year}. Puede que ya haya sido eliminado.`);
+                showDeleteModal = false;
+                deleteTarget = null;
+                return;
+            }
+            
+            if (!res.ok) {
+                throw new Error('Error al eliminar');
+            }
             
             await getAthletes();
             showDeleteModal = false;
             deleteTarget = null;
-            successMessage = '✅ Atleta eliminado correctamente';
+            successMessage = `✅ El atleta "${name}" (${year}) ha sido eliminado correctamente.`;
         } catch (e) {
-            alert('Error al eliminar el atleta');
+            alert('❌ No se pudo eliminar el atleta. Por favor, inténtalo de nuevo.');
+        } finally {
+            clearMessages();
         }
     }
 
     // Eliminar TODOS los atletas
     async function deleteAllAthletes() {
-        if (!confirm('¿Estás seguro de que quieres eliminar TODOS los atletas? Esta acción no se puede deshacer.')) return;
+        if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar TODOS los atletas?\n\nEsta acción no se puede deshacer.')) return;
         
         try {
             const res = await fetch('/api/v1/olympics-athlete-events', {
                 method: 'DELETE'
             });
             
-            if (!res.ok) throw new Error('Error al eliminar todos');
+            if (!res.ok) {
+                throw new Error('Error al eliminar todos');
+            }
             
             await getAthletes();
-            successMessage = '✅ Todos los atletas han sido eliminados';
+            successMessage = '✅ Todos los atletas han sido eliminados correctamente.';
         } catch (e) {
-            alert('Error al eliminar todos los atletas');
+            alert('❌ No se pudieron eliminar todos los atletas. Por favor, inténtalo de nuevo.');
+        } finally {
+            clearMessages();
         }
     }
 
@@ -207,31 +272,33 @@
 
 <h1 style="color: #0284c7; text-align: center;">🏅 Gestión de Atletas Olímpicos</h1>
 
-<!-- Mensaje de éxito -->
+<!-- Mensajes para el usuario -->
 {#if successMessage}
-    <div style="background: #d1fae5; color: #065f46; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; text-align: center;">
+    <div style="background: #d1fae5; color: #065f46; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; text-align: center; border: 1px solid #10b981;">
         {successMessage}
     </div>
 {/if}
 
-<!-- BARRA DE BOTONES - Textos en español y comprensibles -->
+{#if error}
+    <div style="background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; text-align: center; border: 1px solid #dc2626;">
+        ⚠️ {error}
+    </div>
+{/if}
+
+<!-- BARRA DE BOTONES -->
 <div style="margin-bottom: 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
-    <!-- Botón: Cargar datos de ejemplo -->
     <button onclick={loadSampleData} disabled={loading} style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         📥 Cargar datos de ejemplo
     </button>
     
-    <!-- Botón: Añadir nuevo atleta -->
     <button onclick={() => { resetForm(); showCreateForm = true; }} style="background: #0284c7; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         ➕ Añadir nuevo atleta
     </button>
     
-    <!-- Botón: Actualizar lista -->
     <button onclick={getAthletes} disabled={loading} style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         {loading ? 'Cargando...' : '🔄 Actualizar lista'}
     </button>
     
-    <!-- Botón: Eliminar todos -->
     <button onclick={deleteAllAthletes} style="background: #dc2626; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         🗑️ Eliminar todos
     </button>
@@ -326,8 +393,6 @@
 <!-- Lista de atletas -->
 {#if loading}
     <p style="text-align: center; color: #64748b;">Cargando atletas...</p>
-{:else if error}
-    <p style="text-align: center; color: #dc2626;">Error: {error}</p>
 {:else if athletes.length > 0}
     <p style="text-align: center; font-weight: bold;">📊 Total de atletas: {athletes.length}</p>
     
@@ -377,8 +442,6 @@
         <a href="/" style="color: #0284c7; text-decoration: none; font-weight: bold;">🏠 Página principal</a>
         <a href="/about" style="color: #0284c7; text-decoration: none; font-weight: bold;">ℹ️ Acerca del proyecto</a>
     </div>
-{:else}
-    <p style="text-align: center; color: #64748b; padding: 2rem;">No hay atletas. Puedes cargar datos de ejemplo o añadir uno nuevo.</p>
 {/if}
 
 <!-- Modal de confirmación para eliminar -->

@@ -107,12 +107,7 @@
         --celeste-900: #0c4a6e;
     }
 
-    body {
-        background: linear-gradient(135deg, var(--celeste-50) 0%, var(--celeste-100) 100%);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        min-height: 100vh;
-    }
+   
 
     .container {
         max-width: 1200px;
