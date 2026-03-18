@@ -1,7 +1,9 @@
     import express from 'express';
+    import cors from 'cors';
     import path from 'path';
     import { fileURLToPath } from 'url';
     import util from 'util';
+    import{handler} from './src/frontend/build/handler.js';  
     util.isDate = function(d) { return d instanceof Date; };
 
     const __filename = fileURLToPath(import.meta.url);
@@ -15,13 +17,15 @@
 
     const app = express();
     const BASE_URL_API = "/api/v1";
+    app.use(cors());    
 
  
     app.use(express.json());
-    app.use(express.static("public"));
+ 
 
     loadBackendGGG(app)
     loadBackendFMGP(app)
+    app.use(handler);
 
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
