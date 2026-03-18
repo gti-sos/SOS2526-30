@@ -17,6 +17,7 @@
   "main": "index.js",
   "dependencies": {
     "cool-ascii-faces": "^1.3.4",
+    "cors": "^2.8.6",
     "csv-parse": "^6.1.0",
     "csvtojson": "^2.0.14",
     "express": "^5.2.1",
@@ -35,20 +36,16 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": " npm run test-cheaters-stats && npm run test-olympics-athlete-events && npm run test-esportsgrowth-stats && npm run test-esportsearnings-stats ",
-    
     "newman-local-DRP": "npx newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
     "test-local-DRP": "start-server-and-test start http://localhost:3000 newman-local-DRP",
     "test-esportsgrowth-stats": "npm run test-local-DRP & npx kill-port 3000",
-    
     "test-esportsearnings-stats": "npm run test-local-earnings & npx kill-port 3000",
     "newman-local-earnings": "npx newman run test/api/esportsearnings-stats.postman_collection.json -e test/api/local.esportsearnings-stats_environment.json",
     "test-local-earnings": "start-server-and-test start http://localhost:3000 newman-local-earnings",
-    
     "test-FMGP": "npx newman run test/api/cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
     "test-FMGP:local": "start-server-and-test start http://localhost:3000 test-FMGP",
     "test-cheaters-stats": "npm run test-FMGP:local & npx kill-port 3000",
     "test-FMGP:render": "newman run test/api/cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
-    
     "newman-local-GGG": "npx newman run test/api/olympics-athlete-events-collection.json -e test/api/olympics-athlete-events-local.json",
     "test-local-GGG": "start-server-and-test start http://localhost:3000 newman-local-GGG",
     "test-olympics-athlete-events": "npm run test-local-GGG & npx kill-port 3000",
