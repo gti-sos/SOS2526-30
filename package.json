@@ -29,6 +29,7 @@
     "request": "^2.88.2"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
     "newman": "^6.2.2",
     "start-server-and-test": "^2.1.5"
   },
