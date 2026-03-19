@@ -64,9 +64,9 @@
         loadingFilters = true;
         try {
             const [countriesRes, gamesRes, yearsRes] = await Promise.all([
-                fetch('/api/v2/cheaters-stats/countries'),
-                fetch('/api/v2/cheaters-stats/games'),
-                fetch('/api/v2/cheaters-stats/years')
+                fetch('/api/v1/cheaters-stats/countries'),
+                fetch('/api/v1/cheaters-stats/games'),
+                fetch('/api/v1/cheaters-stats/years')
             ]);
             
             if (countriesRes.ok) countries = await countriesRes.json();
@@ -98,7 +98,7 @@
             if (filters.to) params.append('to', filters.to);
             if (filters.cheater_report) params.append('cheater_report', filters.cheater_report);
             
-            const url = `/api/v2/cheaters-stats?${params.toString()}`;
+            const url = `/api/v1/cheaters-stats?${params.toString()}`;
             const res = await fetch(url);
             
             if (!res.ok) {
@@ -170,7 +170,7 @@
         successMessage = null;
         try {
             // Primero verificamos si ya hay datos
-            const checkRes = await fetch('/api/v2/cheaters-stats?limit=1');
+            const checkRes = await fetch('/api/v1/cheaters-stats?limit=1');
             const checkData = await checkRes.json();
             
             // Si ya hay datos, preguntamos si quiere reemplazarlos
@@ -181,13 +181,13 @@
                 }
                 
                 // Borrar todos los datos existentes
-                await fetch('/api/v2/cheaters-stats?confirm=true', {
+                await fetch('/api/v1/cheaters-stats?confirm=true', {
                     method: 'DELETE'
                 });
             }
             
             // Cargar los datos de ejemplo
-            const res = await fetch('/api/v2/cheaters-stats/loadInitialData');
+            const res = await fetch('/api/v1/cheaters-stats/loadInitialData');
             
             if (!res.ok) {
                 if (res.status === 500) {
@@ -237,7 +237,7 @@
                 dataToSend.repeat_offender = parseInt(formData.repeat_offender);
             }
             
-            const res = await fetch('/api/v2/cheaters-stats', {
+            const res = await fetch('/api/v1/cheaters-stats', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSend)
@@ -296,7 +296,7 @@
             }
             
             const res = await fetch(
-                `/api/v2/cheaters-stats/country/${encodeURIComponent(originalCountry)}/year/${originalYear}/game/${encodeURIComponent(originalGame)}`,
+                `/api/v1/cheaters-stats/country/${encodeURIComponent(originalCountry)}/year/${originalYear}/game/${encodeURIComponent(originalGame)}`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -334,7 +334,7 @@
     async function deleteResource(country, year, game) {
         try {
             const res = await fetch(
-                `/api/v2/cheaters-stats/country/${encodeURIComponent(country)}/year/${year}/game/${encodeURIComponent(game)}`,
+                `/api/v1/cheaters-stats/country/${encodeURIComponent(country)}/year/${year}/game/${encodeURIComponent(game)}`,
                 {
                     method: 'DELETE'
                 }
@@ -367,7 +367,7 @@
         if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar TODOS los registros?\n\nEsta acción no se puede deshacer.')) return;
         
         try {
-            const res = await fetch('/api/v2/cheaters-stats?confirm=true', {
+            const res = await fetch('/api/v1/cheaters-stats?confirm=true', {
                 method: 'DELETE'
             });
             
@@ -403,10 +403,10 @@
 </script>
 
 <svelte:head>
-    <title>Gestión de Cheaters Stats - API v2</title>
+    <title>Gestión de Cheaters Stats - API v1</title>
 </svelte:head>
 
-<h1 style="color: #0284c7; text-align: center;">🎮 Gestión de Estadísticas de Tramposos (v2)</h1>
+<h1 style="color: #0284c7; text-align: center;">🎮 Gestión de Estadísticas de Tramposos (v1)</h1>
 
 <!-- Mensajes para el usuario -->
 {#if successMessage}
@@ -439,8 +439,8 @@
         🗑️ Eliminar todos
     </button>
     
-    <a href="/api/v2/cheaters-stats/docs" target="_blank" style="background: #8b5cf6; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold;">
-        📘 Documentación API v2
+    <a href="/api/v1/cheaters-stats/docs" target="_blank" style="background: #8b5cf6; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold;">
+        📘 Documentación API v1
     </a>
 </div>
 
