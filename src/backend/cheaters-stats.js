@@ -730,7 +730,7 @@ function loadBackendFMGP(app) {
     app.use('/api/v1/cheaters-stats', routerV1);
     app.use('/api/v2/cheaters-stats', routerV2);
     
-    console.log('✅ APIs cheaters-stats cargadas: v1 (/api/v1/cheaters-stats) y v2 (/api/v2/cheaters-stats)');
+
 }
 
 export default loadBackendFMGP;
