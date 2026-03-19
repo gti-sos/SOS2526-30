@@ -184,8 +184,12 @@
             </li>
             <li>
                 <div class="api-item">
-                    <span class="api-name">Olympics Athlete:</span>
+                    <span class="api-name">Olympics Athlete v1:</span>
                     <a href="/api/v1/olympics-athlete-events" class="api-link">/api/v1/olympics-athlete-events</a>
+                </div>
+                <div class="api-item">
+                    <span class="api-name">Olympics Athlete v2:</span>
+                    <a href="/api/v2/olympics-athlete-events" class="api-link">/api/v2/olympics-athlete-events</a>
                 </div>
             </li>
         </ul>
@@ -212,8 +216,12 @@
             </li>
             <li>
                 <div class="api-item">
-                    <span class="api-name">Gonzalo García Gómez:</span>
+                    <span class="api-name">olympics-athlete-events v1:</span>
                     <a href="/api/v1/olympics-athlete-events/docs" class="api-link" target="_blank">/api/v1/olympics-athlete-events/docs</a>
+                </div>
+                <div class="api-item">
+                    <span class="api-name">olympics-athlete-events v2:</span>
+                    <a href="/api/v2/olympics-athlete-events/docs" class="api-link" target="_blank">/api/v2/olympics-athlete-events/docs</a>
                 </div>
             </li>
         </ul>
@@ -231,11 +239,6 @@
                 sos2526-30.onrender.com
             </a>
         </p>
-
-        <div class="footer">
-            <p>✨ Proyecto SOS 2025-26 - Grupo 30</p>
-            <p>Desarrollado con ❤️ por el equipo</p>
-        </div>
     </div>
 </body>
 </html>
