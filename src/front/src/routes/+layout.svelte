@@ -9,9 +9,9 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 <Header></Header>
-<hr>
+
 
 {@render children()}
 
-<hr>
+
 <Footer></Footer>

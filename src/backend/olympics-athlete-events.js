@@ -44,12 +44,12 @@ dbV1.ensureIndex({ fieldName: 'team' });
 
 const routerV1 = express.Router();
 
-// 📌 Documentación v1
+// Documentación v1
 routerV1.get("/docs", (req, res) => {
     res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR7");
 });
 
-// 📌 Carga inicial v1 (solo si está vacía)
+// Carga inicial v1 (solo si está vacía)
 routerV1.get("/loadInitialData", (req, res) => {
     dbV1.count({}, (err, count) => {
         if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
@@ -58,7 +58,7 @@ routerV1.get("/loadInitialData", (req, res) => {
             const initialData = csvContent.slice(0, 15);
             dbV1.insert(initialData, (err, newDocs) => {
                 if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
-                console.log(`✅ Datos iniciales v1 cargados: ${newDocs.length} registros`);
+                console.log(`Datos iniciales v1 cargados: ${newDocs.length} registros`);
                 
                 dbV1.find({}).sort({ id: 1 }).exec((err, data) => {
                     if (err) return res.status(500).json({ error: "Error al recuperar datos" });
@@ -76,7 +76,7 @@ routerV1.get("/loadInitialData", (req, res) => {
     });
 });
 
-// 📌 Colección principal v1 (SOLO LECTURA)
+// Colección principal v1 (SOLO LECTURA)
 routerV1.get("/", (req, res) => {
     const { name, team, country, year, from, to, sport, season, city, id, page = 1, limit = 20 } = req.query;
     let query = {};
@@ -129,22 +129,22 @@ routerV1.get("/", (req, res) => {
     });
 });
 
-// ❌ Deshabilitar POST en v1 (inmutable)
+// Deshabilitar POST en v1 (inmutable)
 routerV1.post("/", (req, res) => {
     res.status(405).json({ message: "La versión 1 es solo lectura. No se pueden crear nuevos atletas." });
 });
 
-// ❌ Deshabilitar PUT en v1 (inmutable)
+// Deshabilitar PUT en v1 (inmutable)
 routerV1.put("/", (req, res) => {
     res.status(405).json({ message: "La versión 1 es solo lectura. No se puede modificar la lista." });
 });
 
-// ❌ Deshabilitar DELETE en v1 (inmutable)
+// Deshabilitar DELETE en v1 (inmutable)
 routerV1.delete("/", (req, res) => {
     res.status(405).json({ message: "La versión 1 es solo lectura. No se pueden borrar todos los atletas." });
 });
 
-// 📌 LISTAS v1 (solo lectura)
+// LISTAS v1 (solo lectura)
 routerV1.get("/team", (req, res) => {
     dbV1.find({}).exec((err, data) => {
         if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
@@ -185,7 +185,7 @@ routerV1.get("/season", (req, res) => {
     });
 });
 
-// 📌 Búsqueda por nombre v1
+// Búsqueda por nombre v1
 routerV1.get("/:name", (req, res) => {
     const name = req.params.name;
     const { from, to } = req.query;
@@ -207,7 +207,7 @@ routerV1.get("/:name", (req, res) => {
     });
 });
 
-// 📌 Recurso exacto v1 (solo lectura)
+// Recurso exacto v1 (solo lectura)
 routerV1.get("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
@@ -219,7 +219,7 @@ routerV1.get("/:name/:year", (req, res) => {
     });
 });
 
-// ❌ Deshabilitar POST, PUT, DELETE en recursos concretos de v1
+// Deshabilitar POST, PUT, DELETE en recursos concretos de v1
 routerV1.post("/:name/:year", (req, res) => {
     res.status(405).json({ message: "La versión 1 es solo lectura. No se pueden crear atletas." });
 });
@@ -246,12 +246,12 @@ dbV2.ensureIndex({ fieldName: 'team' });
 
 const routerV2 = express.Router();
 
-// 📌 Documentación v2
+// Documentación v2
 routerV2.get("/docs", (req, res) => {
     res.redirect("https://documenter.getpostman.com/view/52768258/2sBXihqYD4");
 });
 
-// 📌 Carga inicial v2
+// Carga inicial v2
 routerV2.get("/loadInitialData", (req, res) => {
     dbV2.count({}, (err, count) => {
         if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
@@ -260,7 +260,7 @@ routerV2.get("/loadInitialData", (req, res) => {
             const initialData = csvContent.slice(0, 15);
             dbV2.insert(initialData, (err, newDocs) => {
                 if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
-                console.log(`✅ Datos iniciales v2 cargados: ${newDocs.length} registros`);
+                console.log(`Datos iniciales v2 cargados: ${newDocs.length} registros`);
                 
                 dbV2.find({}).sort({ id: 1 }).exec((err, data) => {
                     if (err) return res.status(500).json({ error: "Error al recuperar datos" });
@@ -278,7 +278,7 @@ routerV2.get("/loadInitialData", (req, res) => {
     });
 });
 
-// 📌 Colección principal v2
+// Colección principal v2
 routerV2.get("/", (req, res) => {
     const { name, team, country, year, from, to, sport, season, city, id, page = 1, limit = 20 } = req.query;
     let query = {};
@@ -331,7 +331,7 @@ routerV2.get("/", (req, res) => {
     });
 });
 
-// ✅ POST v2 (permitido)
+// POST v2 (permitido)
 routerV2.post("/", (req, res) => {
     const newData = req.body;
     if (!newData || !newData.name || !newData.year) {
@@ -478,5 +478,4 @@ routerV2.delete("/:name/:year", (req, res) => {
 export default function loadBackendGGG(app) {
     app.use('/api/v1/olympics-athlete-events', routerV1);
     app.use('/api/v2/olympics-athlete-events', routerV2);
-
 }
