@@ -575,12 +575,12 @@
 
     <!-- BOTONES PRINCIPALES -->
     <div class="btn-group">
-        <button onclick={loadSampleData} disabled={loading} class="btn-green">📥 Cargar datos de ejemplo</button>
-        <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">➕ Añadir nuevo atleta</button>
+        <button onclick={loadSampleData} disabled={loading} class="btn-green">Cargar datos </button>
+        <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo atleta</button>
         <button onclick={() => getAthletes(currentPage)} disabled={loading} class="btn-gray">
-            {loading ? 'Cargando...' : '🔄 Actualizar lista'}
+            {loading ? 'Cargando...' : 'Actualizar lista'}
         </button>
-        <button onclick={deleteAllAthletes} class="btn-red">🗑️ Eliminar todos</button>
+        <button onclick={deleteAllAthletes} class="btn-red">Eliminar todos</button>
     </div>
 
     <!-- PAGINACIÓN -->
@@ -611,7 +611,7 @@
     {#if showCreateForm || editingAthlete}
         <div class="modal">
             <div class="modal-content">
-                <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? '✏️ Editar atleta' : '➕ Nuevo atleta'}</h2>
+                <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? ' Editar atleta' : ' Nuevo atleta'}</h2>
                 <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div class="grid-2">
                     <div><label>Nombre *</label><input type="text" bind:value={formData.name} disabled={editingAthlete}></div>
@@ -662,9 +662,9 @@
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.3rem;">
-                        <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.3rem 0.8rem;">✏️</button>
+                        <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.3rem 0.8rem;">Editar</button>
                         <button onclick={() => { deleteTarget = { name: athlete.name, year: athlete.year }; showDeleteModal = true; }} 
-                                class="btn-red" style="padding: 0.3rem 0.8rem;">🗑️</button>
+                                class="btn-red" style="padding: 0.3rem 0.8rem;">Borrar</button>
                     </div>
                 </div>
             </div>
@@ -681,8 +681,8 @@
 
         <hr>
         <div class="footer-links">
-            <a href="/">🏠 Inicio</a>
-            <a href="/about">ℹ️ Acerca de</a>
+            <a href="/"> Inicio</a>
+            <a href="/about">ℹ Acerca de</a>
             <a href="/api/v2/olympics-athlete-events/docs" target="_blank">📄 Docs v2</a>
         </div>
     {:else if !loading && !searchMode}
