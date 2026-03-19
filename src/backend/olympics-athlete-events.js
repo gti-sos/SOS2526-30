@@ -277,10 +277,10 @@ const routerV2 = express.Router();
 
 // 📌 Documentación v2 (CAMBIA ESTA URL)
 routerV2.get("/docs", (req, res) => {
-    res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR8"); // ← CAMBIA ESTA URL
+    res.redirect("https://documenter.getpostman.com/view/52768258/2sBXihqYD4");
 });
 
-// 📌 Carga inicial v2 (puedes modificarla)
+
 routerV2.get("/loadInitialData", (req, res) => {
     db.count({}, (err, count) => {
         if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });

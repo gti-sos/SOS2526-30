@@ -347,6 +347,7 @@
                     <input type="number" bind:value={formData.year} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: 1992">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Temporada</label>
                     <select bind:value={formData.season} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;">
                         <option value="Summer">Verano</option>
@@ -354,13 +355,16 @@
                     </select>
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Ciudad</label>
                     <input type="text" bind:value={formData.city} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: Barcelona">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Deporte *</label>
                     <input type="text" bind:value={formData.sport} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: Baloncesto">
                 </div>
+                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div>
                     <label style="display: block; font-weight: bold;">Evento *</label>
                     <input type="text" bind:value={formData.event} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: Baloncesto masculino">
