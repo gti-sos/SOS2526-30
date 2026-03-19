@@ -48,7 +48,7 @@
                 <li><a href="/frontend/david">Front-end de David</a></li>
                 <li><a href="/frontend/mario">Front-end de Mario</a></li>
                 <li><a href="/olympics-athlete-events">Front-end de Gonzalo</a></li>
-                <li><a href="/frontend/francisco">Front-end de Francisco</a></li>
+                <li><a href="/cheaters-stats">Front-end de Francisco</a></li>
             </ul>
         </section>
 
