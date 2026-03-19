@@ -36,13 +36,17 @@
         }, 5000);
     }
 
-    // Cargar todos los atletas
+    // ============================================
+    // API v2 - TODAS LAS OPERACIONES (LECTURA Y MODIFICACIÓN)
+    // ============================================
+    
+    // Cargar todos los atletas desde v2
     async function getAthletes() {
         loading = true;
         error = null;
         successMessage = null;
         try {
-            const res = await fetch('/api/v1/olympics-athlete-events');
+            const res = await fetch('/api/v2/olympics-athlete-events?t=' + Date.now());
             
             if (!res.ok) {
                 if (res.status === 404) {
@@ -67,19 +71,19 @@
         }
     }
 
-    // Cargar datos de ejemplo (15 atletas iniciales)
+    // Cargar datos de ejemplo (v2)
     async function loadSampleData() {
         loading = true;
         error = null;
         successMessage = null;
         try {
-            // Primero borramos todos los datos existentes
-            await fetch('/api/v1/olympics-athlete-events', {
+            // Primero borramos todos los datos existentes en v2
+            await fetch('/api/v2/olympics-athlete-events', {
                 method: 'DELETE'
             });
             
-            // Luego cargamos los datos de ejemplo
-            const res = await fetch('/api/v1/olympics-athlete-events/loadInitialData');
+            // Luego cargamos los datos de ejemplo en v2
+            const res = await fetch('/api/v2/olympics-athlete-events/loadInitialData');
             
             if (!res.ok) {
                 if (res.status === 500) {
@@ -89,6 +93,7 @@
                 }
             }
             
+            // Recargar la lista desde v2
             await getAthletes();
             successMessage = '✅ Se han cargado 15 atletas de ejemplo correctamente.';
         } catch (e) {
@@ -100,7 +105,7 @@
         }
     }
 
-    // Guardar nuevo atleta
+    // Guardar nuevo atleta (v2)
     async function saveNewAthlete() {
         try {
             // Validar campos obligatorios
@@ -109,7 +114,7 @@
                 return;
             }
             
-            const res = await fetch('/api/v1/olympics-athlete-events', {
+            const res = await fetch('/api/v2/olympics-athlete-events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -135,6 +140,7 @@
                 throw new Error('Error al guardar el atleta');
             }
             
+            // Recargar la lista desde v2
             await getAthletes();
             showCreateForm = false;
             resetForm();
@@ -146,14 +152,14 @@
         }
     }
 
-    // Guardar cambios del atleta
+    // Guardar cambios del atleta (v2)
     async function saveAthleteChanges() {
         try {
             const originalName = editingAthlete.name;
             const originalYear = editingAthlete.year;
             
             const res = await fetch(
-                `/api/v1/olympics-athlete-events/${encodeURIComponent(originalName)}/${originalYear}`,
+                `/api/v2/olympics-athlete-events/${encodeURIComponent(originalName)}/${originalYear}`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -181,6 +187,7 @@
                 throw new Error('Error al guardar los cambios');
             }
             
+            // Recargar la lista desde v2
             await getAthletes();
             editingAthlete = null;
             resetForm();
@@ -192,10 +199,10 @@
         }
     }
 
-    // Eliminar un atleta
+    // Eliminar un atleta (v2)
     async function deleteAthlete(name, year) {
         try {
-            const res = await fetch(`/api/v1/olympics-athlete-events/${encodeURIComponent(name)}/${year}`, {
+            const res = await fetch(`/api/v2/olympics-athlete-events/${encodeURIComponent(name)}/${year}`, {
                 method: 'DELETE'
             });
             
@@ -210,6 +217,7 @@
                 throw new Error('Error al eliminar');
             }
             
+            // Recargar la lista desde v2
             await getAthletes();
             showDeleteModal = false;
             deleteTarget = null;
@@ -221,12 +229,12 @@
         }
     }
 
-    // Eliminar TODOS los atletas
+    // Eliminar TODOS los atletas (v2)
     async function deleteAllAthletes() {
         if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar TODOS los atletas?\n\nEsta acción no se puede deshacer.')) return;
         
         try {
-            const res = await fetch('/api/v1/olympics-athlete-events', {
+            const res = await fetch('/api/v2/olympics-athlete-events', {
                 method: 'DELETE'
             });
             
@@ -234,6 +242,7 @@
                 throw new Error('Error al eliminar todos');
             }
             
+            // Recargar la lista desde v2
             await getAthletes();
             successMessage = '✅ Todos los atletas han sido eliminados correctamente.';
         } catch (e) {
@@ -262,15 +271,15 @@
         };
     }
 
-    // Cargar datos al iniciar
+    // Cargar datos al iniciar (v2)
     getAthletes();
 </script>
 
 <svelte:head>
-    <title>Gestión de Atletas Olímpicos</title>
+    <title>Gestión de Atletas Olímpicos (API v2)</title>
 </svelte:head>
 
-<h1 style="color: #0284c7; text-align: center;">🏅 Gestión de Atletas Olímpicos</h1>
+<h1 style="color: #0284c7; text-align: center;">🏅 Gestión de Atletas Olímpicos <span style="font-size: 0.8rem; background: #e0f2fe; padding: 0.2rem 0.5rem; border-radius: 4px; color: #0369a1;">API v2</span></h1>
 
 <!-- Mensajes para el usuario -->
 {#if successMessage}
@@ -285,7 +294,7 @@
     </div>
 {/if}
 
-<!-- BARRA DE BOTONES -->
+<!-- BARRA DE BOTONES - TODO SOBRE v2 -->
 <div style="margin-bottom: 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
     <button onclick={loadSampleData} disabled={loading} style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
         📥 Cargar datos de ejemplo
@@ -312,10 +321,12 @@
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Nombre completo *</label>
                     <input type="text" bind:value={formData.name} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: A Dijiang">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Sexo</label>
                     <select bind:value={formData.sex} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;">
                         <option value="M">Masculino</option>
@@ -323,26 +334,32 @@
                     </select>
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Edad</label>
                     <input type="number" bind:value={formData.age} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: 25">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Altura (cm)</label>
                     <input type="number" bind:value={formData.height} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: 180">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Peso (kg)</label>
                     <input type="number" step="0.1" bind:value={formData.weight} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: 75.5">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">País *</label>
                     <input type="text" bind:value={formData.team} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: China">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Código del país</label>
                     <input type="text" bind:value={formData.noc} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: CHN">
                 </div>
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Año *</label>
                     <input type="number" bind:value={formData.year} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: 1992">
                 </div>
@@ -364,12 +381,13 @@
                     <label style="display: block; font-weight: bold;">Deporte *</label>
                     <input type="text" bind:value={formData.sport} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: Baloncesto">
                 </div>
-                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div>
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Evento *</label>
                     <input type="text" bind:value={formData.event} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="Ej: Baloncesto masculino">
                 </div>
                 <div style="grid-column: span 2;">
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label style="display: block; font-weight: bold;">Medalla</label>
                     <select bind:value={formData.medal} style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;">
                         <option value="NA">Ninguna</option>
@@ -396,9 +414,9 @@
 
 <!-- Lista de atletas -->
 {#if loading}
-    <p style="text-align: center; color: #64748b;">Cargando atletas...</p>
+    <p style="text-align: center; color: #64748b;">Cargando atletas desde API v2...</p>
 {:else if athletes.length > 0}
-    <p style="text-align: center; font-weight: bold;">📊 Total de atletas: {athletes.length}</p>
+    <p style="text-align: center; font-weight: bold;">📊 Total de atletas en v2: {athletes.length}</p>
     
     {#each athletes as athlete}
         <div style="margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 4px; background: #f8fafc;">
@@ -426,13 +444,13 @@
                     <button onclick={() => { 
                         formData = { ...athlete }; 
                         editingAthlete = athlete; 
-                    }} style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;" title="Editar atleta">
+                    }} style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;" title="Editar atleta en v2">
                         ✏️ Editar
                     </button>
                     <button onclick={() => { 
                         deleteTarget = { name: athlete.name, year: athlete.year };
                         showDeleteModal = true;
-                    }} style="background: #dc2626; color: white; padding: 0.3rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;" title="Eliminar atleta">
+                    }} style="background: #dc2626; color: white; padding: 0.3rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;" title="Eliminar atleta de v2">
                         🗑️ Eliminar
                     </button>
                 </div>
@@ -445,7 +463,10 @@
     <div style="display: flex; gap: 2rem; justify-content: center;">
         <a href="/" style="color: #0284c7; text-decoration: none; font-weight: bold;">🏠 Página principal</a>
         <a href="/about" style="color: #0284c7; text-decoration: none; font-weight: bold;">ℹ️ Acerca del proyecto</a>
+        <a href="/api/v2/olympics-athlete-events/docs" target="_blank" style="color: #0284c7; text-decoration: none; font-weight: bold;">📄 Documentación v2</a>
     </div>
+{:else if !loading}
+    <p style="text-align: center; color: #64748b; padding: 2rem;">No hay atletas en v2. Puedes cargar datos de ejemplo o añadir uno nuevo.</p>
 {/if}
 
 <!-- Modal de confirmación para eliminar -->
@@ -453,7 +474,7 @@
     <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%;">
             <h3 style="color: #dc2626; margin-top: 0;">⚠️ Confirmar eliminación</h3>
-            <p>¿Estás seguro de que quieres eliminar a <strong>{deleteTarget.name}</strong> ({deleteTarget.year})?</p>
+            <p>¿Estás seguro de que quieres eliminar de v2 a <strong>{deleteTarget.name}</strong> ({deleteTarget.year})?</p>
             <p style="color: #64748b; font-size: 0.9rem;">Esta acción no se puede deshacer.</p>
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
                 <button onclick={() => showDeleteModal = false} 
@@ -462,7 +483,7 @@
                 </button>
                 <button onclick={() => deleteAthlete(deleteTarget.name, deleteTarget.year)} 
                     style="background: #dc2626; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-                    Sí, eliminar
+                    Sí, eliminar de v2
                 </button>
             </div>
         </div>
