@@ -483,16 +483,28 @@
         box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.2);
     }
 
+    .athlete-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .detail-item {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: var(--blue-700);
+        margin-right: 0.3rem;
+    }
+
     .grid-2 {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
-    }
-
-    .grid-auto {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 0.5rem;
     }
 
     .modal {
@@ -642,7 +654,7 @@
         </div>
     {/if}
 
-    <!-- LISTA DE ATLETAS -->
+    <!-- LISTA DE ATLETAS - AHORA CON TODOS LOS CAMPOS -->
     {#if loading}
         <p class="text-center text-muted">Cargando...</p>
     {:else if athletes.length > 0}
@@ -650,18 +662,32 @@
         
         {#each athletes as athlete}
             <div class="athlete-card">
-                <div style="display: flex; justify-content: space-between;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="flex-grow: 1;">
-                        <h3 style="margin: 0 0 0.5rem 0; color: var(--blue-700);">{athlete.name}</h3>
-                        <div class="grid-auto">
-                            <p><strong>País:</strong> {athlete.team}</p>
-                            <p><strong>Año:</strong> {athlete.year}</p>
-                            <p><strong>Deporte:</strong> {athlete.sport}</p>
-                            <p><strong>Evento:</strong> {athlete.event}</p>
-                            <p><strong>Medalla:</strong> {athlete.medal === 'Gold' ? 'Oro' : athlete.medal === 'Silver' ? 'Plata' : athlete.medal === 'Bronze' ? 'Bronce' : 'Ninguna'}</p>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--blue-700);">{athlete.name}</h3>
+                        <div class="athlete-details-grid">
+                            <p class="detail-item"><span class="detail-label">ID:</span> {athlete.id}</p>
+                            <p class="detail-item"><span class="detail-label">Sexo:</span> {athlete.sex}</p>
+                            <p class="detail-item"><span class="detail-label">Edad:</span> {athlete.age ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Altura:</span> {athlete.height ?? 'N/A'} cm</p>
+                            <p class="detail-item"><span class="detail-label">Peso:</span> {athlete.weight ?? 'N/A'} kg</p>
+                            <p class="detail-item"><span class="detail-label">País:</span> {athlete.team}</p>
+                            <p class="detail-item"><span class="detail-label">NOC:</span> {athlete.noc ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Juegos:</span> {athlete.games ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Año:</span> {athlete.year}</p>
+                            <p class="detail-item"><span class="detail-label">Temporada:</span> {athlete.season}</p>
+                            <p class="detail-item"><span class="detail-label">Ciudad:</span> {athlete.city ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Deporte:</span> {athlete.sport}</p>
+                            <p class="detail-item"><span class="detail-label">Evento:</span> {athlete.event}</p>
+                            <p class="detail-item"><span class="detail-label">Medalla:</span> {
+                                athlete.medal === 'Gold' ? 'Oro' : 
+                                athlete.medal === 'Silver' ? 'Plata' : 
+                                athlete.medal === 'Bronze' ? 'Bronce' : 
+                                athlete.medal ?? 'Ninguna'
+                            }</p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 0.3rem;">
+                    <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">
                         <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.3rem 0.8rem;">Editar</button>
                         <button onclick={() => { deleteTarget = { name: athlete.name, year: athlete.year }; showDeleteModal = true; }} 
                                 class="btn-red" style="padding: 0.3rem 0.8rem;">Borrar</button>
