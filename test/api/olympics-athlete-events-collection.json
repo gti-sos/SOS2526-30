@@ -348,6 +348,69 @@
       "response": []
     },
     {
+      "name": "Filtro Rango de tiempo por campo especifico 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"La respuesta tiene estructura correcta\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('array')\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Christine Jacoba Aaftink?from=1994&to=2010",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "olympics-athlete-events",
+            "Christine Jacoba Aaftink"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "1994"
+            },
+            {
+              "key": "to",
+              "value": "2010"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Id no coincidentes 400 Bad Request",
       "event": [
         {

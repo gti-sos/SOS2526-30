@@ -185,26 +185,39 @@ routerV1.get("/season", (req, res) => {
     });
 });
 
-// Búsqueda por nombre v1
+// ============================================
+// BÚSQUEDA POR NOMBRE CON RANGO DE AÑOS (v1)
+// Ejemplo: /api/v1/olympics-athlete-events/A Dijiang?from=1990&to=2000
+// ============================================
 routerV1.get("/:name", (req, res) => {
     const name = req.params.name;
     const { from, to } = req.query;
     
     let query = { name: { $regex: new RegExp(name, 'i') } };
+    
+    // Aplicar filtro por rango de años si se proporcionan from y to
     if (from || to) {
         query.year = {};
         if (from) query.year.$gte = parseInt(from);
         if (to) query.year.$lte = parseInt(to);
     }
 
-    dbV1.find(query).sort({ id: 1 }).exec((err, data) => {
-        if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
-        if (data.length === 0 && !from && !to) {
-            return res.status(404).json({ message: "Atleta no encontrado" });
-        }
-        const resultado = data.map(({ _id, ...rest }) => rest);
-        res.status(200).json(resultado);
-    });
+    dbV1.find(query)
+        .sort({ year: 1 }) // Ordenar por año para mejor visualización
+        .exec((err, data) => {
+            if (err) {
+                return res.status(500).json({ error: "Error al acceder a la base de datos" });
+            }
+            
+            // Si no hay resultados y no se usaron filtros, devolver 404
+            if (data.length === 0 && !from && !to) {
+                return res.status(404).json({ message: `No existe ningún atleta con el nombre "${name}"` });
+            }
+            
+            // SIEMPRE devolver un ARRAY (incluso vacío)
+            const resultado = data.map(({ _id, ...rest }) => rest);
+            res.status(200).json(resultado);
+        });
 });
 
 // Recurso exacto v1 (solo lectura)
@@ -404,26 +417,35 @@ routerV2.get("/season", (req, res) => {
     });
 });
 
-// Búsqueda por nombre v2
+// ============================================
+// BÚSQUEDA POR NOMBRE CON RANGO DE AÑOS (v2)
+// ============================================
 routerV2.get("/:name", (req, res) => {
     const name = req.params.name;
     const { from, to } = req.query;
     
     let query = { name: { $regex: new RegExp(name, 'i') } };
+    
     if (from || to) {
         query.year = {};
         if (from) query.year.$gte = parseInt(from);
         if (to) query.year.$lte = parseInt(to);
     }
 
-    dbV2.find(query).sort({ id: 1 }).exec((err, data) => {
-        if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
-        if (data.length === 0 && !from && !to) {
-            return res.status(404).json({ message: "Atleta no encontrado" });
-        }
-        const resultado = data.map(({ _id, ...rest }) => rest);
-        res.status(200).json(resultado);
-    });
+    dbV2.find(query)
+        .sort({ year: 1 })
+        .exec((err, data) => {
+            if (err) {
+                return res.status(500).json({ error: "Error al acceder a la base de datos" });
+            }
+            
+            if (data.length === 0 && !from && !to) {
+                return res.status(404).json({ message: `No existe ningún atleta con el nombre "${name}"` });
+            }
+            
+            const resultado = data.map(({ _id, ...rest }) => rest);
+            res.status(200).json(resultado);
+        });
 });
 
 // Recurso exacto v2
