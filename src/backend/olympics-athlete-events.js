@@ -350,12 +350,12 @@ routerV2.post("/", (req, res) => {
     });
 });
 
-// 📌 PUT no permitido en colección v2
+// PUT no permitido en colección v2
 routerV2.put("/", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
 });
 
-// ✅ DELETE todos v2 (permitido)
+// DELETE todos v2 (permitido)
 routerV2.delete("/", (req, res) => {
     dbV2.remove({}, { multi: true }, (err, numRemoved) => {
         if (err) return res.status(500).json({ error: "Error al borrar los datos" });
@@ -363,7 +363,7 @@ routerV2.delete("/", (req, res) => {
     });
 });
 
-// 📌 LISTAS v2
+// LISTAS v2
 routerV2.get("/team", (req, res) => {
     dbV2.find({}).exec((err, data) => {
         if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
@@ -404,7 +404,7 @@ routerV2.get("/season", (req, res) => {
     });
 });
 
-// ✅ Búsqueda por nombre v2
+// Búsqueda por nombre v2
 routerV2.get("/:name", (req, res) => {
     const name = req.params.name;
     const { from, to } = req.query;
@@ -426,7 +426,7 @@ routerV2.get("/:name", (req, res) => {
     });
 });
 
-// ✅ Recurso exacto v2
+// Recurso exacto v2
 routerV2.get("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
@@ -442,7 +442,7 @@ routerV2.post("/:name/:year", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed" });
 });
 
-// ✅ PUT en recurso exacto v2
+// PUT en recurso exacto v2
 routerV2.put("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
@@ -461,7 +461,7 @@ routerV2.put("/:name/:year", (req, res) => {
     });
 });
 
-// ✅ DELETE en recurso exacto v2
+// DELETE en recurso exacto v2
 routerV2.delete("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);

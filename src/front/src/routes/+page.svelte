@@ -11,6 +11,17 @@
     
     // Variable de entorno para la URL base de la API
     const baseApiUrl = import.meta.env.PUBLIC_API_BASE_URL || "https://sos2526-30.onrender.com/api/v1";
+    
+    // URLs de documentación específicas
+    const docUrls = {
+        "David Real Pérez": `${baseApiUrl}/esportsgrowth-stats/docs`,
+        "Mario Ramos Tuñón": `${baseApiUrl}/esportsearnings-stats/docs`,
+        "Gonzalo García Gómez": {
+            v1: `${baseApiUrl}/olympics-athlete-events/docs`,
+            v2: `https://sos2526-30.onrender.com/api/v2/olympics-athlete-events/docs`
+        },
+        "Francisco Manuel García Patino": `${baseApiUrl}/cheaters-stats/docs`
+    };
 </script>
 
 <svelte:head>
@@ -34,6 +45,22 @@
                         <div class="member-details">
                             <code class="datasource">{member.dataSource}</code>
                             <a href={member.github} target="_blank" rel="noreferrer" class="github-link">GitHub</a>
+                            
+                            <!-- Documentación específica para Gonzalo (v1 y v2) -->
+                            {#if member.name === "Gonzalo García Gómez"}
+                                <div class="doc-links">
+                                    <a href={docUrls[member.name].v1} target="_blank" rel="noreferrer" class="doc-link" title="Documentación v1">
+                                         v1
+                                    </a>
+                                    <a href={docUrls[member.name].v2} target="_blank" rel="noreferrer" class="doc-link v2" title="Documentación v2">
+                                         v2
+                                    </a>
+                                </div>
+                            {:else}
+                                <a href={docUrls[member.name]} target="_blank" rel="noreferrer" class="doc-link" title="Documentación">
+                                    📄 Docs
+                                </a>
+                            {/if}
                         </div>
                     </li>
                 {/each}
@@ -42,12 +69,12 @@
 
         <!-- Tarjeta: Front-ends Individuales -->
         <section class="card">
-            <h2>🔗 Front-ends</h2>
+            <h2>🔗 Front-ends Individuales</h2>
             <p class="card-note"><em>Vistas individuales de cada miembro</em></p>
             <ul class="links-list">
                 <li><a href="/frontend/david">Front-end de David</a></li>
                 <li><a href="/frontend/mario">Front-end de Mario</a></li>
-                <li><a href="/olympics-athlete-events">Front-end de Gonzalo</a></li>
+                <li><a href="/olympics-athlete-events" class="highlight-link"> Gonzalo - Olympics Athlete Events (v2)</a></li>
                 <li><a href="/cheaters-stats">Front-end de Francisco</a></li>
             </ul>
         </section>
@@ -61,6 +88,13 @@
                         <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer">
                             <code>{member.dataSource}</code>
                         </a>
+                        <!-- Indicador de versión para Gonzalo -->
+                        {#if member.name === "Gonzalo García Gómez"}
+                            <span class="version-badge">v1</span>
+                            <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
+                                <code>v2</code>
+                            </a>
+                        {/if}
                     </li>
                 {/each}
             </ul>
@@ -72,10 +106,21 @@
             <ul class="links-list">
                 {#each team as member}
                     <li>
-                        <a href={`${baseApiUrl}/${member.dataSource}/docs`} target="_blank" rel="noreferrer">
-                            <span class="doc-name">{member.name.split(' ')[0]}</span>
-                            <small>{member.dataSource}</small>
-                        </a>
+                        <span class="doc-name">{member.name.split(' ')[0]}</span>
+                        {#if member.name === "Gonzalo García Gómez"}
+                            <div class="doc-versions">
+                                <a href={docUrls[member.name].v1} target="_blank" rel="noreferrer" class="version-doc">
+                                    📘 v1
+                                </a>
+                                <a href={docUrls[member.name].v2} target="_blank" rel="noreferrer" class="version-doc v2">
+                                    📗 v2 (nueva)
+                                </a>
+                            </div>
+                        {:else}
+                            <a href={docUrls[member.name]} target="_blank" rel="noreferrer">
+                                <small>{member.dataSource}</small>
+                            </a>
+                        {/if}
                     </li>
                 {/each}
             </ul>
@@ -87,7 +132,7 @@
             <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
         </section>
     </div>
-
+    
     <footer>
         <p>✨ Proyecto SOS 2025-26 - Grupo 30</p>
     </footer>
@@ -107,12 +152,11 @@
         --celeste-900: #0c4a6e;
     }
 
-   
-
     .container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     header {
@@ -174,6 +218,7 @@
         font-size: 0.9rem;
         margin-top: -0.5rem;
         margin-bottom: 1rem;
+        font-style: italic;
     }
 
     ul {
@@ -203,13 +248,15 @@
         font-weight: 600;
         color: var(--celeste-800);
         margin-bottom: 0.3rem;
+        font-size: 1.1rem;
     }
 
     .member-details {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.8rem;
         font-size: 0.9rem;
+        flex-wrap: wrap;
     }
 
     .datasource {
@@ -219,6 +266,112 @@
         border-radius: 4px;
         font-family: monospace;
         font-size: 0.85rem;
+    }
+
+    .github-link {
+        background-color: var(--celeste-600);
+        color: white;
+        padding: 0.2rem 0.8rem;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .github-link:hover {
+        background-color: var(--celeste-700);
+        color: white;
+        text-decoration: none;
+    }
+
+    .doc-link {
+        background-color: #10b981;
+        color: white;
+        padding: 0.2rem 0.8rem;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .doc-link:hover {
+        background-color: #059669;
+        color: white;
+        text-decoration: none;
+    }
+
+    .doc-links {
+        display: flex;
+        gap: 0.3rem;
+    }
+
+    .doc-link.v2 {
+        background-color: #8b5cf6;
+    }
+
+    .doc-link.v2:hover {
+        background-color: #7c3aed;
+    }
+
+    .version-badge {
+        background-color: var(--celeste-200);
+        color: var(--celeste-800);
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        margin-left: 0.5rem;
+        font-weight: bold;
+    }
+
+    .version-link {
+        margin-left: 0.5rem;
+    }
+
+    .version-link code {
+        background-color: #8b5cf6;
+        color: white;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+    }
+
+    .highlight-link {
+        font-weight: bold;
+        color: var(--celeste-600);
+    }
+
+    .highlight-link:hover {
+        color: var(--celeste-800);
+    }
+
+    .doc-versions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.3rem;
+    }
+
+    .version-doc {
+        background-color: var(--celeste-100);
+        color: var(--celeste-700);
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .version-doc:hover {
+        background-color: var(--celeste-200);
+        text-decoration: none;
+    }
+
+    .version-doc.v2 {
+        background-color: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .version-doc.v2:hover {
+        background-color: #ddd6fe;
     }
 
     a {
@@ -231,21 +384,6 @@
     a:hover {
         color: var(--celeste-800);
         text-decoration: underline;
-    }
-
-    .github-link {
-        background-color: var(--celeste-600);
-        color: white;
-        padding: 0.2rem 0.8rem;
-        border-radius: 16px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-
-    .github-link:hover {
-        background-color: var(--celeste-700);
-        color: white;
-        text-decoration: none;
     }
 
     .repo-link {
@@ -273,6 +411,7 @@
     .doc-name {
         font-weight: 600;
         min-width: 70px;
+        color: var(--celeste-800);
     }
 
     .links-list li a small {

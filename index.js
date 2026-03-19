@@ -21,7 +21,6 @@
 
  
     app.use(express.json());
-    app.use(express.static(path.join(__dirname, 'front', 'build')));
 
     loadBackendGGG(app)
     loadBackendFMGP(app)
@@ -30,14 +29,6 @@
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
 
     app.use(handler);
-
-    // app.get('/', (req, res) => {
-    //     res.sendFile(path.join(__dirname, 'public/index.html'));
-    // });
-
-    // app.get('/about', (req, res) => {
-    //     res.sendFile(path.join(__dirname, 'public/about.html'));
-    // });
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
