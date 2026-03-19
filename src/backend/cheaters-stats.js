@@ -325,7 +325,7 @@ function loadBackendFMGP(app) {
 
     // Documentación v2 (CAMBIA ESTA URL)
     routerV2.get("/docs", (req, res) => {
-        res.redirect("https://documenter.getpostman.com/view/52768258/2sBXigNZg8"); // Cambia esta URL por la de tu documentación v2
+        res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5"); // Cambia esta URL por la de tu documentación v2
     });
 
     // Carga inicial v2
