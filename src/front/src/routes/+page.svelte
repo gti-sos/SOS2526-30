@@ -1,8 +1,5 @@
 <script>
 // @ts-nocheck
-    import Header from './Header.svelte';
-    import Footer from './Footer.svelte';
-
     // Información del equipo
     const team = [
         { name: "David Real Pérez", dataSource: "esportsgrowth-stats", github: "https://github.com/davreaper" },
@@ -32,95 +29,89 @@
     <title>SOS2526-30 - Panel de Control</title>
 </svelte:head>
 
-<div class="container">
-    <Header />
+<div class="cards-grid">
+    <!-- Tarjeta: Miembros del Equipo -->
+    <section class="card">
+        <h2>Miembros del Equipo</h2>
+        <ul class="team-list">
+            {#each team as member}
+                <li>
+                    <span class="member-name">{member.name}</span>
+                    <div class="member-details">
+                        <code class="datasource">{member.dataSource}</code>
+                        <a href={member.github} target="_blank" rel="noreferrer" class="github-link">GitHub</a>
+                    </div>
+                </li>
+            {/each}
+        </ul>
+    </section>
 
-    <div class="cards-grid">
-        <!-- Tarjeta: Miembros del Equipo -->
-        <section class="card">
-            <h2>Miembros del Equipo</h2>
-            <ul class="team-list">
-                {#each team as member}
-                    <li>
-                        <span class="member-name">{member.name}</span>
-                        <div class="member-details">
-                            <code class="datasource">{member.dataSource}</code>
-                            <a href={member.github} target="_blank" rel="noreferrer" class="github-link">GitHub</a>
-                        </div>
-                    </li>
-                {/each}
-            </ul>
-        </section>
+    <!-- Tarjeta: Front-ends Individuales -->
+    <section class="card">
+        <h2>Front-ends Individuales</h2>
+        <p class="card-note"><em>Vistas individuales de cada miembro</em></p>
+        <ul class="links-list">
+            <li><a href="/frontend/david">Front-end de David</a></li>
+            <li><a href="/frontend/mario">Front-end de Mario</a></li>
+            <li><a href="/olympics-athlete-events" class="highlight-link">Gonzalo - Olympics Athlete Events (v2)</a></li>
+            <li><a href="/cheaters-stats">Front-end de Francisco</a></li>
+        </ul>
+    </section>
 
-        <!-- Tarjeta: Front-ends Individuales -->
-        <section class="card">
-            <h2>Front-ends Individuales</h2>
-            <p class="card-note"><em>Vistas individuales de cada miembro</em></p>
-            <ul class="links-list">
-                <li><a href="/frontend/david">Front-end de David</a></li>
-                <li><a href="/frontend/mario">Front-end de Mario</a></li>
-                <li><a href="/olympics-athlete-events" class="highlight-link">Gonzalo - Olympics Athlete Events (v2)</a></li>
-                <li><a href="/cheaters-stats">Front-end de Francisco</a></li>
-            </ul>
-        </section>
-
-        <!-- Tarjeta: URLs Base de las APIs -->
-        <section class="card">
-            <h2>APIs Base</h2>
-            <ul class="links-list">
-                {#each team as member}
-                    <li>
-                        <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer">
-                            <code>{member.dataSource}</code>
+    <!-- Tarjeta: URLs Base de las APIs -->
+    <section class="card">
+        <h2>APIs Base</h2>
+        <ul class="links-list">
+            {#each team as member}
+                <li>
+                    <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer">
+                        <code>{member.dataSource}</code>
+                    </a>
+                    <!-- Versiones para Gonzalo como enlaces -->
+                    {#if member.name === "Gonzalo García Gómez"}
+                        <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
+                            <code>v1</code>
                         </a>
-                        <!-- Versiones para Gonzalo como enlaces -->
-                        {#if member.name === "Gonzalo García Gómez"}
-                            <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
-                                <code>v1</code>
-                            </a>
-                            <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
-                                <code class="v2-code">v2</code>
-                            </a>
-                        {/if}
-                    </li>
-                {/each}
-            </ul>
-        </section>
+                        <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
+                            <code class="v2-code">v2</code>
+                        </a>
+                    {/if}
+                </li>
+            {/each}
+        </ul>
+    </section>
 
-        <!-- Tarjeta: Documentación Postman -->
-        <section class="card">
-            <h2>Postman Docs</h2>
-            <ul class="links-list">
-                {#each team as member}
-                    <li>
-                        <span class="doc-name">{member.name.split(' ')[0]}</span>
-                        {#if member.name === "Gonzalo García Gómez"}
-                            <div class="doc-versions">
-                                <a href={docUrls[member.name].v1} target="_blank" rel="noreferrer" class="version-doc">
-                                    v1
-                                </a>
-                                <a href={docUrls[member.name].v2} target="_blank" rel="noreferrer" class="version-doc v2">
-                                    v2 
-                                </a>
-                            </div>
-                        {:else}
-                            <a href={docUrls[member.name]} target="_blank" rel="noreferrer">
-                                <small>{member.dataSource}</small>
+    <!-- Tarjeta: Documentación Postman -->
+    <section class="card">
+        <h2>Postman Docs</h2>
+        <ul class="links-list">
+            {#each team as member}
+                <li>
+                    <span class="doc-name">{member.name.split(' ')[0]}</span>
+                    {#if member.name === "Gonzalo García Gómez"}
+                        <div class="doc-versions">
+                            <a href={docUrls[member.name].v1} target="_blank" rel="noreferrer" class="version-doc">
+                                v1
                             </a>
-                        {/if}
-                    </li>
-                {/each}
-            </ul>
-        </section>
+                            <a href={docUrls[member.name].v2} target="_blank" rel="noreferrer" class="version-doc v2">
+                                v2 
+                            </a>
+                        </div>
+                    {:else}
+                        <a href={docUrls[member.name]} target="_blank" rel="noreferrer">
+                            <small>{member.dataSource}</small>
+                        </a>
+                    {/if}
+                </li>
+            {/each}
+        </ul>
+    </section>
 
-        <!-- Tarjeta: Repositorio -->
-        <section class="card full-width">
-            <h2>Repositorio</h2>
-            <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
-        </section>
-    </div>
-    
-    <Footer />
+    <!-- Tarjeta: Repositorio -->
+    <section class="card full-width">
+        <h2>Repositorio</h2>
+        <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
+    </section>
 </div>
 
 <style>
@@ -137,18 +128,11 @@
         --celeste-900: #0c4a6e;
     }
 
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     .cards-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
-        margin-bottom: 2rem;
+        margin: 2rem 0;
     }
 
     .card {
@@ -248,35 +232,6 @@
         background-color: var(--celeste-700);
         color: white;
         text-decoration: none;
-    }
-
-    .doc-link {
-        background-color: #10b981;
-        color: white;
-        padding: 0.2rem 0.8rem;
-        border-radius: 16px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        text-decoration: none;
-    }
-
-    .doc-link:hover {
-        background-color: #059669;
-        color: white;
-        text-decoration: none;
-    }
-
-    .doc-links {
-        display: flex;
-        gap: 0.3rem;
-    }
-
-    .doc-link.v2 {
-        background-color: #8b5cf6;
-    }
-
-    .doc-link.v2:hover {
-        background-color: #7c3aed;
     }
 
     .version-link {
@@ -391,12 +346,6 @@
     }
 
     @media (max-width: 640px) {
-        .container {
-            padding: 1rem;
-        }
-        h1 {
-            font-size: 2rem;
-        }
         .cards-grid {
             grid-template-columns: 1fr;
         }

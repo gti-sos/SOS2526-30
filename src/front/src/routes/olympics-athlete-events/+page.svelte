@@ -354,15 +354,6 @@
         --blue-800: #075985;
     }
 
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: linear-gradient(135deg, var(--blue-50), var(--blue-100));
-        min-height: 100vh;
-        color: #1e293b;
-    }
-
     .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -542,12 +533,14 @@
     <div class="search-box">
         <h3 style="margin-top: 0; color: var(--blue-700);">Buscar atletas</h3>
         <div class="flex-row">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
             <div class="flex-2">
                 <label>Nombre *</label>
                 <input type="text" bind:value={searchName} placeholder="Ej: A Dijiang"
                        onkeypress={(e) => e.key === 'Enter' && searchAthlete()}>
             </div>
             <div class="flex-1">
+            <!-- svelte-ignore a11y_label_has_associated_control -->
                 <label>Año</label>
                 <input type="number" bind:value={searchYear} placeholder="Ej: 1992"
                        onkeypress={(e) => e.key === 'Enter' && searchAthlete()}>
@@ -593,6 +586,7 @@
     <!-- PAGINACIÓN -->
     {#if !searchMode && athletes.length > 0}
         <div class="pagination">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <label>Mostrar:</label>
                 <select bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
@@ -618,6 +612,7 @@
         <div class="modal">
             <div class="modal-content">
                 <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? '✏️ Editar atleta' : '➕ Nuevo atleta'}</h2>
+                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div class="grid-2">
                     <div><label>Nombre *</label><input type="text" bind:value={formData.name} disabled={editingAthlete}></div>
                     <div><label>Sexo</label><select bind:value={formData.sex}><option value="M">M</option><option value="F">F</option></select></div>
