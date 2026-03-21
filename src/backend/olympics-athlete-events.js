@@ -185,17 +185,13 @@ routerV1.get("/season", (req, res) => {
     });
 });
 
-// ============================================
-// BÚSQUEDA POR NOMBRE CON RANGO DE AÑOS (v1)
-// Ejemplo: /api/v1/olympics-athlete-events/A Dijiang?from=1990&to=2000
-// ============================================
+// Búsqueda por nombre con rango de años (v1)
 routerV1.get("/:name", (req, res) => {
     const name = req.params.name;
     const { from, to } = req.query;
     
     let query = { name: { $regex: new RegExp(name, 'i') } };
     
-    // Aplicar filtro por rango de años si se proporcionan from y to
     if (from || to) {
         query.year = {};
         if (from) query.year.$gte = parseInt(from);
@@ -203,18 +199,16 @@ routerV1.get("/:name", (req, res) => {
     }
 
     dbV1.find(query)
-        .sort({ year: 1 }) // Ordenar por año para mejor visualización
+        .sort({ year: 1 })
         .exec((err, data) => {
             if (err) {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
             }
             
-            // Si no hay resultados y no se usaron filtros, devolver 404
             if (data.length === 0 && !from && !to) {
                 return res.status(404).json({ message: `No existe ningún atleta con el nombre "${name}"` });
             }
             
-            // SIEMPRE devolver un ARRAY (incluso vacío)
             const resultado = data.map(({ _id, ...rest }) => rest);
             res.status(200).json(resultado);
         });
@@ -256,6 +250,9 @@ const dbV2 = new Datastore({
 dbV2.ensureIndex({ fieldName: 'name' });
 dbV2.ensureIndex({ fieldName: 'year' });
 dbV2.ensureIndex({ fieldName: 'team' });
+dbV2.ensureIndex({ fieldName: 'age' });
+dbV2.ensureIndex({ fieldName: 'height' });
+dbV2.ensureIndex({ fieldName: 'weight' });
 
 const routerV2 = express.Router();
 
@@ -291,26 +288,51 @@ routerV2.get("/loadInitialData", (req, res) => {
     });
 });
 
-// Colección principal v2
+// Colección principal v2 CON OPERADORES NUMÉRICOS
 routerV2.get("/", (req, res) => {
-    const { name, team, country, year, from, to, sport, season, city, id, page = 1, limit = 20 } = req.query;
+    const { 
+        name, team, country, year, from, to, sport, season, city, id, page = 1, limit = 20,
+        age_min, age_max, height_min, height_max, weight_min, weight_max
+    } = req.query;
+    
     let query = {};
     
+    // Filtros de texto
     if (name) query.name = { $regex: new RegExp(name, 'i') };
     if (team || country) {
         const teamFilter = (team || country);
         query.team = { $regex: new RegExp(`^${teamFilter}$`, 'i') };
     }
-    if (year) query.year = parseInt(year);
     if (sport) query.sport = { $regex: new RegExp(sport, 'i') };
     if (season) query.season = { $regex: new RegExp(`^${season}$`, 'i') };
     if (city) query.city = { $regex: new RegExp(city, 'i') };
     if (id) query.id = parseInt(id);
     
+    // Filtros de año
+    if (year) query.year = parseInt(year);
     if (from || to) {
         query.year = {};
         if (from) query.year.$gte = parseInt(from);
         if (to) query.year.$lte = parseInt(to);
+    }
+    
+    // Filtros numéricos
+    if (age_min || age_max) {
+        query.age = {};
+        if (age_min) query.age.$gte = parseInt(age_min);
+        if (age_max) query.age.$lte = parseInt(age_max);
+    }
+    
+    if (height_min || height_max) {
+        query.height = {};
+        if (height_min) query.height.$gte = parseInt(height_min);
+        if (height_max) query.height.$lte = parseInt(height_max);
+    }
+    
+    if (weight_min || weight_max) {
+        query.weight = {};
+        if (weight_min) query.weight.$gte = parseFloat(weight_min);
+        if (weight_max) query.weight.$lte = parseFloat(weight_max);
     }
 
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -344,7 +366,7 @@ routerV2.get("/", (req, res) => {
     });
 });
 
-// POST v2 (permitido)
+// POST v2 - SOLO CÓDIGO 201 (sin datos)
 routerV2.post("/", (req, res) => {
     const newData = req.body;
     if (!newData || !newData.name || !newData.year) {
@@ -357,8 +379,7 @@ routerV2.post("/", (req, res) => {
 
         dbV2.insert(newData, (err, newDoc) => {
             if (err) return res.status(500).json({ error: "Error al insertar el dato" });
-            const { _id, ...result } = newDoc;
-            res.status(201).json(result);
+            res.sendStatus(201);
         });
     });
 });
@@ -368,7 +389,7 @@ routerV2.put("/", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
 });
 
-// DELETE todos v2 (permitido)
+// DELETE todos v2
 routerV2.delete("/", (req, res) => {
     dbV2.remove({}, { multi: true }, (err, numRemoved) => {
         if (err) return res.status(500).json({ error: "Error al borrar los datos" });
@@ -417,12 +438,15 @@ routerV2.get("/season", (req, res) => {
     });
 });
 
-// ============================================
-// BÚSQUEDA POR NOMBRE CON RANGO DE AÑOS (v2)
-// ============================================
+// Búsqueda por nombre CON OPERADORES NUMÉRICOS (v2)
 routerV2.get("/:name", (req, res) => {
     const name = req.params.name;
-    const { from, to } = req.query;
+    const { 
+        from, to,
+        age_min, age_max,
+        height_min, height_max,
+        weight_min, weight_max
+    } = req.query;
     
     let query = { name: { $regex: new RegExp(name, 'i') } };
     
@@ -430,6 +454,24 @@ routerV2.get("/:name", (req, res) => {
         query.year = {};
         if (from) query.year.$gte = parseInt(from);
         if (to) query.year.$lte = parseInt(to);
+    }
+    
+    if (age_min || age_max) {
+        query.age = {};
+        if (age_min) query.age.$gte = parseInt(age_min);
+        if (age_max) query.age.$lte = parseInt(age_max);
+    }
+    
+    if (height_min || height_max) {
+        query.height = {};
+        if (height_min) query.height.$gte = parseInt(height_min);
+        if (height_max) query.height.$lte = parseInt(height_max);
+    }
+    
+    if (weight_min || weight_max) {
+        query.weight = {};
+        if (weight_min) query.weight.$gte = parseFloat(weight_min);
+        if (weight_max) query.weight.$lte = parseFloat(weight_max);
     }
 
     dbV2.find(query)
@@ -439,7 +481,7 @@ routerV2.get("/:name", (req, res) => {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
             }
             
-            if (data.length === 0 && !from && !to) {
+            if (data.length === 0 && !from && !to && !age_min && !age_max && !height_min && !height_max && !weight_min && !weight_max) {
                 return res.status(404).json({ message: `No existe ningún atleta con el nombre "${name}"` });
             }
             
@@ -464,7 +506,7 @@ routerV2.post("/:name/:year", (req, res) => {
     res.status(405).json({ message: "Method Not Allowed" });
 });
 
-// PUT en recurso exacto v2
+// PUT en recurso exacto v2 - SOLO CÓDIGO 200 (sin datos)
 routerV2.put("/:name/:year", (req, res) => {
     const name = req.params.name;
     const year = parseInt(req.params.year);
@@ -478,8 +520,7 @@ routerV2.put("/:name/:year", (req, res) => {
     dbV2.update({ name: name, year: year }, { $set: body }, { returnUpdatedDocs: true }, (err, numReplaced, affectedDoc) => {
         if (err) return res.status(500).json({ error: "Error al actualizar" });
         if (numReplaced === 0) return res.status(404).json({ message: "Resource not found" });
-        const { _id, ...result } = affectedDoc;
-        res.status(200).json(result);
+        res.sendStatus(200);
     });
 });
 
