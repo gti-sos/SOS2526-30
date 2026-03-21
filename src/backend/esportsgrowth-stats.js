@@ -1,5 +1,3 @@
-//DRP
-
 import express from "express";
 import Datastore from "nedb";
 
