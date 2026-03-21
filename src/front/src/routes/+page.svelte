@@ -54,7 +54,7 @@
         <h2>Front-ends Individuales</h2>
         <p class="card-note"><em>Vistas individuales de cada miembro</em></p>
         <ul class="links-list">
-            <li><a href="/frontend/david">Front-end de David</a></li>
+            <li><a href="/esportsgrowth-stats" class="highlight-link">David - Esports Growth Stats</a></li>
             <li><a href="/frontend/mario">Front-end de Mario</a></li>
             <li><a href="/olympics-athlete-events" class="highlight-link">Gonzalo - Olympics Athlete Events (v2)</a></li>
             <li><a href="/cheaters-stats" class="highlight-link">Francisco - Cheaters Stats (v2)</a></li>
