@@ -88,17 +88,31 @@ function loadBackendFMGP(app) {
     });
 
     // ============================================
-    // Carga inicial - SOLO LECTURA (no modifica datos, solo muestra)
+    // Carga inicial v1 - INSERTA SOLO SI LA BD ESTÁ VACÍA
     // ============================================
     routerV1.get("/loadInitialData", (req, res) => {
         dbV1.count({}, (err, count) => {
             if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
             
-            // SOLO LECTURA: devuelve los datos existentes o vacío si no hay
-            dbV1.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
-                if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                res.status(200).json(data);
-            });
+            if (count === 0) {
+                // Insertar datos iniciales solo si no hay datos
+                const initialData = csvContent.slice(0, 15);
+                dbV1.insert(initialData, (err, newDocs) => {
+                    if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
+                    console.log(`✅ Datos iniciales de cheaters-stats v1 cargados: ${newDocs.length} registros`);
+                    
+                    dbV1.find({}).sort({ country: 1, year: 1 }).exec((err, data) => {
+                        if (err) return res.status(500).json({ error: "Error al recuperar datos" });
+                        res.status(200).json(data);
+                    });
+                });
+            } else {
+                // Si ya hay datos, solo los devuelve
+                dbV1.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
+                    if (err) return res.status(500).json({ error: "Error al recuperar datos" });
+                    res.status(200).json(data);
+                });
+            }
         });
     });
 
@@ -711,6 +725,7 @@ function loadBackendFMGP(app) {
     app.use('/api/v1/cheaters-stats', routerV1);
     app.use('/api/v2/cheaters-stats', routerV2);
     
+
 }
 
 export default loadBackendFMGP;
