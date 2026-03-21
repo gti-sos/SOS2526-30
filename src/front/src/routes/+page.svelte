@@ -21,7 +21,10 @@
             v1: `${baseApiUrl}/olympics-athlete-events/docs`,
             v2: `https://sos2526-30.onrender.com/api/v2/olympics-athlete-events/docs`
         },
-        "Francisco Manuel García Patino": `${baseApiUrl}/cheaters-stats/docs`
+        "Francisco Manuel García Patino": {
+            v1: `${baseApiUrl}/cheaters-stats/docs`,
+            v2: `https://sos2526-30.onrender.com/api/v2/cheaters-stats/docs`
+        }
     };
 </script>
 
@@ -54,7 +57,7 @@
             <li><a href="/frontend/david">Front-end de David</a></li>
             <li><a href="/frontend/mario">Front-end de Mario</a></li>
             <li><a href="/olympics-athlete-events" class="highlight-link">Gonzalo - Olympics Athlete Events (v2)</a></li>
-            <li><a href="/cheaters-stats">Front-end de Francisco</a></li>
+            <li><a href="/cheaters-stats" class="highlight-link">Francisco - Cheaters Stats (v2)</a></li>
         </ul>
     </section>
 
@@ -67,8 +70,15 @@
                     <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer">
                         <code>{member.dataSource}</code>
                     </a>
-                    <!-- Versiones para Gonzalo como enlaces -->
+                    <!-- Versiones para cada miembro como enlaces -->
                     {#if member.name === "Gonzalo García Gómez"}
+                        <a href={`${baseApiUrl}/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
+                            <code>v1</code>
+                        </a>
+                        <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
+                            <code class="v2-code">v2</code>
+                        </a>
+                    {:else if member.name === "Francisco Manuel García Patino"}
                         <a href={`${baseApiUrl}/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
                             <code>v1</code>
                         </a>
@@ -88,13 +98,13 @@
             {#each team as member}
                 <li>
                     <span class="doc-name">{member.name.split(' ')[0]}</span>
-                    {#if member.name === "Gonzalo García Gómez"}
+                    {#if member.name === "Gonzalo García Gómez" || member.name === "Francisco Manuel García Patino"}
                         <div class="doc-versions">
                             <a href={docUrls[member.name].v1} target="_blank" rel="noreferrer" class="version-doc">
                                 v1
                             </a>
                             <a href={docUrls[member.name].v2} target="_blank" rel="noreferrer" class="version-doc v2">
-                                v2 
+                                v2
                             </a>
                         </div>
                     {:else}

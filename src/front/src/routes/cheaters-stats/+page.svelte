@@ -415,14 +415,14 @@
 
 <style>
     :root {
-        --green-50: #f0fdf4;
-        --green-100: #dcfce7;
-        --green-200: #bbf7d0;
-        --green-300: #86efac;
-        --green-500: #22c55e;
-        --green-600: #16a34a;
-        --green-700: #15803d;
-        --green-800: #166534;
+        --purple-50: #faf5ff;
+        --purple-100: #f3e8ff;
+        --purple-200: #e9d5ff;
+        --purple-300: #d8b4fe;
+        --purple-500: #a855f7;
+        --purple-600: #9333ea;
+        --purple-700: #7e22ce;
+        --purple-800: #6b21a5;
     }
 
     .container {
@@ -431,22 +431,22 @@
         background: white;
         padding: 2rem;
         border-radius: 16px;
-        box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.2);
-        border: 1px solid var(--green-200);
+        box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.2);
+        border: 1px solid var(--purple-200);
     }
 
     h1 {
-        color: var(--green-800);
-        border-bottom: 3px solid var(--green-500);
+        color: var(--purple-800);
+        border-bottom: 3px solid var(--purple-500);
         padding-bottom: 0.5rem;
         text-align: center;
     }
 
     .badge {
-        background: var(--green-100);
+        background: var(--purple-100);
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
-        color: var(--green-700);
+        color: var(--purple-700);
         font-size: 0.8rem;
         margin-left: 0.5rem;
     }
@@ -461,11 +461,11 @@
     .msg-error { background: #fee2e2; color: #b91c1c; border: 1px solid #dc2626; }
 
     .search-box {
-        background: var(--green-50);
+        background: var(--purple-50);
         padding: 1.5rem;
         border-radius: 12px;
         margin-bottom: 2rem;
-        border: 1px solid var(--green-200);
+        border: 1px solid var(--purple-200);
     }
 
     .flex-row {
@@ -482,26 +482,26 @@
         display: block;
         font-weight: 600;
         margin-bottom: 0.3rem;
-        color: var(--green-700);
+        color: var(--purple-700);
     }
 
     input, select {
         width: 100%;
         padding: 0.5rem;
-        border: 1px solid var(--green-200);
+        border: 1px solid var(--purple-200);
         border-radius: 6px;
         box-sizing: border-box;
     }
 
     input:focus, select:focus {
         outline: none;
-        border-color: var(--green-500);
-        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        border-color: var(--purple-500);
+        box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
     }
 
     input:disabled {
-        background: var(--green-50);
-        color: var(--green-600);
+        background: var(--purple-50);
+        color: var(--purple-600);
     }
 
     .btn-group {
@@ -522,14 +522,14 @@
     }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .btn-green { background: var(--green-600); color: white; }
-    .btn-green:hover:not(:disabled) { background: var(--green-700); }
+    .btn-purple { background: var(--purple-600); color: white; }
+    .btn-purple:hover:not(:disabled) { background: var(--purple-700); }
     .btn-blue { background: #0284c7; color: white; }
     .btn-blue:hover:not(:disabled) { background: #0369a1; }
     .btn-red { background: #dc2626; color: white; }
     .btn-red:hover:not(:disabled) { background: #b91c1c; }
-    .btn-gray { background: var(--green-200); color: var(--green-800); }
-    .btn-gray:hover:not(:disabled) { background: var(--green-300); }
+    .btn-gray { background: var(--purple-200); color: var(--purple-800); }
+    .btn-gray:hover:not(:disabled) { background: var(--purple-300); }
     .btn-orange { background: #f59e0b; color: white; }
     .btn-orange:hover:not(:disabled) { background: #d97706; }
 
@@ -545,13 +545,13 @@
     .resource-card {
         margin: 1rem 0;
         padding: 1rem;
-        border: 1px solid var(--green-200);
+        border: 1px solid var(--purple-200);
         border-radius: 8px;
         transition: 0.2s;
     }
     .resource-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.2);
+        box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.2);
     }
 
     .resource-details-grid {
@@ -568,7 +568,7 @@
 
     .detail-label {
         font-weight: 600;
-        color: var(--green-700);
+        color: var(--purple-700);
         margin-right: 0.3rem;
     }
 
@@ -599,22 +599,22 @@
     }
 
     .text-center { text-align: center; }
-    .text-muted { color: var(--green-600); }
-    hr { margin: 2rem 0; border: none; border-top: 2px solid var(--green-200); }
-    a { color: var(--green-600); text-decoration: none; font-weight: 500; }
-    a:hover { text-decoration: underline; color: var(--green-800); }
+    .text-muted { color: var(--purple-600); }
+    hr { margin: 2rem 0; border: none; border-top: 2px solid var(--purple-200); }
+    a { color: var(--purple-600); text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; color: var(--purple-800); }
     .footer-links { display: flex; gap: 2rem; justify-content: center; }
 </style>
 
 <div class="container">
-    <h1>🎮 Gestión de Estadísticas de Tramposos <span class="badge">API v2</span></h1>
+    <h1>Gestión de Estadísticas de Tramposos <span class="badge">API v2</span></h1>
 
     {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
-    {#if error}<div class="msg-error">⚠️ {error}</div>{/if}
+    {#if error}<div class="msg-error">{error}</div>{/if}
 
     <!-- BUSCADOR / FILTROS AVANZADOS -->
     <div class="search-box">
-        <h3 style="margin-top: 0; color: var(--green-700);">🔍 Buscar registros</h3>
+        <h3 style="margin-top: 0; color: var(--purple-700);">Buscar registros</h3>
         <div class="flex-row">
             <div class="flex-2">
                 <label>País</label>
@@ -652,7 +652,7 @@
                 <input type="number" bind:value={searchTo} placeholder="Ej: 2020">
             </div>
             <div style="display: flex; gap: 0.5rem;">
-                <button onclick={searchResources} disabled={searching} class="btn-green" style="height: 2.5rem;">
+                <button onclick={searchResources} disabled={searching} class="btn-purple" style="height: 2.5rem;">
                     {searching ? 'Buscando...' : 'Buscar'}
                 </button>
                 <button onclick={clearSearch} class="btn-gray" style="height: 2.5rem;">Limpiar</button>
@@ -662,13 +662,13 @@
         {#if searchError}<div class="msg-error" style="margin-top: 1rem;">{searchError}</div>{/if}
         
         {#if searchResults !== null}
-            <div style="margin-top: 1.5rem; border-top: 2px solid var(--green-200); padding-top: 1rem;">
-                <h4 style="color: var(--green-700);">📋 Resultados de la búsqueda:</h4>
+            <div style="margin-top: 1.5rem; border-top: 2px solid var(--purple-200); padding-top: 1rem;">
+                <h4 style="color: var(--purple-700);">Resultados de la búsqueda:</h4>
                 {#if searchResults.length === 0}
                     <p>No se encontraron resultados.</p>
                 {:else}
                     {#each searchResults as resource}
-                        <div style="padding: 0.5rem; background: white; border: 1px solid var(--green-200); border-radius: 4px; margin-bottom: 0.3rem;">
+                        <div style="padding: 0.5rem; background: white; border: 1px solid var(--purple-200); border-radius: 4px; margin-bottom: 0.3rem;">
                             <strong>{resource.country}</strong> - {resource.game} ({resource.year}) - Reportes: {resource.cheater_report}
                         </div>
                     {/each}
@@ -679,13 +679,13 @@
 
     <!-- BOTONES PRINCIPALES -->
     <div class="btn-group">
-        <button onclick={loadSampleData} disabled={loading} class="btn-green">📥 Cargar datos de ejemplo</button>
-        <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">➕ Añadir nuevo registro</button>
+        <button onclick={loadSampleData} disabled={loading} class="btn-purple">Cargar datos de ejemplo</button>
+        <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo registro</button>
         <button onclick={() => getResources(currentPage)} disabled={loading} class="btn-gray">
-            {loading ? 'Cargando...' : '🔄 Actualizar lista'}
+            {loading ? 'Cargando...' : 'Actualizar lista'}
         </button>
-        <button onclick={deleteAllResources} class="btn-red">🗑️ Eliminar todos</button>
-        <a href="/api/v2/cheaters-stats/docs" target="_blank" class="btn-green" style="background: #8b5cf6; display: inline-block; text-decoration: none;">📘 Documentación v2</a>
+        <button onclick={deleteAllResources} class="btn-red">Eliminar todos</button>
+        <a href="/api/v2/cheaters-stats/docs" target="_blank" class="btn-purple" style="background: #8b5cf6; display: inline-block; text-decoration: none;">Documentación v2</a>
     </div>
 
     <!-- PAGINACIÓN SUPERIOR -->
@@ -702,11 +702,11 @@
                 <span>por página</span>
             </div>
             <div style="display: flex; gap: 0.5rem;">
-                <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">◀ Anterior</button>
-                <span style="padding: 0.3rem 0.8rem; background: var(--green-50); border-radius: 4px;">
+                <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">Anterior</button>
+                <span style="padding: 0.3rem 0.8rem; background: var(--purple-50); border-radius: 4px;">
                     Pág. {currentPage} de {totalPages} ({totalResources} total)
                 </span>
-                <button onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} class="btn-gray">Siguiente ▶</button>
+                <button onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} class="btn-gray">Siguiente</button>
             </div>
         </div>
     {/if}
@@ -715,25 +715,25 @@
     {#if showCreateForm || editingResource}
         <div class="modal">
             <div class="modal-content">
-                <h2 style="color: var(--green-700); margin-top: 0;">{editingResource ? '✏️ Editar registro' : '➕ Nuevo registro'}</h2>
+                <h2 style="color: var(--purple-700); margin-top: 0;">{editingResource ? 'Editar registro' : 'Nuevo registro'}</h2>
                 <div class="grid-2">
                     <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource} placeholder="Ej: Spain"></div>
                     <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource} placeholder="Ej: 2020"></div>
                     <div><label>Juego *</label><input type="text" bind:value={formData.game} disabled={editingResource} placeholder="Ej: csgo"></div>
                     <div><label>Reportes de tramposos *</label><input type="number" bind:value={formData.cheater_report} placeholder="Ej: 100"></div>
                     <div><label>Baneos confirmados *</label><input type="number" bind:value={formData.confirmed_ban} placeholder="Ej: 50"></div>
-                    <div><label>% Estimado de tramposos</label><input type="number" step="0.01" bind:value={formData.estimated_cheater} placeholder="Ej: 2.5"></div>
+                    <div><label>Porcentaje estimado de tramposos</label><input type="number" step="0.01" bind:value={formData.estimated_cheater} placeholder="Ej: 2.5"></div>
                     <div><label>Cuentas suspendidas</label><input type="number" bind:value={formData.suspended_account} placeholder="Ej: 30"></div>
                     <div><label>Reincidentes</label><input type="number" bind:value={formData.repeat_offender} placeholder="Ej: 10"></div>
                 </div>
                 {#if editingResource}
-                    <p style="color: var(--green-600); font-size: 0.9rem; margin-top: 1rem;">
-                        ℹ️ Para cambiar país, año o juego, elimina el registro y crea uno nuevo.
+                    <p style="color: var(--purple-600); font-size: 0.9rem; margin-top: 1rem;">
+                        Para cambiar país, año o juego, elimina el registro y crea uno nuevo.
                     </p>
                 {/if}
                 <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
                     <button onclick={() => { showCreateForm = false; editingResource = null; resetForm(); }} class="btn-gray">Cancelar</button>
-                    <button onclick={editingResource ? saveResourceChanges : saveNewResource} class="btn-green">
+                    <button onclick={editingResource ? saveResourceChanges : saveNewResource} class="btn-purple">
                         {editingResource ? 'Guardar cambios' : 'Guardar'}
                     </button>
                 </div>
@@ -751,20 +751,20 @@
             <div class="resource-card">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="flex-grow: 1;">
-                        <h3 style="margin: 0 0 1rem 0; color: var(--green-700);">{resource.country} - {resource.game}</h3>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--purple-700);">{resource.country} - {resource.game}</h3>
                         <div class="resource-details-grid">
                             <p class="detail-item"><span class="detail-label">Año:</span> {resource.year}</p>
                             <p class="detail-item"><span class="detail-label">Reportes de tramposos:</span> {resource.cheater_report}</p>
                             <p class="detail-item"><span class="detail-label">Baneos confirmados:</span> {resource.confirmed_ban}</p>
-                            <p class="detail-item"><span class="detail-label">% Estimado:</span> {resource.estimated_cheater ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Porcentaje estimado:</span> {resource.estimated_cheater ?? 'N/A'}</p>
                             <p class="detail-item"><span class="detail-label">Cuentas suspendidas:</span> {resource.suspended_account ?? 'N/A'}</p>
                             <p class="detail-item"><span class="detail-label">Reincidentes:</span> {resource.repeat_offender ?? 'N/A'}</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">
-                        <button onclick={() => startEditing(resource)} class="btn-orange" style="padding: 0.3rem 0.8rem;">✏️ Editar</button>
+                        <button onclick={() => startEditing(resource)} class="btn-orange" style="padding: 0.3rem 0.8rem;">Editar</button>
                         <button onclick={() => { deleteTarget = { country: resource.country, year: resource.year, game: resource.game }; showDeleteModal = true; }} 
-                                class="btn-red" style="padding: 0.3rem 0.8rem;">🗑️ Eliminar</button>
+                                class="btn-red" style="padding: 0.3rem 0.8rem;">Eliminar</button>
                     </div>
                 </div>
             </div>
@@ -772,18 +772,18 @@
 
         <!-- PAGINACIÓN INFERIOR -->
         <div style="display: flex; justify-content: center; gap: 0.5rem; margin: 2rem 0;">
-            <button onclick={() => goToPage(1)} disabled={currentPage === 1} class="btn-gray">⏮️</button>
-            <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">◀</button>
-            <span style="padding: 0.3rem 0.8rem; background: var(--green-50); border-radius: 4px;">{currentPage}/{totalPages}</span>
-            <button onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} class="btn-gray">▶</button>
-            <button onclick={() => goToPage(totalPages)} disabled={currentPage === totalPages} class="btn-gray">⏭️</button>
+            <button onclick={() => goToPage(1)} disabled={currentPage === 1} class="btn-gray">Primera</button>
+            <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">Anterior</button>
+            <span style="padding: 0.3rem 0.8rem; background: var(--purple-50); border-radius: 4px;">{currentPage}/{totalPages}</span>
+            <button onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} class="btn-gray">Siguiente</button>
+            <button onclick={() => goToPage(totalPages)} disabled={currentPage === totalPages} class="btn-gray">Última</button>
         </div>
 
         <hr>
         <div class="footer-links">
-            <a href="/">🏠 Inicio</a>
-            <a href="/about">ℹ️ Acerca de</a>
-            <a href="/api/v2/cheaters-stats/docs" target="_blank">📄 Documentación API v2</a>
+            <a href="/">Inicio</a>
+            <a href="/about">Acerca de</a>
+            <a href="/api/v2/cheaters-stats/docs" target="_blank">Documentación API v2</a>
         </div>
     {:else if !loading && !searchMode}
         <p class="text-center text-muted" style="padding: 2rem;">No hay registros. Carga datos de ejemplo o añade uno nuevo.</p>
@@ -793,7 +793,7 @@
     {#if showDeleteModal && deleteTarget}
         <div class="modal">
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
-                <h3 style="color: #dc2626; margin-top: 0;">⚠️ Confirmar eliminación</h3>
+                <h3 style="color: #dc2626; margin-top: 0;">Confirmar eliminación</h3>
                 <p>¿Eliminar este registro?</p>
                 <p><strong>{deleteTarget.country} - {deleteTarget.game} ({deleteTarget.year})</strong></p>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
