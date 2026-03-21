@@ -77,7 +77,7 @@ const removeIdMiddleware = (req, res, next) => {
 
 function loadBackendFMGP(app) {
     // ============================================
-    // API v1 - RUTAS (sin cambios, solo añadimos middleware)
+    // API v1 - SOLO LECTURA (inmutable)
     // ============================================
     const routerV1 = express.Router();
     routerV1.use(removeIdMiddleware);
@@ -87,32 +87,24 @@ function loadBackendFMGP(app) {
         res.redirect("https://documenter.getpostman.com/view/52768258/2sBXigNZg8");
     });
 
-    // Carga inicial v1
+    // ============================================
+    // Carga inicial - SOLO LECTURA (no modifica datos, solo muestra)
+    // ============================================
     routerV1.get("/loadInitialData", (req, res) => {
         dbV1.count({}, (err, count) => {
             if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
             
-            if (count === 0) {
-                const initialData = csvContent.slice(0, 15);
-                dbV1.insert(initialData, (err, newDocs) => {
-                    if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
-                    console.log(`✅ Datos iniciales de cheaters-stats v1 cargados: ${newDocs.length} registros`);
-                    
-                    dbV1.find({}).sort({ country: 1, year: 1 }).exec((err, data) => {
-                        if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                        res.status(200).json(data);
-                    });
-                });
-            } else {
-                dbV1.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
-                    if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                    res.status(200).json(data);
-                });
-            }
+            // SOLO LECTURA: devuelve los datos existentes o vacío si no hay
+            dbV1.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
+                if (err) return res.status(500).json({ error: "Error al recuperar datos" });
+                res.status(200).json(data);
+            });
         });
     });
 
-    // GET v1 - Colección con búsquedas y paginación
+    // ============================================
+    // GET - Colección con búsquedas y paginación (SOLO LECTURA)
+    // ============================================
     routerV1.get("/", (req, res) => {
         const { country, year, from, to, page = 1, limit = 20 } = req.query;
         
@@ -154,45 +146,69 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // POST v1
+    // ============================================
+    // OPERACIONES DE ESCRITURA EN v1 - NO PERMITIDAS (v1 es SOLO LECTURA)
+    // ============================================
+    
+    // POST no permitido en v1 (colección)
     routerV1.post("/", (req, res) => {
-        const newData = req.body;
-
-        if (!newData || !newData.country || !newData.year) {
-            return res.status(400).json({ message: "Bad Request: Missing country or year" });
-        }
-
-        dbV1.findOne({ 
-            country: { $regex: new RegExp(`^${newData.country}$`, 'i') }, 
-            year: newData.year 
-        }, (err, existe) => {
-            if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
-            
-            if (existe) {
-                return res.status(409).json({ message: "Resource already exists for this country and year" });
-            }
-
-            dbV1.insert(newData, (err, newDoc) => {
-                if (err) return res.status(500).json({ error: "Error al insertar el dato" });
-                res.status(201).json(newDoc);
-            });
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use POST to /api/v2/cheaters-stats to create resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
         });
     });
 
-    // DELETE v1
-    routerV1.delete("/", (req, res) => {
-        dbV1.remove({}, { multi: true }, (err, numRemoved) => {
-            if (err) return res.status(500).json({ error: "Error al borrar los datos" });
-            res.status(200).json({ message: "All data deleted successfully", count: numRemoved });
+    // POST no permitido en v1 (recurso por país)
+    routerV1.post("/:country", (req, res) => {
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use POST to /api/v2/cheaters-stats to create resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
+        });
+    });
+    
+    // POST no permitido en v1 (recurso exacto)
+    routerV1.post("/:country/:year", (req, res) => {
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use POST to /api/v2/cheaters-stats to create resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
         });
     });
 
-    // PUT no permitido en colección v1
+    // PUT no permitido en v1 (colección)
     routerV1.put("/", (req, res) => {
-        res.status(405).json({ message: "Method Not Allowed: Cannot update the entire list" });
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use PUT to /api/v2/cheaters-stats/country/:country/year/:year/game/:game to update resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
+        });
     });
 
-    // Listas v1
+    // PUT no permitido en v1 (recurso exacto)
+    routerV1.put("/:country/:year", (req, res) => {
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use PUT to /api/v2/cheaters-stats/country/:country/year/:year/game/:game to update resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
+        });
+    });
+
+    // DELETE no permitido en v1 (colección)
+    routerV1.delete("/", (req, res) => {
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use DELETE with ?confirm=true to /api/v2/cheaters-stats to delete all resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
+        });
+    });
+
+    // DELETE no permitido en v1 (recurso exacto)
+    routerV1.delete("/:country/:year", (req, res) => {
+        res.status(405).json({ 
+            message: "Method Not Allowed: v1 is read-only. Use DELETE to /api/v2/cheaters-stats/country/:country/year/:year/game/:game to delete specific resources",
+            hint: "This API version is immutable. Please use v2 for write operations."
+        });
+    });
+
+    // ============================================
+    // LISTAS - SOLO LECTURA (permitidas)
+    // ============================================
     routerV1.get("/country", (req, res) => {
         dbV1.find({}).exec((err, data) => {
             if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
@@ -209,7 +225,9 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // Búsqueda por país v1
+    // ============================================
+    // Búsqueda por país (SOLO LECTURA)
+    // ============================================
     routerV1.get("/:country", (req, res) => {
         const countryParam = req.params.country;
         const { from, to, page = 1, limit = 20 } = req.query;
@@ -253,7 +271,9 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // Recurso exacto país/año v1
+    // ============================================
+    // Recurso exacto país/año (SOLO LECTURA)
+    // ============================================
     routerV1.get("/:country/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -268,67 +288,18 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // PUT v1 recurso exacto
-    routerV1.put("/:country/:year", (req, res) => {
-        const countryParam = req.params.country;
-        const yearParam = parseInt(req.params.year);
-        const body = req.body;
-
-        if (!body) return res.status(400).json({ message: "Bad Request: No data provided" });
-
-        if ((body.country && body.country.toLowerCase() !== countryParam.toLowerCase()) || 
-            (body.year && parseInt(body.year) !== yearParam)) {
-            return res.status(400).json({ message: "Bad Request: IDs in URL and body do not match" });
-        }
-
-        dbV1.update(
-            { country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, year: yearParam },
-            { $set: body },
-            { returnUpdatedDocs: true },
-            (err, numReplaced, affectedDoc) => {
-                if (err) return res.status(500).json({ error: "Error al actualizar" });
-                if (numReplaced === 0) return res.status(404).json({ message: "Resource not found" });
-                res.status(200).json(affectedDoc);
-            }
-        );
-    });
-
-    // DELETE v1 recurso exacto
-    routerV1.delete("/:country/:year", (req, res) => {
-        const countryParam = req.params.country;
-        const yearParam = parseInt(req.params.year);
-
-        dbV1.remove(
-            { country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, year: yearParam },
-            {},
-            (err, numRemoved) => {
-                if (err) return res.status(500).json({ error: "Error al eliminar" });
-                if (numRemoved === 0) return res.status(404).json({ message: "Resource not found" });
-                res.status(200).json({ message: "Resource deleted successfully" });
-            }
-        );
-    });
-
-    // POST no permitido en recurso específico v1
-    routerV1.post("/:country", (req, res) => {
-        res.status(405).json({ message: "Method Not Allowed" });
-    });
-    routerV1.post("/:country/:year", (req, res) => {
-        res.status(405).json({ message: "Method Not Allowed" });
-    });
-
     // ============================================
-    // API v2 - NUEVAS RUTAS (con mejoras)
+    // API v2 - COMPLETA (LECTURA Y ESCRITURA)
     // ============================================
     const routerV2 = express.Router();
     routerV2.use(removeIdMiddleware);
 
-    // Documentación v2 (CAMBIA ESTA URL)
+    // Documentación v2
     routerV2.get("/docs", (req, res) => {
-        res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5"); // Cambia esta URL por la de tu documentación v2
+        res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5");
     });
 
-    // Carga inicial v2
+    // Carga inicial v2 (solo si la BD está vacía)
     routerV2.get("/loadInitialData", (req, res) => {
         dbV2.count({}, (err, count) => {
             if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
@@ -421,7 +392,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // POST v2 - Validación estricta de estructura JSON
+    // POST v2 - Crear nuevo recurso (ESCRITURA)
     routerV2.post("/", (req, res) => {
         const newData = req.body;
 
@@ -488,7 +459,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // DELETE v2 - Requiere confirmación
+    // DELETE v2 - Eliminar todos (requiere confirmación)
     routerV2.delete("/", (req, res) => {
         const { confirm } = req.query;
         
@@ -637,7 +608,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // PUT recurso exacto (reemplazo completo)
+    // PUT recurso exacto (reemplazo completo) - ESCRITURA
     routerV2.put("/country/:country/year/:year/game/:game", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -673,7 +644,7 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // PATCH recurso exacto (actualización parcial) - NUEVO en v2
+    // PATCH recurso exacto (actualización parcial) - ESCRITURA
     routerV2.patch("/country/:country/year/:year/game/:game", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -703,7 +674,7 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // DELETE recurso exacto
+    // DELETE recurso exacto - ESCRITURA
     routerV2.delete("/country/:country/year/:year/game/:game", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -725,12 +696,24 @@ function loadBackendFMGP(app) {
     });
 
     // ============================================
+    // POST no permitido en recurso exacto (debe devolver 405)
+    // ============================================
+    routerV2.post("/country/:country/year/:year/game/:game", (req, res) => {
+        res.status(405).json({ 
+            message: "Method Not Allowed: Cannot POST to a specific resource. Use POST to /api/v2/cheaters-stats to create new resources.",
+            hint: "To create a new resource, send POST request to /api/v2/cheaters-stats"
+        });
+    });
+
+    // ============================================
     // REGISTRAR RUTAS EN LA APP
     // ============================================
     app.use('/api/v1/cheaters-stats', routerV1);
     app.use('/api/v2/cheaters-stats', routerV2);
     
-    console.log('✅ APIs cheaters-stats cargadas: v1 (/api/v1/cheaters-stats) y v2 (/api/v2/cheaters-stats)');
+    console.log('✅ APIs cheaters-stats cargadas:');
+    console.log('   - v1 (/api/v1/cheaters-stats): SOLO LECTURA (inmutable)');
+    console.log('   - v2 (/api/v2/cheaters-stats): LECTURA/ESCRITURA (activa para modificaciones)');
 }
 
 export default loadBackendFMGP;

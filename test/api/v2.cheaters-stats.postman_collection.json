@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "8bc1d282-2bff-4a1b-ba38-e13accd6d36f",
-    "name": "cheaters-stats",
+    "_postman_id": "cc3797fd-2bad-4f11-bc0d-98577c1ec5f2",
+    "name": "cheaters-stats V2",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "52706289",
-    "_collection_link": "https://go.postman.co/collection/52768258-8bc1d282-2bff-4a1b-ba38-e13accd6d36f?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/52706289-cc3797fd-2bad-4f11-bc0d-98577c1ec5f2?source=collection_link"
   },
   "item": [
     {
@@ -28,12 +28,13 @@
               "    pm.expect(res.length).to.be.at.least(10);\r",
               "});\r",
               "\r",
-              "pm.test(\"Los objetos tienen la estructura correcta\", function () {\r",
+              "pm.test(\"Los objetos tienen la estructura correcta con campo 'game'\", function () {\r",
               "    const res = pm.response.json();\r",
               "    const primerElemento = res[0];\r",
               "    pm.expect(primerElemento).to.have.property(\"year\");\r",
               "    pm.expect(primerElemento).to.have.property(\"country\");\r",
               "    pm.expect(primerElemento).to.have.property(\"cheater_reports\");\r",
+              "    // En v2 puede tener campo game (aunque en datos iniciales puede estar vacío)\r",
               "});"
             ],
             "type": "text/javascript",
@@ -58,13 +59,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/loadInitialData",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/loadInitialData",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats",
             "loadInitialData"
           ]
@@ -79,14 +80,19 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Devuelve un array\", function () {\r",
+              "pm.test(\"Devuelve objeto con data y pagination\", function () {\r",
               "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.have.property('data');\r",
+              "    pm.expect(res).to.have.property('pagination');\r",
               "    pm.expect(res.data).to.be.an('array');\r",
+              "    pm.expect(res.pagination).to.have.property('total');\r",
+              "    pm.expect(res.pagination).to.have.property('page');\r",
+              "    pm.expect(res.pagination).to.have.property('limit');\r",
+              "    pm.expect(res.pagination).to.have.property('totalPages');\r",
               "});\r",
               "\r",
               "pm.test(\"Array contiene datos\", function () {\r",
@@ -104,13 +110,13 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v2/cheaters-stats",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats"
           ]
         }
@@ -155,13 +161,13 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats?country=Spain",
+          "raw": "{{base_url}}/api/v2/cheaters-stats?country=Spain",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats"
           ],
           "query": [
@@ -220,13 +226,13 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats?country=Spain&year=2020",
+          "raw": "{{base_url}}/api/v2/cheaters-stats?country=Spain&year=2020",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats"
           ],
           "query": [
@@ -244,21 +250,20 @@
       "response": []
     },
     {
-      "name": "POST registro existente 409 conflict",
+      "name": "Borrar Todo 200 OK",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
-              "pm.test(\"Status code is 409\", function () {\r",
-              "    pm.response.to.have.status(409);\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Mensaje de error existe\", function () {\r",
+              "pm.test(\"Confirmación de borrado total\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    // Como no sé el formato exacto de tu error, prueba con:\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "    pm.expect(res.message).to.include(\"deleted successfully\");\r",
+              "    pm.expect(res.count).to.be.at.least(0);\r",
               "});"
             ],
             "type": "text/javascript",
@@ -268,26 +273,23 @@
         }
       ],
       "request": {
-        "method": "POST",
+        "method": "DELETE",
         "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"year\":2021,\r\n    \"country\":\"spain\"\r\n\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v2/cheaters-stats?confirm=true",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats"
+          ],
+          "query": [
+            {
+              "key": "confirm",
+              "value": "true"
+            }
           ]
         }
       },
@@ -300,21 +302,21 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 201\", function () {\r",
               "    pm.response.to.have.status(201);\r",
               "});\r",
               "\r",
-              "pm.test(\"Recurso creado devuelve datos\", function () {\r",
+              "pm.test(\"Recurso creado devuelve los datos correctos\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    \r",
-              "    // Si devuelve el objeto creado\r",
-              "    if (Array.isArray(res)) {\r",
-              "        pm.expect(res.length).to.be.at.least(1);\r",
-              "    } else {\r",
-              "        pm.expect(res).to.have.property(\"country\");\r",
-              "        pm.expect(res.country).to.equal(\"nuevopais\");\r",
-              "    }\r",
+              "    pm.expect(res.country).to.equal(\"nuevopais\");\r",
+              "    pm.expect(res.year).to.equal(2025);\r",
+              "    pm.expect(res.game).to.equal(\"testgame\");\r",
+              "    pm.expect(res.cheater_report).to.equal(1500);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"No contiene campo _id\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.not.have.property(\"_id\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -334,7 +336,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"cheater_report\": 1500,\r\n    \"confirmed_ban\": 750,\r\n    \"estimated_cheater\": 3.25,\r\n    \"suspended_account\": 680,\r\n    \"repeat_offender\": 120\r\n}",
+          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 1500,\r\n    \"confirmed_ban\": 750,\r\n    \"estimated_cheater\": 3.25,\r\n    \"suspended_account\": 680,\r\n    \"repeat_offender\": 120\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -342,13 +344,61 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v2/cheaters-stats",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
+            "cheaters-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST registro existente 409 conflict",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 409\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje indica que el recurso ya existe\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"already exists\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 100,\r\n    \"confirmed_ban\": 50\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v2/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v2",
             "cheaters-stats"
           ]
         }
@@ -362,12 +412,14 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 400\", function () {\r",
+              "pm.test(\"Status code is 400\", function () {\r",
               "    pm.response.to.have.status(400);\r",
               "});\r",
-              "pm.test(\"El recurso se ha creado correctamente\", function () {\r",
-              "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
+              "\r",
+              "pm.test(\"Mensaje indica campos requeridos faltantes\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"Missing required fields\");\r",
+              "    pm.expect(res.required).to.be.an('array');\r",
               "});"
             ],
             "type": "text/javascript",
@@ -381,7 +433,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": " {\r\n       \r\n        \"cheater_reports\": \"3786\",\r\n        \"confirmed_bans\": \"1439\",\r\n        \"estimated_cheater_percentage\": \"2.34\"\r\n }",
+          "raw": "{\r\n    \"country\": \"test\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -389,13 +441,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v2/cheaters-stats",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats"
           ]
         }
@@ -409,14 +461,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 400\", function () {\r",
               "    pm.response.to.have.status(400);\r",
               "});\r",
               "\r",
-              "pm.test(\"Mensaje de error existe\", function () {\r",
+              "pm.test(\"Mensaje indica que los IDs no coinciden\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "    pm.expect(res.message).to.include(\"do not match\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -436,19 +487,23 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}"
+          "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0\r\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/Spain/2021",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2021/game/testgame",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats",
+            "country",
             "Spain",
-            "2021"
+            "year",
+            "2021",
+            "game",
+            "testgame"
           ]
         }
       },
@@ -461,14 +516,21 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Confirmación de actualización\", function () {\r",
+              "pm.test(\"Recurso actualizado correctamente\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
+              "    pm.expect(res.cheater_report).to.equal(0);\r",
+              "    pm.expect(res.confirmed_ban).to.equal(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mantiene los identificadores\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.country).to.equal(\"nuevopais\");\r",
+              "    pm.expect(res.year).to.equal(2025);\r",
+              "    pm.expect(res.game).to.equal(\"testgame\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -482,7 +544,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}",
+          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -490,16 +552,20 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/nuevopais/year/2025/game/testgame",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats",
+            "country",
             "nuevopais",
-            "2025"
+            "year",
+            "2025",
+            "game",
+            "testgame"
           ]
         }
       },
@@ -512,14 +578,18 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 405\", function () {\r",
               "    pm.response.to.have.status(405);\r",
               "});\r",
               "\r",
-              "pm.test(\"Mensaje de método no permitido\", function () {\r",
+              "pm.test(\"Mensaje indica que el método no está permitido\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "    pm.expect(res.message).to.include(\"Method Not Allowed\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El mensaje explica que no se puede hacer POST en recurso específico\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.match(/not allowed|not permitted|Method Not Allowed/i);\r",
               "});"
             ],
             "type": "text/javascript",
@@ -532,16 +602,20 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/Spain/2026",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2026/game/testgame",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats",
+            "country",
             "Spain",
-            "2026"
+            "year",
+            "2026",
+            "game",
+            "testgame"
           ]
         }
       },
@@ -554,16 +628,14 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 405\", function () {\r",
               "    pm.response.to.have.status(405);\r",
               "});\r",
               "\r",
               "pm.test(\"Mensaje de método no permitido\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
-              "});\r",
-              ""
+              "    pm.expect(res.message).to.include(\"Method Not Allowed\");\r",
+              "});"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -585,56 +657,14 @@
           "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v2/cheaters-stats",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Borrar Dato Concreto 200 OK",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Confirmación de borrado\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats",
-            "nuevopais",
-            "2025"
           ]
         }
       },
@@ -647,14 +677,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
               "pm.test(\"Status code is 404\", function () {\r",
               "    pm.response.to.have.status(404);\r",
               "});\r",
               "\r",
-              "pm.test(\"Mensaje de no encontrado\", function () {\r",
+              "pm.test(\"Mensaje indica que el recurso no existe\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "    pm.expect(res.message).to.include(\"not found\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -667,35 +696,38 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/paisinexistente/year/9999/game/juegoinexistente",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "cheaters-stats",
-            "nuevopais"
+            "country",
+            "paisinexistente",
+            "year",
+            "9999",
+            "game",
+            "juegoinexistente"
           ]
         }
       },
       "response": []
     },
     {
-      "name": "Borrar Todo 200 OK",
+      "name": "Borrar Dato Concreto 200 OK",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "\r",
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
+              "pm.test(\"Status code is 204\", function () {\r",
+              "    pm.response.to.have.status(204);\r",
               "});\r",
               "\r",
-              "pm.test(\"Confirmación de borrado total\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
+              "pm.test(\"Respuesta no tiene cuerpo\", function () {\r",
+              "    pm.expect(pm.response.text()).to.be.empty;\r",
               "});"
             ],
             "type": "text/javascript",
@@ -708,14 +740,20 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/nuevopais/year/2025/game/testgame",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
-            "cheaters-stats"
+            "v2",
+            "cheaters-stats",
+            "country",
+            "nuevopais",
+            "year",
+            "2025",
+            "game",
+            "testgame"
           ]
         }
       },

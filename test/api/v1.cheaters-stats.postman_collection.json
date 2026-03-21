@@ -1,0 +1,428 @@
+{
+  "info": {
+    "_postman_id": "8bc1d282-2bff-4a1b-ba38-e13accd6d36f",
+    "name": "cheaters-stats",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52706289",
+    "_collection_link": "https://go.postman.co/collection/52768258-8bc1d282-2bff-4a1b-ba38-e13accd6d36f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Carga Datos iniciales 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Devuelve un array\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.be.an('array');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Array tiene al menos 10 elementos\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.length).to.be.at.least(10);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Los objetos tienen la estructura correcta\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    const primerElemento = res[0];\r",
+              "    pm.expect(primerElemento).to.have.property(\"year\");\r",
+              "    pm.expect(primerElemento).to.have.property(\"country\");\r",
+              "    pm.expect(primerElemento).to.have.property(\"cheater_reports\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats/loadInitialData",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats",
+            "loadInitialData"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Datos 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Devuelve un array\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.data).to.be.an('array');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Array contiene datos\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.data.length).to.be.at.least(1);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtro Pais 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Devuelve un array\", function () {",
+              "    const res = pm.response.json();",
+              "    pm.expect(res.data).to.be.an('array');",
+              "});",
+              "",
+              "pm.test(\"Todos los resultados son de Spain\", function () {",
+              "    const res = pm.response.json();",
+              "    pm.expect(res).to.be.an('object');",
+              "    pm.expect(res.data, 'res.data debe ser un array').to.be.an('array');",
+              "",
+              "    res.data.forEach(item => {",
+              "        pm.expect(item).to.have.property('country');",
+              "        pm.expect(item.country).to.equal(\"Spain\");",
+              "    });",
+              "});",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats?country=Spain",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ],
+          "query": [
+            {
+              "key": "country",
+              "value": "Spain"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recurso especifico 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Devuelve un array\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.data).to.be.an('array');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El año es 2020\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "\r",
+              "    pm.expect(res).to.have.property(\"data\");\r",
+              "    pm.expect(res.data).to.be.an(\"array\");\r",
+              "\r",
+              "    pm.expect(res.data[0]).to.have.property(\"year\");\r",
+              "    pm.expect(res.data[0].year).to.equal(2020);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El país es Spain\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res).to.have.property(\"data\");\r",
+              "    pm.expect(res.data).to.be.an(\"array\").that.is.not.empty;\r",
+              "\r",
+              "    pm.expect(res.data[0]).to.have.property(\"country\");\r",
+              "    pm.expect(res.data[0].country.toLowerCase()).to.equal(\"spain\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats?country=Spain&year=2020",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ],
+          "query": [
+            {
+              "key": "country",
+              "value": "Spain"
+            },
+            {
+              "key": "year",
+              "value": "2020"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recurso inexistente 404 not found",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "\r",
+              "pm.test(\"Status code is 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje de no encontrado\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats",
+            "nuevopais"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST registro existente 409 conflict",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 405 - v1 es solo lectura\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje indica que v1 es solo lectura y redirige a v2\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"read-only\");\r",
+              "    pm.expect(res.message).to.include(\"v2\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"year\":2021,\r\n    \"country\":\"spain\"\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Actualizar recurso 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 405 - v1 es solo lectura\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje indica que v1 es solo lectura y redirige a v2\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"read-only\");\r",
+              "    pm.expect(res.message).to.include(\"v2\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats",
+            "nuevopais",
+            "2025"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Borrar Todo 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 405 - v1 es solo lectura\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje indica que v1 es solo lectura y redirige a v2\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"read-only\");\r",
+              "    pm.expect(res.message).to.include(\"v2\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
