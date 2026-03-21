@@ -250,52 +250,6 @@
       "response": []
     },
     {
-      "name": "Borrar Todo 200 OK",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Confirmación de borrado total\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res.message).to.include(\"deleted successfully\");\r",
-              "    pm.expect(res.count).to.be.at.least(0);\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v2/cheaters-stats?confirm=true",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v2",
-            "cheaters-stats"
-          ],
-          "query": [
-            {
-              "key": "confirm",
-              "value": "true"
-            }
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Creacion nuevo recurso 201 Created",
       "event": [
         {
@@ -754,6 +708,52 @@
             "2025",
             "game",
             "testgame"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Borrar Todo 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Confirmación de borrado total\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"deleted successfully\");\r",
+              "    pm.expect(res.count).to.be.at.least(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v2/cheaters-stats?confirm=true",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v2",
+            "cheaters-stats"
+          ],
+          "query": [
+            {
+              "key": "confirm",
+              "value": "true"
+            }
           ]
         }
       },
