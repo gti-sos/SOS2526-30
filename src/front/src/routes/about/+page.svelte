@@ -1,241 +1,309 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<script>
+    // Información del equipo (se mantiene igual)
+    const team = [
+        { name: "David Real Pérez", dataSource: "esportsgrowth-stats", github: "https://github.com/davreaper" },
+        { name: "Mario Ramos Tuñón", dataSource: "esportsearnings-stats", github: "https://github.com/MarioRt8558" },
+        { name: "Gonzalo García Gómez", dataSource: "olympics-athlete-events", github: "https://github.com/gonzaloogrcia" },
+        { name: "Francisco Manuel García Patino", dataSource: "cheaters-stats", github: "https://github.com/PaGarPa" }
+    ];
+
+    const repoUrl = "https://github.com/gti-sos/SOS2526-30";
+    const baseApiUrl = "https://sos2526-30.onrender.com/api/v1";
+</script>
+
+<svelte:head>
     <title>SOS2526-30 - Sobre Nosotros</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            min-height: 100vh;
-            color: #1e293b;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(2, 132, 199, 0.2);
-            border: 1px solid #bae6fd;
-        }
-        h1 {
-            color: #075985;
-            border-bottom: 3px solid #0284c7;
-            padding-bottom: 0.5rem;
-            margin-top: 0;
-            font-size: 2.5rem;
-        }
-        h2 {
-            color: #0369a1;
-            margin-top: 2rem;
-            font-size: 1.8rem;
-        }
-        h3 {
-            color: #0284c7;
-            margin-top: 1.5rem;
-            font-size: 1.3rem;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        li {
-            margin: 1rem 0;
-            padding: 1rem;
-            background: #f0f9ff;
-            border-left: 4px solid #38bdf8;
-            border-radius: 8px;
-        }
-        a {
-            color: #0284c7;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        a:hover {
-            text-decoration: underline;
-            color: #075985;
-        }
-        code {
-            background: #e0f2fe;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-            color: #0369a1;
-        }
-        .footer {
-            margin-top: 2rem;
-            text-align: center;
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-        .team-member {
-            display: flex;
-            flex-direction: column;
-        }
-        .member-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #075985;
-        }
-        .member-details {
-            display: flex;
-            gap: 1rem;
-            margin-top: 0.3rem;
-            font-size: 0.9rem;
-        }
-        .member-github {
-            background: #0284c7;
-            color: white;
-            padding: 0.2rem 0.8rem;
-            border-radius: 16px;
-            font-size: 0.8rem;
-        }
-        .member-github:hover {
-            background: #075985;
-            color: white;
-            text-decoration: none;
-        }
-        .api-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .api-name {
-            font-weight: 600;
-            min-width: 150px;
-        }
-        .api-link {
-            word-break: break-all;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 SOS2526-30</h1>
-        <p style="font-size: 1.2rem; color: #475569;">Panel de Control del Proyecto - Información del equipo</p>
+</svelte:head>
 
-        <h2>📋 Descripción del Proyecto</h2>
-        <p>Our sources of information are geared towards analysing the relationship between the growth of the esports industry, the earnings of esports players, cheating players in esports, and statistics on Olympic athletes.</p>
+<div class="container">
+    <header>
+        <h1>SOS2526-30</h1>
+        <p class="subtitle">Panel de Control del Proyecto - Información del equipo</p>
+    </header>
 
-        <h2>👥 Miembros del Equipo</h2>
-        <ul>
-            <li>
-                <div class="team-member">
-                    <span class="member-name">David Real Pérez</span>
-                    <div class="member-details">
-                        <code>esportsgrowth-stats</code>
-                        <a href="https://github.com/davreaper" target="_blank" class="member-github">GitHub</a>
-                    </div>
-                </div>
-            </li>
-            <li>
-                <div class="team-member">
-                    <span class="member-name">Mario Ramos Tuñón</span>
-                    <div class="member-details">
-                        <code>esportsearnings-stats</code>
-                        <a href="https://github.com/MarioRt8558" target="_blank" class="member-github">GitHub</a>
-                    </div>
-                </div>
-            </li>
-            <li>
-                <div class="team-member">
-                    <span class="member-name">Gonzalo García Gómez</span>
-                    <div class="member-details">
-                        <code>olympics-athlete-events</code>
-                        <a href="https://github.com/gonzaloogrcia" target="_blank" class="member-github">GitHub</a>
-                    </div>
-                </div>
-            </li>
-            <li>
-                <div class="team-member">
-                    <span class="member-name">Francisco Manuel García Patino</span>
-                    <div class="member-details">
-                        <code>cheaters-stats</code>
-                        <a href="https://github.com/PaGarPa" target="_blank" class="member-github">GitHub</a>
-                    </div>
-                </div>
-            </li>
-        </ul>
+    <h2>Descripción del Proyecto</h2>
+    <p>Our sources of information are geared towards analysing the relationship between the growth of the esports industry, the earnings of esports players, cheating players in esports, and statistics on Olympic athletes.</p>
 
-        <h2>🔗 Enlaces a las APIs</h2>
-        <h3>Bases de las APIs</h3>
-        <ul>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Esports Growth:</span>
-                    <a href="/api/v1/esportsgrowth-stats" class="api-link">/api/v1/esportsgrowth-stats</a>
-                </div>
-            </li>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Esports Earnings:</span>
-                    <a href="/api/v1/esportsearnings-stats" class="api-link">/api/v1/esportsearnings-stats</a>
-                </div>
-            </li>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Cheaters Stats:</span>
-                    <a href="/api/v1/cheaters-stats" class="api-link">/api/v1/cheaters-stats</a>
-                </div>
-            </li>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Olympics Athlete:</span>
-                    <a href="/api/v1/olympics-athlete-events" class="api-link">/api/v1/olympics-athlete-events</a>
-                </div>
-            </li>
-        </ul>
-
-        <h3>📄 Documentación en Postman</h3>
-        <ul>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">David Real Pérez:</span>
-                    <a href="/api/v1/esportsgrowth-stats/docs" class="api-link" target="_blank">/api/v1/esportsgrowth-stats/docs</a>
-                </div>
-            </li>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Mario Ramos Tuñón:</span>
-                    <a href="/api/v1/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v1/esportsearnings-stats/docs</a>
-                </div>
-            </li>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Francisco M. García:</span>
-                    <a href="/api/v1/cheaters-stats/docs" class="api-link" target="_blank">/api/v1/cheaters-stats/docs</a>
-                </div>
-            </li>
-            <li>
-                <div class="api-item">
-                    <span class="api-name">Gonzalo García Gómez:</span>
-                    <a href="/api/v1/olympics-athlete-events/docs" class="api-link" target="_blank">/api/v1/olympics-athlete-events/docs</a>
-                </div>
-            </li>
-        </ul>
-
-        <h2>📦 Repositorio</h2>
-        <p>
-            <a href="https://github.com/gti-sos/SOS2526-30" target="_blank">
-                github.com/gti-sos/SOS2526-30
-            </a>
-        </p>
-
-        <h2>🌐 URL del Proyecto</h2>
-        <p>
-            <a href="https://sos2526-30.onrender.com" target="_blank">
-                sos2526-30.onrender.com
-            </a>
-        </p>
-
-        <div class="footer">
-            <p>✨ Proyecto SOS 2025-26 - Grupo 30</p>
-            <p>Desarrollado con ❤️ por el equipo</p>
+    <h2>Miembros del Equipo</h2>
+    
+    <div class="team-member">
+        <div class="member-name">David Real Pérez</div>
+        <div class="member-details">
+            <code>esportsgrowth-stats</code>
+            <a href="https://github.com/davreaper" target="_blank" class="btn-github">GitHub</a>
         </div>
     </div>
-</body>
-</html>
+
+    <div class="team-member">
+        <div class="member-name">Mario Ramos Tuñón</div>
+        <div class="member-details">
+            <code>esportsearnings-stats</code>
+            <a href="https://github.com/MarioRt8558" target="_blank" class="btn-github">GitHub</a>
+        </div>
+    </div>
+
+    <div class="team-member">
+        <div class="member-name">Gonzalo García Gómez</div>
+        <div class="member-details">
+            <code>olympics-athlete-events</code>
+            <a href="https://github.com/gonzaloogrcia" target="_blank" class="btn-github">GitHub</a>
+        </div>
+    </div>
+
+    <div class="team-member">
+        <div class="member-name">Francisco Manuel García Patino</div>
+        <div class="member-details">
+            <code>cheaters-stats</code>
+            <a href="https://github.com/PaGarPa" target="_blank" class="btn-github">GitHub</a>
+        </div>
+    </div>
+
+    <h2>Enlaces a las APIs</h2>
+    <h3>Bases de las APIs</h3>
+
+    <div class="api-item">
+        <span class="api-name">Esports Growth:</span>
+        <a href="/api/v1/esportsgrowth-stats" class="api-link">/api/v1/esportsgrowth-stats</a>
+    </div>
+
+    <div class="api-item">
+        <span class="api-name">Esports Earnings:</span>
+        <a href="/api/v1/esportsearnings-stats" class="api-link">/api/v1/esportsearnings-stats</a>
+    </div>
+
+    <div class="api-item">
+        <span class="api-name">Cheaters Stats:</span>
+        <a href="/api/v1/cheaters-stats" class="api-link">/api/v1/cheaters-stats</a>
+    </div>
+
+    <div class="grid-2">
+        <div class="api-item">
+            <span class="api-name">Olympics v1:</span>
+            <a href="/api/v1/olympics-athlete-events" class="api-link">/api/v1/olympics-athlete-events</a>
+        </div>
+        <div class="api-item">
+            <span class="api-name">Olympics v2:</span>
+            <a href="/api/v2/olympics-athlete-events" class="api-link">/api/v2/olympics-athlete-events</a>
+        </div>
+    </div>
+
+    <h3>Documentación en Postman</h3>
+
+    <div class="api-item">
+        <span class="api-name">David Real Pérez:</span>
+        <a href="/api/v1/esportsgrowth-stats/docs" class="api-link" target="_blank">/api/v1/esportsgrowth-stats/docs</a>
+    </div>
+
+    <div class="api-item">
+        <span class="api-name">Mario Ramos Tuñón:</span>
+        <a href="/api/v1/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v1/esportsearnings-stats/docs</a>
+    </div>
+
+    <div class="api-item">
+        <span class="api-name">Francisco M. García:</span>
+        <a href="/api/v1/cheaters-stats/docs" class="api-link" target="_blank">/api/v1/cheaters-stats/docs</a>
+    </div>
+
+    <div class="grid-2">
+        <div class="api-item">
+            <span class="api-name">Olympics v1:</span>
+            <a href="/api/v1/olympics-athlete-events/docs" class="api-link" target="_blank">/api/v1/olympics-athlete-events/docs</a>
+        </div>
+        <div class="api-item">
+            <span class="api-name">Olympics v2:</span>
+            <a href="/api/v2/olympics-athlete-events/docs" class="api-link" target="_blank">/api/v2/olympics-athlete-events/docs</a>
+        </div>
+    </div>
+
+    <hr>
+
+    <h2>Repositorio</h2>
+    <p>
+        <a href={repoUrl} target="_blank">
+            github.com/gti-sos/SOS2526-30
+        </a>
+    </p>
+
+    <h2>URL del Proyecto</h2>
+    <p>
+        <a href="https://sos2526-30.onrender.com" target="_blank">
+            sos2526-30.onrender.com
+        </a>
+    </p>
+    
+    <footer>
+        <p>Proyecto SOS 2025-26 - Grupo 30</p>
+    </footer>
+</div>
+
+<style>
+    :root {
+        --blue-50: #f0f9ff;
+        --blue-100: #e0f2fe;
+        --blue-200: #bae6fd;
+        --blue-300: #7dd3fc;
+        --blue-500: #0ea5e9;
+        --blue-600: #0284c7;
+        --blue-700: #0369a1;
+        --blue-800: #075985;
+    }
+
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: white;
+        min-height: 100vh;
+        color: #1e293b;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--blue-200);
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    h1 {
+        color: var(--blue-800);
+        border-bottom: 3px solid var(--blue-500);
+        padding-bottom: 0.5rem;
+        margin-top: 0;
+        font-size: 2.5rem;
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+        color: var(--blue-600);
+        font-weight: 300;
+        margin-top: 0;
+    }
+
+    h2 {
+        color: var(--blue-700);
+        margin-top: 2rem;
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        color: var(--blue-600);
+        margin: 1.5rem 0 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .team-member {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: var(--blue-50);
+        border-left: 4px solid var(--blue-500);
+        border-radius: 8px;
+    }
+
+    .member-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--blue-800);
+    }
+
+    .member-details {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    code {
+        background: var(--blue-100);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        color: var(--blue-700);
+        font-family: monospace;
+    }
+
+    .btn-github {
+        background: var(--blue-600);
+        color: white;
+        padding: 0.2rem 0.8rem;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-github:hover {
+        background: var(--blue-700);
+    }
+
+    .api-item {
+        padding: 0.8rem;
+        background: var(--blue-50);
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .api-name {
+        font-weight: 600;
+        color: var(--blue-800);
+        min-width: 150px;
+    }
+
+    .api-link {
+        color: var(--blue-600);
+        text-decoration: none;
+        word-break: break-all;
+        font-size: 0.9rem;
+    }
+    .api-link:hover {
+        color: var(--blue-800);
+        text-decoration: underline;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 2px solid var(--blue-200);
+    }
+
+    a {
+        color: var(--blue-600);
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+        color: var(--blue-800);
+    }
+
+    footer {
+        text-align: center;
+        color: var(--blue-600);
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 2px solid var(--blue-200);
+    }
+
+    footer p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .text-muted {
+        color: var(--blue-600);
+    }
+</style>
