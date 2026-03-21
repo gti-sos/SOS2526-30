@@ -1,6 +1,5 @@
 <script>
 // @ts-nocheck
-
     // @ts-ignore
     let resources = $state([]);
     let loading = $state(false);
@@ -11,34 +10,29 @@
     let showCreateForm = $state(false);
     let editingResource = $state(null);
     
-    // Para filtros
+    // Variables para paginación
+    let currentPage = $state(1);
+    let itemsPerPage = $state(5);
+    let totalResources = $state(0);
+    let totalPages = $state(1);
+    let paginationData = $state(null);
+    
+    // Variables para búsqueda/filtros
+    let searchCountry = $state('');
+    let searchGame = $state('');
+    let searchYear = $state('');
+    let searchFrom = $state('');
+    let searchTo = $state('');
+    let searchResults = $state(null);
+    let searching = $state(false);
+    let searchError = $state(null);
+    let searchMode = $state(false);
+    
+    // Variables para listas de filtros
     let countries = $state([]);
     let games = $state([]);
     let years = $state([]);
-    let loadingFilters = $state(false);
     
-    // Filtros actuales
-    let filters = $state({
-        country: '',
-        game: '',
-        year: '',
-        from: '',
-        to: '',
-        cheater_report: ''
-    });
-    
-    // Paginación
-    let currentPage = $state(1);
-    let limit = $state(10);
-    let pagination = $state({
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0,
-        next: null,
-        prev: null
-    });
-
     // Formulario para nuevo/editar recurso
     let formData = $state({
         country: '',
@@ -51,17 +45,16 @@
         repeat_offender: ''
     });
 
-    // Limpiar mensajes después de un tiempo
     function clearMessages() {
         setTimeout(() => {
             error = null;
             successMessage = null;
+            searchError = null;
         }, 5000);
     }
 
     // Cargar listas para filtros
     async function loadFilters() {
-        loadingFilters = true;
         try {
             const [countriesRes, gamesRes, yearsRes] = await Promise.all([
                 fetch('/api/v2/cheaters-stats/countries'),
@@ -74,36 +67,28 @@
             if (yearsRes.ok) years = await yearsRes.json();
         } catch (e) {
             console.error('Error loading filters:', e);
-        } finally {
-            loadingFilters = false;
         }
     }
 
-    // Cargar todos los recursos con filtros y paginación
-    async function getResources() {
+    // API v2 - TODAS LAS OPERACIONES
+    async function getResources(page = currentPage) {
         loading = true;
         error = null;
         successMessage = null;
+        searchMode = false;
         
         try {
-            // Construir URL con filtros y paginación
             const params = new URLSearchParams();
-            params.append('page', currentPage);
-            params.append('limit', limit);
-            
-            if (filters.country) params.append('country', filters.country);
-            if (filters.game) params.append('game', filters.game);
-            if (filters.year) params.append('year', filters.year);
-            if (filters.from) params.append('from', filters.from);
-            if (filters.to) params.append('to', filters.to);
-            if (filters.cheater_report) params.append('cheater_report', filters.cheater_report);
+            params.append('page', page);
+            params.append('limit', itemsPerPage);
+            params.append('t', Date.now());
             
             const url = `/api/v2/cheaters-stats?${params.toString()}`;
             const res = await fetch(url);
             
             if (!res.ok) {
                 if (res.status === 404) {
-                    throw new Error('No se encontraron recursos en la base de datos');
+                    throw new Error('No se encontraron registros en la base de datos');
                 } else {
                     throw new Error(`Error del servidor: ${res.status}`);
                 }
@@ -111,22 +96,19 @@
             
             const data = await res.json();
             resources = data.data || [];
-            pagination = data.pagination || {
-                total: 0,
-                page: 1,
-                limit: 10,
-                totalPages: 0,
-                next: null,
-                prev: null
-            };
+            paginationData = data.pagination;
             
-            if (resources.length === 0) {
-                successMessage = 'La lista está vacía. Puedes cargar datos de ejemplo o añadir un nuevo recurso.';
+            if (paginationData) {
+                totalResources = paginationData.total;
+                totalPages = paginationData.totalPages;
+                currentPage = paginationData.page;
             }
             
-            // Actualizar listas de filtros
-            await loadFilters();
+            if (resources.length === 0) {
+                successMessage = 'La lista está vacía. Puedes cargar datos de ejemplo o añadir un nuevo registro.';
+            }
             
+            await loadFilters();
         } catch (e) {
             // @ts-ignore
             error = e.message;
@@ -136,34 +118,75 @@
         }
     }
 
-    // Aplicar filtros
-    function applyFilters() {
-        currentPage = 1;
-        getResources();
-    }
-
-    // Resetear filtros
-    function resetFilters() {
-        filters = {
-            country: '',
-            game: '',
-            year: '',
-            from: '',
-            to: '',
-            cheater_report: ''
-        };
-        currentPage = 1;
-        getResources();
-    }
-
-    // Cambiar página
     function goToPage(page) {
-        if (page < 1 || page > pagination.totalPages) return;
-        currentPage = page;
-        getResources();
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            getResources(page);
+        }
     }
 
-    // Cargar datos de ejemplo (15 registros iniciales)
+    function changeItemsPerPage() {
+        currentPage = 1;
+        getResources(1);
+    }
+
+    // Búsqueda avanzada con filtros
+    async function searchResources() {
+        searching = true;
+        searchError = null;
+        searchResults = null;
+        searchMode = true;
+        
+        try {
+            const params = new URLSearchParams();
+            if (searchCountry) params.append('country', searchCountry);
+            if (searchGame) params.append('game', searchGame);
+            if (searchYear) params.append('year', searchYear);
+            if (searchFrom) params.append('from', searchFrom);
+            if (searchTo) params.append('to', searchTo);
+            
+            const url = `/api/v2/cheaters-stats?${params.toString()}`;
+            const res = await fetch(url);
+            
+            if (res.status === 404) {
+                searchError = 'No se encontraron registros con los filtros especificados.';
+                searchResults = null;
+                return;
+            }
+            
+            if (!res.ok) {
+                throw new Error('Error al buscar registros');
+            }
+            
+            const data = await res.json();
+            searchResults = data.data || [];
+            
+            if (searchResults.length === 0) {
+                searchError = 'No se encontraron registros con los filtros especificados.';
+            } else {
+                successMessage = `Se encontraron ${searchResults.length} registro(s) con los filtros aplicados.`;
+            }
+            
+        } catch (e) {
+            searchError = 'Error al buscar. Por favor, inténtalo de nuevo.';
+        } finally {
+            searching = false;
+            clearMessages();
+        }
+    }
+
+    function clearSearch() {
+        searchCountry = '';
+        searchGame = '';
+        searchYear = '';
+        searchFrom = '';
+        searchTo = '';
+        searchResults = null;
+        searchError = null;
+        searchMode = false;
+        getResources(1);
+    }
+
     async function loadSampleData() {
         loading = true;
         error = null;
@@ -173,32 +196,25 @@
             const checkRes = await fetch('/api/v2/cheaters-stats?limit=1');
             const checkData = await checkRes.json();
             
-            // Si ya hay datos, preguntamos si quiere reemplazarlos
             if (checkData.data && checkData.data.length > 0) {
-                if (!confirm('⚠️ Ya existen datos. ¿Quieres reemplazarlos con los datos de ejemplo? Esto eliminará todos los datos actuales.')) {
+                if (!confirm('Ya existen datos. ¿Quieres reemplazarlos con los datos de ejemplo? Esto eliminará todos los datos actuales.')) {
                     loading = false;
                     return;
                 }
                 
-                // Borrar todos los datos existentes
                 await fetch('/api/v2/cheaters-stats?confirm=true', {
                     method: 'DELETE'
                 });
             }
             
-            // Cargar los datos de ejemplo
             const res = await fetch('/api/v2/cheaters-stats/loadInitialData');
             
             if (!res.ok) {
-                if (res.status === 500) {
-                    throw new Error('Error al cargar los datos de ejemplo. Por favor, inténtalo de nuevo.');
-                } else {
-                    throw new Error(`Error inesperado: ${res.status}`);
-                }
+                throw new Error('Error al cargar los datos de ejemplo.');
             }
             
-            await getResources();
-            successMessage = '✅ Se han cargado 15 registros de ejemplo correctamente.';
+            await getResources(1);
+            successMessage = 'Se han cargado 15 registros de ejemplo correctamente.';
         } catch (e) {
             // @ts-ignore
             error = e.message;
@@ -208,16 +224,13 @@
         }
     }
 
-    // Guardar nuevo recurso
     async function saveNewResource() {
         try {
-            // Validar campos obligatorios
             if (!formData.country || !formData.game || !formData.year || !formData.cheater_report || !formData.confirmed_ban) {
-                alert('❌ Por favor, completa todos los campos obligatorios (*)');
+                alert('Por favor, completa todos los campos obligatorios (*)');
                 return;
             }
             
-            // Preparar datos para enviar
             const dataToSend = {
                 country: formData.country,
                 year: parseInt(formData.year),
@@ -226,7 +239,6 @@
                 confirmed_ban: parseInt(formData.confirmed_ban)
             };
             
-            // Añadir campos opcionales si tienen valor
             if (formData.estimated_cheater) {
                 dataToSend.estimated_cheater = parseFloat(formData.estimated_cheater);
             }
@@ -244,39 +256,40 @@
             });
             
             if (res.status === 409) {
-                alert(`❌ Ya existe un registro para "${formData.country}" en ${formData.year} con el juego "${formData.game}". No se puede crear duplicado.`);
+                alert(`Ya existe un registro para "${formData.country}" en ${formData.year} con el juego "${formData.game}".`);
                 return;
             }
             
             if (res.status === 400) {
                 const errorData = await res.json();
-                alert(`❌ ${errorData.message || 'Faltan datos obligatorios o el formato es incorrecto.'}`);
+                alert(errorData.message || 'Datos incorrectos. Revisa los campos obligatorios.');
                 return;
             }
             
-            if (!res.ok) {
-                throw new Error('Error al guardar el recurso');
-            }
+            if (!res.ok) throw new Error('Error al guardar');
             
-            await getResources();
+            await getResources(1);
             showCreateForm = false;
             resetForm();
-            successMessage = `✅ El registro para "${formData.country}" (${formData.year}) ha sido añadido correctamente.`;
+            successMessage = `El registro para "${formData.country}" (${formData.year}) ha sido añadido correctamente.`;
         } catch (e) {
-            alert('❌ No se pudo guardar el recurso. Por favor, inténtalo de nuevo.');
+            alert('No se pudo guardar el registro.');
         } finally {
             clearMessages();
         }
     }
 
-    // Guardar cambios del recurso
     async function saveResourceChanges() {
         try {
             const originalCountry = editingResource.country;
             const originalYear = editingResource.year;
             const originalGame = editingResource.game;
             
-            // Preparar datos para enviar
+            if (formData.country !== originalCountry || parseInt(formData.year) !== originalYear || formData.game !== originalGame) {
+                alert('No se puede cambiar el país, año o juego del registro.');
+                return;
+            }
+            
             const dataToSend = {
                 country: formData.country,
                 year: parseInt(formData.year),
@@ -304,33 +317,28 @@
                 }
             );
             
-            if (res.status === 400) {
-                const errorData = await res.json();
-                alert(`❌ ${errorData.message || 'Los datos no coinciden. No se puede cambiar el país, año o juego a través de esta opción.'}`);
-                return;
-            }
-            
             if (res.status === 404) {
-                alert('❌ El recurso que intentas modificar ya no existe. Puede que haya sido eliminado.');
+                alert('El registro que intentas modificar ya no existe.');
+                editingResource = null;
+                showCreateForm = false;
+                resetForm();
                 return;
             }
             
-            if (!res.ok) {
-                throw new Error('Error al guardar los cambios');
-            }
+            if (!res.ok) throw new Error('Error al guardar los cambios');
             
-            await getResources();
+            await getResources(1);
             editingResource = null;
+            showCreateForm = false;
             resetForm();
-            successMessage = `✅ Los cambios en "${formData.country}" (${formData.year}) han sido guardados correctamente.`;
+            successMessage = `Los cambios en "${formData.country}" (${formData.year}) han sido guardados correctamente.`;
         } catch (e) {
-            alert('❌ No se pudieron guardar los cambios. Por favor, inténtalo de nuevo.');
+            alert('No se pudieron guardar los cambios.');
         } finally {
             clearMessages();
         }
     }
 
-    // Eliminar un recurso
     async function deleteResource(country, year, game) {
         try {
             const res = await fetch(
@@ -341,50 +349,44 @@
             );
             
             if (res.status === 404) {
-                alert(`❌ No se encontró el registro para "${country}" (${year}, ${game}). Puede que ya haya sido eliminado.`);
+                alert(`No se encontró el registro para "${country}" (${year}, ${game}).`);
                 showDeleteModal = false;
                 deleteTarget = null;
                 return;
             }
             
-            if (!res.ok && res.status !== 204) {
-                throw new Error('Error al eliminar');
-            }
+            if (!res.ok && res.status !== 204) throw new Error('Error al eliminar');
             
-            await getResources();
+            await getResources(1);
             showDeleteModal = false;
             deleteTarget = null;
-            successMessage = `✅ El registro para "${country}" (${year}, ${game}) ha sido eliminado correctamente.`;
+            successMessage = `El registro para "${country}" (${year}, ${game}) ha sido eliminado correctamente.`;
         } catch (e) {
-            alert('❌ No se pudo eliminar el recurso. Por favor, inténtalo de nuevo.');
+            alert('No se pudo eliminar el registro.');
         } finally {
             clearMessages();
         }
     }
 
-    // Eliminar TODOS los recursos
     async function deleteAllResources() {
-        if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar TODOS los registros?\n\nEsta acción no se puede deshacer.')) return;
+        if (!confirm('¿Estás seguro de que quieres eliminar TODOS los registros?\n\nEsta acción no se puede deshacer.')) return;
         
         try {
             const res = await fetch('/api/v2/cheaters-stats?confirm=true', {
                 method: 'DELETE'
             });
             
-            if (!res.ok) {
-                throw new Error('Error al eliminar todos');
-            }
+            if (!res.ok) throw new Error('Error al eliminar todos');
             
-            await getResources();
-            successMessage = '✅ Todos los registros han sido eliminados correctamente.';
+            await getResources(1);
+            successMessage = 'Todos los registros han sido eliminados correctamente.';
         } catch (e) {
-            alert('❌ No se pudieron eliminar todos los registros. Por favor, inténtalo de nuevo.');
+            alert('No se pudieron eliminar todos los registros.');
         } finally {
             clearMessages();
         }
     }
 
-    // Resetear formulario
     function resetForm() {
         formData = {
             country: '',
@@ -398,315 +400,407 @@
         };
     }
 
-    // Cargar datos al iniciar
-    getResources();
+    function startEditing(resource) {
+        formData = { ...resource };
+        editingResource = resource;
+        showCreateForm = true;
+    }
+
+    getResources(1);
 </script>
 
 <svelte:head>
-    <title>Gestión de Cheaters Stats - API v2</title>
+    <title>Gestión de Estadísticas de Tramposos (API v2)</title>
 </svelte:head>
 
-<h1 style="color: #0284c7; text-align: center;">🎮 Gestión de Estadísticas de Tramposos (v2)</h1>
+<style>
+    :root {
+        --green-50: #f0fdf4;
+        --green-100: #dcfce7;
+        --green-200: #bbf7d0;
+        --green-300: #86efac;
+        --green-500: #22c55e;
+        --green-600: #16a34a;
+        --green-700: #15803d;
+        --green-800: #166534;
+    }
 
-<!-- Mensajes para el usuario -->
-{#if successMessage}
-    <div style="background: #d1fae5; color: #065f46; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; text-align: center; border: 1px solid #10b981;">
-        {successMessage}
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.2);
+        border: 1px solid var(--green-200);
+    }
+
+    h1 {
+        color: var(--green-800);
+        border-bottom: 3px solid var(--green-500);
+        padding-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .badge {
+        background: var(--green-100);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        color: var(--green-700);
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+    }
+
+    .msg-success, .msg-error {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .msg-success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+    .msg-error { background: #fee2e2; color: #b91c1c; border: 1px solid #dc2626; }
+
+    .search-box {
+        background: var(--green-50);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--green-200);
+    }
+
+    .flex-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .flex-2 { flex: 2; min-width: 200px; }
+    .flex-1 { flex: 1; min-width: 120px; }
+
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        color: var(--green-700);
+    }
+
+    input, select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--green-200);
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        border-color: var(--green-500);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    }
+
+    input:disabled {
+        background: var(--green-50);
+        color: var(--green-600);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    button {
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-green { background: var(--green-600); color: white; }
+    .btn-green:hover:not(:disabled) { background: var(--green-700); }
+    .btn-blue { background: #0284c7; color: white; }
+    .btn-blue:hover:not(:disabled) { background: #0369a1; }
+    .btn-red { background: #dc2626; color: white; }
+    .btn-red:hover:not(:disabled) { background: #b91c1c; }
+    .btn-gray { background: var(--green-200); color: var(--green-800); }
+    .btn-gray:hover:not(:disabled) { background: var(--green-300); }
+    .btn-orange { background: #f59e0b; color: white; }
+    .btn-orange:hover:not(:disabled) { background: #d97706; }
+
+    .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .resource-card {
+        margin: 1rem 0;
+        padding: 1rem;
+        border: 1px solid var(--green-200);
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+    .resource-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.2);
+    }
+
+    .resource-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .detail-item {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: var(--green-700);
+        margin-right: 0.3rem;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .modal {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .text-center { text-align: center; }
+    .text-muted { color: var(--green-600); }
+    hr { margin: 2rem 0; border: none; border-top: 2px solid var(--green-200); }
+    a { color: var(--green-600); text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; color: var(--green-800); }
+    .footer-links { display: flex; gap: 2rem; justify-content: center; }
+</style>
+
+<div class="container">
+    <h1>🎮 Gestión de Estadísticas de Tramposos <span class="badge">API v2</span></h1>
+
+    {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
+    {#if error}<div class="msg-error">⚠️ {error}</div>{/if}
+
+    <!-- BUSCADOR / FILTROS AVANZADOS -->
+    <div class="search-box">
+        <h3 style="margin-top: 0; color: var(--green-700);">🔍 Buscar registros</h3>
+        <div class="flex-row">
+            <div class="flex-2">
+                <label>País</label>
+                <select bind:value={searchCountry}>
+                    <option value="">Todos</option>
+                    {#each countries as country}
+                        <option value={country}>{country}</option>
+                    {/each}
+                </select>
+            </div>
+            <div class="flex-2">
+                <label>Juego</label>
+                <select bind:value={searchGame}>
+                    <option value="">Todos</option>
+                    {#each games as game}
+                        <option value={game}>{game}</option>
+                    {/each}
+                </select>
+            </div>
+            <div class="flex-1">
+                <label>Año exacto</label>
+                <select bind:value={searchYear}>
+                    <option value="">Todos</option>
+                    {#each years as year}
+                        <option value={year}>{year}</option>
+                    {/each}
+                </select>
+            </div>
+            <div class="flex-1">
+                <label>Desde año</label>
+                <input type="number" bind:value={searchFrom} placeholder="Ej: 2010">
+            </div>
+            <div class="flex-1">
+                <label>Hasta año</label>
+                <input type="number" bind:value={searchTo} placeholder="Ej: 2020">
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick={searchResources} disabled={searching} class="btn-green" style="height: 2.5rem;">
+                    {searching ? 'Buscando...' : 'Buscar'}
+                </button>
+                <button onclick={clearSearch} class="btn-gray" style="height: 2.5rem;">Limpiar</button>
+            </div>
+        </div>
+        
+        {#if searchError}<div class="msg-error" style="margin-top: 1rem;">{searchError}</div>{/if}
+        
+        {#if searchResults !== null}
+            <div style="margin-top: 1.5rem; border-top: 2px solid var(--green-200); padding-top: 1rem;">
+                <h4 style="color: var(--green-700);">📋 Resultados de la búsqueda:</h4>
+                {#if searchResults.length === 0}
+                    <p>No se encontraron resultados.</p>
+                {:else}
+                    {#each searchResults as resource}
+                        <div style="padding: 0.5rem; background: white; border: 1px solid var(--green-200); border-radius: 4px; margin-bottom: 0.3rem;">
+                            <strong>{resource.country}</strong> - {resource.game} ({resource.year}) - Reportes: {resource.cheater_report}
+                        </div>
+                    {/each}
+                {/if}
+            </div>
+        {/if}
     </div>
-{/if}
 
-{#if error}
-    <div style="background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; text-align: center; border: 1px solid #dc2626;">
-        ⚠️ {error}
-    </div>
-{/if}
-
-<!-- BARRA DE BOTONES PRINCIPAL -->
-<div style="margin-bottom: 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
-    <button onclick={loadSampleData} disabled={loading} style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        📥 Cargar datos de ejemplo
-    </button>
-    
-    <button onclick={() => { resetForm(); showCreateForm = true; }} style="background: #0284c7; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        ➕ Añadir nuevo registro
-    </button>
-    
-    <button onclick={getResources} disabled={loading} style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        {loading ? 'Cargando...' : '🔄 Actualizar lista'}
-    </button>
-    
-    <button onclick={deleteAllResources} style="background: #dc2626; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        🗑️ Eliminar todos
-    </button>
-    
-    <a href="/api/v2/cheaters-stats/docs" target="_blank" style="background: #8b5cf6; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold;">
-        📘 Documentación API v2
-    </a>
-</div>
-
-<!-- FILTROS DE BÚSQUEDA -->
-<div style="background: #f1f5f9; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
-    <h3 style="margin-top: 0; color: #334155;">🔍 Filtros de búsqueda</h3>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-        <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 0.3rem;">País</label>
-            <select bind:value={filters.country} style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" disabled={loadingFilters}>
-                <option value="">Todos</option>
-                {#each countries as country}
-                    <option value={country}>{country}</option>
-                {/each}
-            </select>
-        </div>
-        
-        <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 0.3rem;">Juego</label>
-            <select bind:value={filters.game} style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" disabled={loadingFilters}>
-                <option value="">Todos</option>
-                {#each games as game}
-                    <option value={game}>{game}</option>
-                {/each}
-            </select>
-        </div>
-        
-        <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 0.3rem;">Año exacto</label>
-            <select bind:value={filters.year} style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" disabled={loadingFilters}>
-                <option value="">Todos</option>
-                {#each years as year}
-                    <option value={year}>{year}</option>
-                {/each}
-            </select>
-        </div>
-        
-        <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 0.3rem;">Desde año</label>
-            <input type="number" bind:value={filters.from} placeholder="Ej: 2010" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
-        
-        <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 0.3rem;">Hasta año</label>
-            <input type="number" bind:value={filters.to} placeholder="Ej: 2020" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
-        
-        <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 0.3rem;">Reportes mínimos</label>
-            <input type="number" bind:value={filters.cheater_report} placeholder="Ej: 100" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
-    </div>
-    
-    <div style="display: flex; gap: 1rem;">
-        <button onclick={applyFilters} style="background: #0284c7; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-            Aplicar filtros
+    <!-- BOTONES PRINCIPALES -->
+    <div class="btn-group">
+        <button onclick={loadSampleData} disabled={loading} class="btn-green">📥 Cargar datos de ejemplo</button>
+        <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">➕ Añadir nuevo registro</button>
+        <button onclick={() => getResources(currentPage)} disabled={loading} class="btn-gray">
+            {loading ? 'Cargando...' : '🔄 Actualizar lista'}
         </button>
-        <button onclick={resetFilters} style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-            Resetear filtros
-        </button>
+        <button onclick={deleteAllResources} class="btn-red">🗑️ Eliminar todos</button>
+        <a href="/api/v2/cheaters-stats/docs" target="_blank" class="btn-green" style="background: #8b5cf6; display: inline-block; text-decoration: none;">📘 Documentación v2</a>
     </div>
-</div>
 
-<!-- Formulario para añadir/editar recurso -->
-{#if showCreateForm || editingResource}
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
-            <h2 style="color: #0284c7; margin-top: 0;">{editingResource ? '✏️ Editar registro' : '➕ Añadir nuevo registro'}</h2>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div>
-                    <label style="display: block; font-weight: bold;">País *</label>
-                    <input 
-                        type="text" 
-                        bind:value={formData.country} 
-                        readonly={editingResource}
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px; background: {editingResource ? '#f1f5f9' : 'white'};" 
-                        placeholder="Ej: Spain"
-                    >
+    <!-- PAGINACIÓN SUPERIOR -->
+    {#if !searchMode && resources.length > 0}
+        <div class="pagination">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label>Mostrar:</label>
+                <select bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                </select>
+                <span>por página</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">◀ Anterior</button>
+                <span style="padding: 0.3rem 0.8rem; background: var(--green-50); border-radius: 4px;">
+                    Pág. {currentPage} de {totalPages} ({totalResources} total)
+                </span>
+                <button onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} class="btn-gray">Siguiente ▶</button>
+            </div>
+        </div>
+    {/if}
+
+    <!-- FORMULARIO MODAL -->
+    {#if showCreateForm || editingResource}
+        <div class="modal">
+            <div class="modal-content">
+                <h2 style="color: var(--green-700); margin-top: 0;">{editingResource ? '✏️ Editar registro' : '➕ Nuevo registro'}</h2>
+                <div class="grid-2">
+                    <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource} placeholder="Ej: Spain"></div>
+                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource} placeholder="Ej: 2020"></div>
+                    <div><label>Juego *</label><input type="text" bind:value={formData.game} disabled={editingResource} placeholder="Ej: csgo"></div>
+                    <div><label>Reportes de tramposos *</label><input type="number" bind:value={formData.cheater_report} placeholder="Ej: 100"></div>
+                    <div><label>Baneos confirmados *</label><input type="number" bind:value={formData.confirmed_ban} placeholder="Ej: 50"></div>
+                    <div><label>% Estimado de tramposos</label><input type="number" step="0.01" bind:value={formData.estimated_cheater} placeholder="Ej: 2.5"></div>
+                    <div><label>Cuentas suspendidas</label><input type="number" bind:value={formData.suspended_account} placeholder="Ej: 30"></div>
+                    <div><label>Reincidentes</label><input type="number" bind:value={formData.repeat_offender} placeholder="Ej: 10"></div>
                 </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Año *</label>
-                    <input 
-                        type="number" 
-                        bind:value={formData.year} 
-                        readonly={editingResource}
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px; background: {editingResource ? '#f1f5f9' : 'white'};" 
-                        placeholder="Ej: 2020"
-                    >
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Juego *</label>
-                    <input 
-                        type="text" 
-                        bind:value={formData.game} 
-                        readonly={editingResource}
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px; background: {editingResource ? '#f1f5f9' : 'white'};" 
-                        placeholder="Ej: csgo"
-                    >
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Reportes de tramposos *</label>
-                    <input 
-                        type="number" 
-                        bind:value={formData.cheater_report} 
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" 
-                        placeholder="Ej: 100"
-                    >
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Baneos confirmados *</label>
-                    <input 
-                        type="number" 
-                        bind:value={formData.confirmed_ban} 
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" 
-                        placeholder="Ej: 50"
-                    >
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Porcentaje estimado</label>
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        bind:value={formData.estimated_cheater} 
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" 
-                        placeholder="Ej: 2.5"
-                    >
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Cuentas suspendidas</label>
-                    <input 
-                        type="number" 
-                        bind:value={formData.suspended_account} 
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" 
-                        placeholder="Ej: 30"
-                    >
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: bold;">Reincidentes</label>
-                    <input 
-                        type="number" 
-                        bind:value={formData.repeat_offender} 
-                        style="width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px;" 
-                        placeholder="Ej: 10"
-                    >
+                {#if editingResource}
+                    <p style="color: var(--green-600); font-size: 0.9rem; margin-top: 1rem;">
+                        ℹ️ Para cambiar país, año o juego, elimina el registro y crea uno nuevo.
+                    </p>
+                {/if}
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button onclick={() => { showCreateForm = false; editingResource = null; resetForm(); }} class="btn-gray">Cancelar</button>
+                    <button onclick={editingResource ? saveResourceChanges : saveNewResource} class="btn-green">
+                        {editingResource ? 'Guardar cambios' : 'Guardar'}
+                    </button>
                 </div>
             </div>
-            
-            {#if editingResource}
-                <p style="color: #64748b; font-size: 0.9rem; margin-top: 1rem;">
-                    ℹ️ Para cambiar país, año o juego, elimina el registro y crea uno nuevo.
-                </p>
-            {/if}
-            
-            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                <button onclick={() => { showCreateForm = false; editingResource = null; resetForm(); }} 
-                    style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button onclick={editingResource ? saveResourceChanges : saveNewResource}
-                    style="background: #0284c7; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-                    {editingResource ? 'Guardar cambios' : 'Guardar registro'}
-                </button>
-            </div>
         </div>
-    </div>
-{/if}
+    {/if}
 
-<!-- Lista de recursos -->
-{#if loading}
-    <p style="text-align: center; color: #64748b;">Cargando recursos...</p>
-{:else if resources.length > 0}
-    <p style="text-align: center; font-weight: bold;">📊 Total de registros: {pagination.total}</p>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <div>
-            <label>Mostrar:</label>
-            <select bind:value={limit} onchange={getResources} style="margin-left: 0.5rem; padding: 0.3rem;">
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-            </select>
-        </div>
+    <!-- LISTA DE RECURSOS -->
+    {#if loading}
+        <p class="text-center text-muted">Cargando registros...</p>
+    {:else if resources.length > 0}
+        <p class="text-center"><strong>Mostrando {resources.length} registros (página {currentPage} de {totalPages})</strong></p>
         
-        <div>
-            {#if pagination.totalPages > 1}
-                <button onclick={() => goToPage(currentPage - 1)} disabled={!pagination.prev} style="padding: 0.3rem 0.8rem; margin-right: 0.5rem;">◀</button>
-                <span>Página {currentPage} de {pagination.totalPages}</span>
-                <button onclick={() => goToPage(currentPage + 1)} disabled={!pagination.next} style="padding: 0.3rem 0.8rem; margin-left: 0.5rem;">▶</button>
-            {/if}
-        </div>
-    </div>
-    
-    {#each resources as resource}
-        <div style="margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 4px; background: #f8fafc;">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div style="flex-grow: 1;">
-                    <h3 style="margin: 0 0 0.5rem 0; color: #0284c7;">{resource.country} - {resource.game}</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
-                        <p style="margin: 0;"><strong>Año:</strong> {resource.year}</p>
-                        <p style="margin: 0;"><strong>Reportes:</strong> {resource.cheater_report}</p>
-                        <p style="margin: 0;"><strong>Baneos confirmados:</strong> {resource.confirmed_ban}</p>
-                        {#if resource.estimated_cheater}
-                            <p style="margin: 0;"><strong>% Estimado:</strong> {resource.estimated_cheater}%</p>
-                        {/if}
-                        {#if resource.suspended_account}
-                            <p style="margin: 0;"><strong>Cuentas suspendidas:</strong> {resource.suspended_account}</p>
-                        {/if}
-                        {#if resource.repeat_offender}
-                            <p style="margin: 0;"><strong>Reincidentes:</strong> {resource.repeat_offender}</p>
-                        {/if}
+        {#each resources as resource}
+            <div class="resource-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex-grow: 1;">
+                        <h3 style="margin: 0 0 1rem 0; color: var(--green-700);">{resource.country} - {resource.game}</h3>
+                        <div class="resource-details-grid">
+                            <p class="detail-item"><span class="detail-label">Año:</span> {resource.year}</p>
+                            <p class="detail-item"><span class="detail-label">Reportes de tramposos:</span> {resource.cheater_report}</p>
+                            <p class="detail-item"><span class="detail-label">Baneos confirmados:</span> {resource.confirmed_ban}</p>
+                            <p class="detail-item"><span class="detail-label">% Estimado:</span> {resource.estimated_cheater ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Cuentas suspendidas:</span> {resource.suspended_account ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Reincidentes:</span> {resource.repeat_offender ?? 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">
+                        <button onclick={() => startEditing(resource)} class="btn-orange" style="padding: 0.3rem 0.8rem;">✏️ Editar</button>
+                        <button onclick={() => { deleteTarget = { country: resource.country, year: resource.year, game: resource.game }; showDeleteModal = true; }} 
+                                class="btn-red" style="padding: 0.3rem 0.8rem;">🗑️ Eliminar</button>
                     </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
-                    <button onclick={() => { 
-                        formData = { ...resource }; 
-                        editingResource = resource; 
-                    }} style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;" title="Editar registro">
-                        ✏️ Editar
-                    </button>
-                    <button onclick={() => { 
-                        deleteTarget = { country: resource.country, year: resource.year, game: resource.game };
-                        showDeleteModal = true;
-                    }} style="background: #dc2626; color: white; padding: 0.3rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;" title="Eliminar registro">
-                        🗑️ Eliminar
-                    </button>
+            </div>
+        {/each}
+
+        <!-- PAGINACIÓN INFERIOR -->
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin: 2rem 0;">
+            <button onclick={() => goToPage(1)} disabled={currentPage === 1} class="btn-gray">⏮️</button>
+            <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">◀</button>
+            <span style="padding: 0.3rem 0.8rem; background: var(--green-50); border-radius: 4px;">{currentPage}/{totalPages}</span>
+            <button onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} class="btn-gray">▶</button>
+            <button onclick={() => goToPage(totalPages)} disabled={currentPage === totalPages} class="btn-gray">⏭️</button>
+        </div>
+
+        <hr>
+        <div class="footer-links">
+            <a href="/">🏠 Inicio</a>
+            <a href="/about">ℹ️ Acerca de</a>
+            <a href="/api/v2/cheaters-stats/docs" target="_blank">📄 Documentación API v2</a>
+        </div>
+    {:else if !loading && !searchMode}
+        <p class="text-center text-muted" style="padding: 2rem;">No hay registros. Carga datos de ejemplo o añade uno nuevo.</p>
+    {/if}
+
+    <!-- MODAL CONFIRMACIÓN ELIMINAR -->
+    {#if showDeleteModal && deleteTarget}
+        <div class="modal">
+            <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
+                <h3 style="color: #dc2626; margin-top: 0;">⚠️ Confirmar eliminación</h3>
+                <p>¿Eliminar este registro?</p>
+                <p><strong>{deleteTarget.country} - {deleteTarget.game} ({deleteTarget.year})</strong></p>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button onclick={() => showDeleteModal = false} class="btn-gray">Cancelar</button>
+                    <button onclick={() => deleteResource(deleteTarget.country, deleteTarget.year, deleteTarget.game)} class="btn-red">Sí, eliminar</button>
                 </div>
             </div>
         </div>
-    {/each}
-    
-    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #0284c7;">
-    
-    <div style="display: flex; gap: 2rem; justify-content: center;">
-        <a href="/" style="color: #0284c7; text-decoration: none; font-weight: bold;">🏠 Página principal</a>
-        <a href="/about" style="color: #0284c7; text-decoration: none; font-weight: bold;">ℹ️ Acerca del proyecto</a>
-    </div>
-{/if}
-
-<!-- Modal de confirmación para eliminar -->
-{#if showDeleteModal && deleteTarget}
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%;">
-            <h3 style="color: #dc2626; margin-top: 0;">⚠️ Confirmar eliminación</h3>
-            <p>¿Estás seguro de que quieres eliminar este registro?</p>
-            <p style="font-weight: bold;">{deleteTarget.country} - {deleteTarget.game} ({deleteTarget.year})</p>
-            <p style="color: #64748b; font-size: 0.9rem;">Esta acción no se puede deshacer.</p>
-            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                <button onclick={() => showDeleteModal = false} 
-                    style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button onclick={() => deleteResource(deleteTarget.country, deleteTarget.year, deleteTarget.game)} 
-                    style="background: #dc2626; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-                    Sí, eliminar
-                </button>
-            </div>
-        </div>
-    </div>
-{/if}
+    {/if}
+</div>
