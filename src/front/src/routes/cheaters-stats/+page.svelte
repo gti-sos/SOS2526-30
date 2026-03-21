@@ -45,6 +45,14 @@
         repeat_offender: ''
     });
 
+    // Función para formatear valores vacíos
+    function formatValue(value) {
+        if (value === null || value === undefined || value === '') {
+            return 'No disponible';
+        }
+        return value;
+    }
+
     function clearMessages() {
         setTimeout(() => {
             error = null;
@@ -616,7 +624,6 @@
     <div class="search-box">
         <h3 style="margin-top: 0; color: var(--purple-700);">Buscar registros</h3>
         <div class="flex-row">
-        <!-- svelte-ignore a11y_label_has_associated_control -->
             <div class="flex-2">
                 <label>País</label>
                 <select bind:value={searchCountry}>
@@ -626,7 +633,6 @@
                     {/each}
                 </select>
             </div>
-            <!-- svelte-ignore a11y_label_has_associated_control -->
             <div class="flex-2">
                 <label>Juego</label>
                 <select bind:value={searchGame}>
@@ -637,7 +643,6 @@
                 </select>
             </div>
             <div class="flex-1">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
                 <label>Año exacto</label>
                 <select bind:value={searchYear}>
                     <option value="">Todos</option>
@@ -647,12 +652,10 @@
                 </select>
             </div>
             <div class="flex-1">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
                 <label>Desde año</label>
                 <input type="number" bind:value={searchFrom} placeholder="Ej: 2010">
             </div>
             <div class="flex-1">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
                 <label>Hasta año</label>
                 <input type="number" bind:value={searchTo} placeholder="Ej: 2020">
             </div>
@@ -697,7 +700,6 @@
     {#if !searchMode && resources.length > 0}
         <div class="pagination">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
                 <label>Mostrar:</label>
                 <select bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
                     <option value={5}>5</option>
@@ -722,9 +724,7 @@
         <div class="modal">
             <div class="modal-content">
                 <h2 style="color: var(--purple-700); margin-top: 0;">{editingResource ? 'Editar registro' : 'Nuevo registro'}</h2>
-                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div class="grid-2">
-                    
                     <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource} placeholder="Ej: Spain"></div>
                     <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource} placeholder="Ej: 2020"></div>
                     <div><label>Juego *</label><input type="text" bind:value={formData.game} disabled={editingResource} placeholder="Ej: csgo"></div>
@@ -764,9 +764,9 @@
                             <p class="detail-item"><span class="detail-label">Año:</span> {resource.year}</p>
                             <p class="detail-item"><span class="detail-label">Reportes de tramposos:</span> {resource.cheater_report}</p>
                             <p class="detail-item"><span class="detail-label">Baneos confirmados:</span> {resource.confirmed_ban}</p>
-                            <p class="detail-item"><span class="detail-label">Porcentaje estimado:</span> {resource.estimated_cheater ?? 'N/A'}</p>
-                            <p class="detail-item"><span class="detail-label">Cuentas suspendidas:</span> {resource.suspended_account ?? 'N/A'}</p>
-                            <p class="detail-item"><span class="detail-label">Reincidentes:</span> {resource.repeat_offender ?? 'N/A'}</p>
+                            <p class="detail-item"><span class="detail-label">Porcentaje estimado:</span> {formatValue(resource.estimated_cheater)}</p>
+                            <p class="detail-item"><span class="detail-label">Cuentas suspendidas:</span> {formatValue(resource.suspended_account)}</p>
+                            <p class="detail-item"><span class="detail-label">Reincidentes:</span> {formatValue(resource.repeat_offender)}</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">

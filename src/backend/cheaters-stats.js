@@ -39,15 +39,17 @@ try {
     csvContent = parse(fileContent, {
         columns: true,
         cast: (value, context) => {
+            // Usar los nombres correctos del CSV
             if (context.column === 'year') return Number(value);
-            if (context.column === 'cheater_report') return Number(value);
-            if (context.column === 'confirmed_ban') return Number(value);
-            if (context.column === 'estimated_cheater') return Number(value);
-            if (context.column === 'suspended_account') return Number(value);
-            if (context.column === 'repeat_offender') return Number(value);
+            if (context.column === 'cheater_reports') return Number(value);
+            if (context.column === 'confirmed_bans') return Number(value);
+            if (context.column === 'estimated_cheater_percentage') return Number(value);
+            if (context.column === 'suspended_accounts') return Number(value);
+            if (context.column === 'repeat_offenders') return Number(value);
             return value;
         }
     });
+    console.log(`✅ CSV cargado correctamente: ${csvContent.length} registros`);
 } catch (err) {
     console.error("Error leyendo CSV:", err.message);
 }
@@ -95,8 +97,17 @@ function loadBackendFMGP(app) {
             if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
             
             if (count === 0) {
-                // Insertar datos iniciales solo si no hay datos
-                const initialData = csvContent.slice(0, 15);
+                // Mapear campos del CSV a los nombres que usa la API v1
+                const initialData = csvContent.slice(0, 15).map(item => ({
+                    year: item.year,
+                    country: item.country,
+                    cheater_reports: item.cheater_reports,
+                    confirmed_bans: item.confirmed_bans,
+                    estimated_cheater_percentage: item.estimated_cheater_percentage,
+                    suspended_accounts: item.suspended_accounts,
+                    repeat_offenders: item.repeat_offenders
+                }));
+                
                 dbV1.insert(initialData, (err, newDocs) => {
                     if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
                     console.log(`✅ Datos iniciales de cheaters-stats v1 cargados: ${newDocs.length} registros`);
@@ -313,13 +324,24 @@ function loadBackendFMGP(app) {
         res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5");
     });
 
-    // Carga inicial v2 (solo si la BD está vacía)
+    // Carga inicial v2 (solo si la BD está vacía) - CORREGIDA CON MAPEO DE CAMPOS
     routerV2.get("/loadInitialData", (req, res) => {
         dbV2.count({}, (err, count) => {
             if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
             
             if (count === 0) {
-                const initialData = csvContent.slice(0, 15);
+                // Mapear campos del CSV a los nombres que usa la API v2
+                const initialData = csvContent.slice(0, 15).map(item => ({
+                    year: item.year,
+                    country: item.country,
+                    game: item.game || "Unknown",
+                    cheater_report: item.cheater_reports,
+                    confirmed_ban: item.confirmed_bans,
+                    estimated_cheater: item.estimated_cheater_percentage,
+                    suspended_account: item.suspended_accounts,
+                    repeat_offender: item.repeat_offenders
+                }));
+                
                 dbV2.insert(initialData, (err, newDocs) => {
                     if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
                     console.log(`✅ Datos iniciales de cheaters-stats v2 cargados: ${newDocs.length} registros`);
