@@ -711,13 +711,6 @@ function loadBackendFMGP(app) {
     app.use('/api/v1/cheaters-stats', routerV1);
     app.use('/api/v2/cheaters-stats', routerV2);
     
-<<<<<<< HEAD
-    console.log('✅ APIs cheaters-stats cargadas:');
-    console.log('   - v1 (/api/v1/cheaters-stats): SOLO LECTURA (inmutable)');
-    console.log('   - v2 (/api/v2/cheaters-stats): LECTURA/ESCRITURA (activa para modificaciones)');
-=======
-
->>>>>>> 79250161398cfad1a78b5ad1c93291a14b8f1819
 }
 
 export default loadBackendFMGP;
