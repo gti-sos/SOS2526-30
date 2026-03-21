@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "7e934809-8408-4f88-a989-0b59bfbd60cf",
-    "name": "olympics-athlete-events",
+    "_postman_id": "603d5a8a-8af2-40fb-952a-5a10c31262cd",
+    "name": "olympics-athlete-events V2",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "52768258",
-    "_collection_link": "https://go.postman.co/collection/52768258-7e934809-8408-4f88-a989-0b59bfbd60cf?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/52768258-603d5a8a-8af2-40fb-952a-5a10c31262cd?source=collection_link"
   },
   "item": [
     {
@@ -41,13 +41,13 @@
           }
         ],
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/loadInitialData",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/loadInitialData",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "loadInitialData"
           ]
@@ -95,13 +95,13 @@
           "raw": ""
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events?page=1&limit=3",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events?page=1&limit=3",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ],
           "query": [
@@ -158,19 +158,78 @@
           "raw": ""
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events?country=China",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events?country=China",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ],
           "query": [
             {
               "key": "country",
               "value": "China"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtro edad menor 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"La respuesta tiene estructura correcta\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
+              "    pm.expect(jsonData).to.have.property('data');\r",
+              "    pm.expect(jsonData.data).to.be.an('array');\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events?age_max=25",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v2",
+            "olympics-athlete-events"
+          ],
+          "query": [
+            {
+              "key": "age_max",
+              "value": "25"
             }
           ]
         }
@@ -216,13 +275,13 @@
           "raw": ""
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/year",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/year",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "year"
           ]
@@ -269,13 +328,13 @@
           "raw": ""
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/A Dijiang/1992",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/A Dijiang/1992",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "A Dijiang",
             "1992"
@@ -324,13 +383,13 @@
           "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events?from=1990&to=1994",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events?from=1990&to=1994",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ],
           "query": [
@@ -348,7 +407,7 @@
       "response": []
     },
     {
-      "name": "Filtro Rango de tiempo por campo especifico 200 OK",
+      "name": "Filtro Rango de tiempo por campo especifico 200 OK Copy",
       "event": [
         {
           "listen": "test",
@@ -386,13 +445,13 @@
           "raw": "{\r\n    \"name\": \"Atleta Prueba\",\r\n    \"team\": \"PaisNuevo\",\r\n    \"year\": 2024,\r\n    \"sport\": \"Futbol\",\r\n    \"event\": \"Torneo Nuevo\",\r\n    \"medal\": \"Gold\"\r\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Christine Jacoba Aaftink?from=1994&to=2010",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/Christine Jacoba Aaftink?from=1994&to=2010",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "Christine Jacoba Aaftink"
           ],
@@ -417,13 +476,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 405 (Not allowed)\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El código de estado es 400 (Petición Incorrecta)\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
               "});\r",
               "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
               "});\r",
               ""
             ],
@@ -446,13 +505,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/China/1992",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/China/1992",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "China",
             "1992"
@@ -474,7 +533,7 @@
               "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.message).to.include(\"Not Allowed\");\r",
               "});\r",
               "\r",
               ""
@@ -498,13 +557,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             ""
           ]
@@ -525,7 +584,7 @@
               "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.message).to.include(\"Not Allowed\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -538,13 +597,13 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/China/2026",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/China/2026",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "China",
             "2026"
@@ -560,13 +619,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 405 (Not allowed)\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El código de estado es 409 (Conflicto por duplicado)\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
               "});\r",
-              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "pm.test(\"Devuelve un mensaje de elemento ya existente\", function () {\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.message).to.include(\"exists\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -594,13 +653,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ]
         }
@@ -614,13 +673,12 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 405\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El código de estado es 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
               "});\r",
-              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
-              "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "pm.test(\"La respuesta es OK (confirmación de actualización)\", function () {\r",
+              "    var responseText = pm.response.text();\r",
+              "    pm.expect(responseText).to.equal(\"Created\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -648,13 +706,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ]
         }
@@ -668,13 +726,12 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 405\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El código de estado es 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
               "});\r",
-              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "pm.test(\"El recurso se ha creado correctamente\", function () {\r",
               "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -702,13 +759,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ]
         }
@@ -722,13 +779,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 405\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
               "});\r",
-              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
-              "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "\r",
+              "pm.test(\"La respuesta es OK (confirmación de actualización)\", function () {\r",
+              "    var responseText = pm.response.text();\r",
+              "    pm.expect(responseText).to.equal(\"OK\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -756,13 +813,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Atleta Prueba/2024",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/Atleta Prueba/2024",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "Atleta Prueba",
             "2024"
@@ -778,14 +835,14 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El codigo de estado es 405\",function(){\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El codigo de estado es 200 OK\",function(){\r",
+              "    pm.response.to.have.status(200);\r",
               "    })\r",
               "\r",
-              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "pm.test(\"Devuelve un mensaje de elemento borrado\", function () {\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.message).to.include(\"deleted\");\r",
               "});"
             ],
             "type": "text/javascript",
@@ -808,13 +865,13 @@
           "raw": ""
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Atleta Prueba/2024",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/Atleta Prueba/2024",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "Atleta Prueba",
             "2024"
@@ -835,6 +892,7 @@
               "});\r",
               "pm.test(\"Devuelve un mensaje de elemetno no Encontrado\", function () {\r",
               "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an('object');\r",
               "    pm.expect(jsonData.message).to.include(\"No existe\");\r",
               "});"
             ],
@@ -854,13 +912,13 @@
           }
         ],
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events/Atleta Prueba",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events/Atleta Prueba",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events",
             "Atleta Prueba"
           ]
@@ -875,14 +933,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"El código de estado es 405\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
+              "pm.test(\"El código de estado es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Devuelve un mensaje de metodo no permitido\", function () {\r",
+              "pm.test(\"El número de registros borrados es \" + pm.response.json().count, function(){\r",
               "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an('object');\r",
-              "    pm.expect(jsonData.message).to.include(\"solo lectura\");\r",
+              "    pm.expect(jsonData.count).to.eql(15);\r",
               "});\r",
               ""
             ],
@@ -906,13 +963,13 @@
           "raw": ""
         },
         "url": {
-          "raw": "{{base_url}}/api/v1/olympics-athlete-events",
+          "raw": "{{base_url}}/api/v2/olympics-athlete-events",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
-            "v1",
+            "v2",
             "olympics-athlete-events"
           ]
         }

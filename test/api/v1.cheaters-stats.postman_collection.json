@@ -244,403 +244,6 @@
       "response": []
     },
     {
-      "name": "POST registro existente 409 conflict",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 409\", function () {\r",
-              "    pm.response.to.have.status(409);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Mensaje de error existe\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    // Como no sé el formato exacto de tu error, prueba con:\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"year\":2021,\r\n    \"country\":\"spain\"\r\n\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Creacion nuevo recurso 201 Created",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 201\", function () {\r",
-              "    pm.response.to.have.status(201);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Recurso creado devuelve datos\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    \r",
-              "    // Si devuelve el objeto creado\r",
-              "    if (Array.isArray(res)) {\r",
-              "        pm.expect(res.length).to.be.at.least(1);\r",
-              "    } else {\r",
-              "        pm.expect(res).to.have.property(\"country\");\r",
-              "        pm.expect(res.country).to.equal(\"nuevopais\");\r",
-              "    }\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json",
-            "type": "text"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"cheater_report\": 1500,\r\n    \"confirmed_ban\": 750,\r\n    \"estimated_cheater\": 3.25,\r\n    \"suspended_account\": 680,\r\n    \"repeat_offender\": 120\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Campo faltante",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"El código de estado es 400\", function () {\r",
-              "    pm.response.to.have.status(400);\r",
-              "});\r",
-              "pm.test(\"El recurso se ha creado correctamente\", function () {\r",
-              "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData.message).to.include(\"Bad Request\");\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": " {\r\n       \r\n        \"cheater_reports\": \"3786\",\r\n        \"confirmed_bans\": \"1439\",\r\n        \"estimated_cheater_percentage\": \"2.34\"\r\n }",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Ids no coincidentes 400 Bad Request",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 400\", function () {\r",
-              "    pm.response.to.have.status(400);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Mensaje de error existe\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json",
-            "type": "text"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/Spain/2021",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats",
-            "Spain",
-            "2021"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Actualizar recurso 200 OK",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Confirmación de actualización\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats",
-            "nuevopais",
-            "2025"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "POST no permitido en recurso especifico 405 Not allowed",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 405\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Mensaje de método no permitido\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/Spain/2026",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats",
-            "Spain",
-            "2026"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "PUT no permitido en coleccion 405 not allowed",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 405\", function () {\r",
-              "    pm.response.to.have.status(405);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Mensaje de método no permitido\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
-              "});\r",
-              ""
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json",
-            "type": "text"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Borrar Dato Concreto 200 OK",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "\r",
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Confirmación de borrado\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "v1",
-            "cheaters-stats",
-            "nuevopais",
-            "2025"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Recurso inexistente 404 not found",
       "event": [
         {
@@ -682,20 +285,121 @@
       "response": []
     },
     {
-      "name": "Borrar Todo 200 OK",
+      "name": "POST registro existente 409 conflict",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
               "\r",
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
+              "pm.test(\"Status code is 405\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
               "});\r",
               "\r",
-              "pm.test(\"Confirmación de borrado total\", function () {\r",
+              "pm.test(\"Mensaje de error existe\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.be.empty;\r",
+              "    // Como no sé el formato exacto de tu error, prueba con:\r",
+              "    pm.expect(res.error || res.message || res.mensaje).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"year\":2021,\r\n    \"country\":\"spain\"\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Actualizar recurso 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 405 - v1 es solo lectura\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje indica que v1 es solo lectura y redirige a v2\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"read-only\");\r",
+              "    pm.expect(res.message).to.include(\"v2\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/cheaters-stats/nuevopais/2025",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cheaters-stats",
+            "nuevopais",
+            "2025"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Borrar Todo 200 OK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 405 - v1 es solo lectura\", function () {\r",
+              "    pm.response.to.have.status(405);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mensaje indica que v1 es solo lectura y redirige a v2\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "    pm.expect(res.message).to.include(\"read-only\");\r",
+              "    pm.expect(res.message).to.include(\"v2\");\r",
               "});"
             ],
             "type": "text/javascript",
