@@ -69,10 +69,10 @@
                     </a>
                     <!-- Versiones para Gonzalo como enlaces -->
                     {#if member.name === "Gonzalo García Gómez"}
-                        <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
+                        <a href={`${baseApiUrl}/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
                             <code>v1</code>
                         </a>
-                        <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}`} target="_blank" rel="noreferrer" class="version-link">
+                        <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
                             <code class="v2-code">v2</code>
                         </a>
                     {/if}

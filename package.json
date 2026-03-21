@@ -1,70 +1,66 @@
-{
-  "name": "sos2526-30",
-  "version": "1.0.1",
-  "description": "- **Team**\r   - David Real Pérez (https://github.com/davreaper)\r   - Mario Ramos Tuñón (https://github.com/MarioRt8558)\r   - Gonzalo García Gómez (https://github.com/gonzaloogrcia)\r   - Francisco Manuel García Patino (https://github.com/PaGarPa)",
-  "keywords": [],
-  "homepage": "https://github.com/gti-sos/SOS2526-30#readme",
-  "bugs": {
-    "url": "https://github.com/gti-sos/SOS2526-30/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gti-sos/SOS2526-30.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "module",
-  "main": "index.js",
-  "dependencies": {
-    "@sveltejs/adapter-node": "^5.5.4",
-    "cool-ascii-faces": "^1.3.4",
-    "cors": "^2.8.6",
-    "csv-parse": "^6.1.0",
-    "csvtojson": "^2.0.14",
-    "express": "^5.2.1",
-    "nedb": "^1.8.0",
-    "nedb-promises": "^6.2.3",
-    "nodemon": "^3.1.14",
-    "nvm": "^0.0.4",
-    "path": "^0.12.7",
-    "request": "^2.88.2"
-  },
-  "devDependencies": {
-    "newman": "^6.2.2",
-    "start-server-and-test": "^2.1.5"
-  },
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "front-dev": "cd src/front && npm run dev -- --open",
-    "build": "cd src/front && npm install && npm run build",
-    
-    "test": " npm run test-cheaters-stats-v1 && npm run test-cheaters-stats-v2 && npm run test-olympics-athlete-events && npm run test-esportsgrowth-stats && npm run test-esportsearnings-stats ",
-
-    "newman-local-DRP": "npx newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
-    "test-local-DRP": "start-server-and-test start http://localhost:3000 newman-local-DRP",
-    "test-esportsgrowth-stats": "npm run test-local-DRP & npx kill-port 3000",
-    "test-esportsearnings-stats": "npm run test-local-earnings & npx kill-port 3000",
-
-    "newman-local-earnings": "npx newman run test/api/esportsearnings-stats.postman_collection.json -e test/api/local.esportsearnings-stats_environment.json",
-    "test-local-earnings": "start-server-and-test start http://localhost:3000 newman-local-earnings",
-
-    "test-FMGP-v1": "npx newman run test/api/v1.cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
-    "test-FMGP-v1:local": "start-server-and-test start http://localhost:3000 test-FMGP-v1",
-    "test-cheaters-stats-v1": "npm run test-FMGP-v1:local & npx kill-port 3000",
-    "test-FMGP-v1:render": "newman run test/api/v1.cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
-    
-    "test-FMGP-v2": "npx newman run test/api/v2.cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
-    "test-FMGP-v2:local": "start-server-and-test start http://localhost:3000 test-FMGP-v2",
-    "test-cheaters-stats-v2": "npm run test-FMGP-v2:local & npx kill-port 3000",
-    "test-FMGP-v2:render": "newman run test/api/v2.cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
-    "newman-local-GGG": "npx newman run test/api/olympics-athlete-events-collection.json -e test/api/olympics-athlete-events-local.json",
-    "test-local-GGG": "start-server-and-test start http://localhost:3000 newman-local-GGG",
-    "test-olympics-athlete-events": "npm run test-local-GGG & npm run test-local-GGG-v2 & npx kill-port 3000",
-
-    "newman-local-GGG-v2": "npx newman run test/api/olympics-athlete-events-collection-v2.json -e test/api/olympics-athlete-events-local.json",
-    "test-local-GGG-v2": "start-server-and-test start http://localhost:3000 newman-local-GGG-v2",
-
-    "test-GGG:render": "newman run test/api/API-GGG-Colection-test.json -e test/api/olympics-athlete-events-render.json"
+  {
+    "name": "sos2526-30",
+    "version": "1.0.1",
+    "description": "- **Team**\r   - David Real Pérez (https://github.com/davreaper)\r   - Mario Ramos Tuñón (https://github.com/MarioRt8558)\r   - Gonzalo García Gómez (https://github.com/gonzaloogrcia)\r   - Francisco Manuel García Patino (https://github.com/PaGarPa)",
+    "keywords": [],
+    "homepage": "https://github.com/gti-sos/SOS2526-30#readme",
+    "bugs": {
+      "url": "https://github.com/gti-sos/SOS2526-30/issues"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/gti-sos/SOS2526-30.git"
+    },
+    "license": "ISC",
+    "author": "",
+    "type": "module",
+    "main": "index.js",
+    "dependencies": {
+      "@sveltejs/adapter-node": "^5.5.4",
+      "cool-ascii-faces": "^1.3.4",
+      "cors": "^2.8.6",
+      "csv-parse": "^6.1.0",
+      "csvtojson": "^2.0.14",
+      "express": "^5.2.1",
+      "nedb": "^1.8.0",
+      "nedb-promises": "^6.2.3",
+      "nodemon": "^3.1.14",
+      "nvm": "^0.0.4",
+      "path": "^0.12.7",
+      "request": "^2.88.2"
+    },
+    "devDependencies": {
+      "newman": "^6.2.2",
+      "start-server-and-test": "^2.1.5"
+    },
+    "scripts": {
+      "start": "node index.js",
+      "dev": "nodemon index.js",
+      "front-dev": "cd src/front && npm run dev -- --open",
+      "build": "cd src/front && npm install && npm run build",
+      "test": " npm run test-cheaters-stats-v1 && npm run test-cheaters-stats-v2 && npm run test-olympics-athlete-events && npm run test-esportsgrowth-stats && npm run test-esportsearnings-stats ",
+      
+      "newman-local-DRP": "npx newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
+      "test-local-DRP": "start-server-and-test start http://localhost:3000 newman-local-DRP",
+      "test-esportsgrowth-stats": "npm run test-local-DRP & npx kill-port 3000",
+      "test-esportsearnings-stats": "npm run test-local-earnings & npx kill-port 3000",
+      "newman-local-earnings": "npx newman run test/api/esportsearnings-stats.postman_collection.json -e test/api/local.esportsearnings-stats_environment.json",
+      "test-local-earnings": "start-server-and-test start http://localhost:3000 newman-local-earnings",
+      
+      "test-FMGP-v1": "npx newman run test/api/v1.cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
+      "test-FMGP-v1:local": "start-server-and-test start http://localhost:3000 test-FMGP-v1",
+      "test-cheaters-stats-v1": "npm run test-FMGP-v1:local & npx kill-port 3000",
+      "test-FMGP-v1:render": "newman run test/api/v1.cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
+      "test-FMGP-v2": "npx newman run test/api/v2.cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
+      "test-FMGP-v2:local": "start-server-and-test start http://localhost:3000 test-FMGP-v2",
+      "test-cheaters-stats-v2": "npm run test-FMGP-v2:local & npx kill-port 3000",
+      "test-FMGP-v2:render": "newman run test/api/v2.cheaters-stats.postman_collection.json -e test/api/render.cheaters-stats_environment.json",
+      
+      "newman-local-GGG": "npx newman run test/api/olympics-athlete-events-collection.json -e test/api/olympics-athlete-events-local.json",
+      "test-local-GGG": "start-server-and-test start http://localhost:3000 newman-local-GGG",
+      "test-olympics-athlete-events": "npm run test-local-GGG & npm run test-local-GGG-v2 & npx kill-port 3000",
+      "newman-local-GGG-v2": "npx newman run test/api/olympics-athlete-events-collection-v2.json -e test/api/olympics-athlete-events-local.json",
+      "test-local-GGG-v2": "start-server-and-test start http://localhost:3000 newman-local-GGG-v2",
+      "test-GGG:render": "newman run test/api/API-GGG-Colection-test.json -e test/api/olympics-athlete-events-render.json"
+    }
   }
-}
