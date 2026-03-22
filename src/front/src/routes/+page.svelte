@@ -16,10 +16,7 @@
     // URLs de documentación específicas
     const docUrls = {
         "David Real Pérez": `${baseApiUrl}/esportsgrowth-stats/docs`,
-        "Mario Ramos Tuñón": {
-            v1: `${baseApiUrl}/esportsearnings-stats/docs`,
-            v2: `https://sos2526-30.onrender.com/api/v2/esportsearnings-stats/docs`
-        },
+        "Mario Ramos Tuñón": `${baseApiUrl}/esportsearnings-stats/docs`,
         "Gonzalo García Gómez": {
             v1: `${baseApiUrl}/olympics-athlete-events/docs`,
             v2: `https://sos2526-30.onrender.com/api/v2/olympics-athlete-events/docs`
@@ -36,6 +33,7 @@
 </svelte:head>
 
 <div class="cards-grid">
+    <!-- Tarjeta: Miembros del Equipo -->
     <section class="card">
         <h2>Miembros del Equipo</h2>
         <ul class="team-list">
@@ -51,17 +49,19 @@
         </ul>
     </section>
 
+    <!-- Tarjeta: Front-ends Individuales -->
     <section class="card">
         <h2>Front-ends Individuales</h2>
         <p class="card-note"><em>Vistas individuales de cada miembro</em></p>
         <ul class="links-list">
             <li><a href="/esportsgrowth-stats" class="highlight-link">David - Esports Growth Stats</a></li>
-            <li><a href="/esportsearnings-stats" class="highlight-link">Mario - Esportsearnings Stats (v2)</a></li>
+            <li><a href="/frontend/mario">Front-end de Mario</a></li>
             <li><a href="/olympics-athlete-events" class="highlight-link">Gonzalo - Olympics Athlete Events (v2)</a></li>
             <li><a href="/cheaters-stats" class="highlight-link">Francisco - Cheaters Stats (v2)</a></li>
         </ul>
     </section>
 
+    <!-- Tarjeta: URLs Base de las APIs -->
     <section class="card">
         <h2>APIs Base</h2>
         <ul class="links-list">
@@ -70,7 +70,15 @@
                     <a href={`${baseApiUrl}/${member.dataSource}`} target="_blank" rel="noreferrer">
                         <code>{member.dataSource}</code>
                     </a>
-                    {#if member.name === "Gonzalo García Gómez" || member.name === "Francisco Manuel García Patino" || member.name === "Mario Ramos Tuñón"}
+                    <!-- Versiones para cada miembro como enlaces -->
+                    {#if member.name === "Gonzalo García Gómez"}
+                        <a href={`${baseApiUrl}/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
+                            <code>v1</code>
+                        </a>
+                        <a href={`https://sos2526-30.onrender.com/api/v2/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
+                            <code class="v2-code">v2</code>
+                        </a>
+                    {:else if member.name === "Francisco Manuel García Patino"}
                         <a href={`${baseApiUrl}/${member.dataSource}/loadInitialData`} target="_blank" rel="noreferrer" class="version-link">
                             <code>v1</code>
                         </a>
@@ -83,13 +91,14 @@
         </ul>
     </section>
 
+    <!-- Tarjeta: Documentación Postman -->
     <section class="card">
         <h2>Postman Docs</h2>
         <ul class="links-list">
             {#each team as member}
                 <li>
                     <span class="doc-name">{member.name.split(' ')[0]}</span>
-                    {#if member.name === "Gonzalo García Gómez" || member.name === "Francisco Manuel García Patino" || member.name === "Mario Ramos Tuñón"}
+                    {#if member.name === "Gonzalo García Gómez" || member.name === "Francisco Manuel García Patino"}
                         <div class="doc-versions">
                             <a href={docUrls[member.name].v1} target="_blank" rel="noreferrer" class="version-doc">
                                 v1
@@ -108,6 +117,7 @@
         </ul>
     </section>
 
+    <!-- Tarjeta: Repositorio -->
     <section class="card full-width">
         <h2>Repositorio</h2>
         <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
