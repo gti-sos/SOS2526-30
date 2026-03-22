@@ -53,6 +53,21 @@
             if (searchTo) params.append('to', searchTo);
 
             const res = await fetch(`/api/v1/esportsgrowth-stats?${params.toString()}`);
+            
+            if (res.status === 404) {
+                allResources = [];
+                let mensajeError = 'No existe ninguna estadística';
+                if (searchCountry) mensajeError += ` con el país ${searchCountry}`;
+                if (searchGenre) mensajeError += ` y género ${searchGenre}`;
+                error = mensajeError + '.';
+                return;
+            }
+
+            if (res.status === 400) {
+                error = 'Los datos de búsqueda no son válidos. Revisa los filtros.';
+                return;
+            }
+
             if (!res.ok) throw new Error('Error al cargar los datos');
             
             allResources = await res.json();
@@ -65,7 +80,7 @@
             
             currentPage = 1;
         } catch (e) {
-            error = e.message;
+            error = 'Error de conexión con el servidor.';
         } finally {
             loading = false;
             clearMessages();
@@ -117,10 +132,16 @@
                 body: JSON.stringify(dataToSend)
             });
 
+            if (res.status === 400) {
+                alert('No se puede guardar: Los datos introducidos no tienen el formato correcto (revisa los números).');
+                return;
+            }
+
             if (res.status === 409) {
                 alert(`No se puede añadir: Ya existe una estadística para ${formData.country} en el año ${formData.year}.`);
                 return;
             }
+
             if (!res.ok) throw new Error('Error al guardar');
 
             showCreateForm = false;
@@ -152,6 +173,11 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSend)
             });
+
+            if (res.status === 400) {
+                alert('No se pueden guardar los cambios: Asegúrate de que los campos numéricos sean correctos.');
+                return;
+            }
 
             if (res.status === 404) {
                 alert(`No se puede editar: No existe ninguna estadística para ${editingResource.country} en el año ${editingResource.year}.`);
