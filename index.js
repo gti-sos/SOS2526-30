@@ -19,6 +19,7 @@
     const app = express();
     app.use(cors());
     const BASE_URL_API = "/api/v1";
+    const BASE_URL_API2 = "/api/v2";
 
  
     app.use(express.json());
@@ -28,7 +29,7 @@
 
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
-    app.use(`${BASE_URL_API}/esportsearnings-stats/v2`, esportsearningsAPIv2);
+    app.use(`${BASE_URL_API2}/esportsearnings-stats/v2`, esportsearningsAPIv2);
 
     app.use(handler);
 
