@@ -1,5 +1,4 @@
 import express from "express";
-//import Datastore from "nedb";
 import Datastore from "@seald-io/nedb";
 
 const router = express.Router();
@@ -17,7 +16,6 @@ const datosIniciales = [
     { total_money: 114467.372, game_name: "FIFA 20", genre: "Sports", player_no: 248, tournament_no: 39, country: "United Kingdom", top_country_earnings: 20561.304, year: 2019 },
     { total_money: 9750842.500, game_name: "Fortnite", genre: "Battle Royale", player_no: 4347, tournament_no: 660, country: "United States", top_country_earnings: 3342275.637, year: 2017 }
 ];
-db.insert(datosIniciales);
 
 const camposEsperados = [
     "total_money", "game_name", "genre", "player_no", 
@@ -46,7 +44,6 @@ router.get("/loadInitialData", (req, res) => {
                 if (err) {
                     return res.status(500).json({ message: "Error al insertar los datos" });
                 }
-                // Si NeDB no devuelve newDocs, usamos datosIniciales como respaldo
                 const datosParaEnviar = newDocs || datosIniciales;
                 res.status(201).json(datosParaEnviar.map(cleanId));
             });
@@ -119,40 +116,15 @@ router.delete("/", (req, res) => {
     });
 });
 
-/* ---------------- GET POR PAÍS ---------------- */
-router.get("/:country", (req, res) => {
-    const country = req.params.country;
-    const { from, to } = req.query;
-    let query = { country: country };
-
-    if (from && to) {
-        query.year = { $gte: parseInt(from), $lte: parseInt(to) };
-    } else if (from) {
-        query.year = { $gte: parseInt(from) };
-    } else if (to) {
-        query.year = { $lte: parseInt(to) };
-    }
-
-    db.find(query, (err, docs) => {
-        if (docs.length === 0 && !from && !to) {
-            res.status(404).json({ message: "Resource not found" });
-        } else {
-            res.status(200).json(docs.map(cleanId));
-        }
-    });
-});
-
 /* ---------------- GET POR JUEGO Y AÑO ---------------- */
 router.get("/:game_name/:year", (req, res) => {
     const game = req.params.game_name;
     const year = parseInt(req.params.year); 
     
     db.find({ game_name: game, year: year }, (err, docs) => {
-        // 1. Manejamos el error interno
         if (err) {
             return res.status(500).json({ message: "Error interno" });
         }
-        // 2. Nos aseguramos de que docs existe antes de mirar su length
         if (docs && docs.length > 0) {
             res.status(200).json(cleanId(docs[0]));
         } else {
