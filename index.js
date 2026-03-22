@@ -29,7 +29,7 @@
 
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
     app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
-    app.use(`${BASE_URL_API2}/esportsearnings-stats/v2`, esportsearningsAPIv2);
+    app.use(`${BASE_URL_API2}/esportsearnings-stats`, esportsearningsAPIv2);
 
     app.use(handler);
 
