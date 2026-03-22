@@ -13,7 +13,8 @@
     import loadBackendGGG from './src/backend/olympics-athlete-events.js';
     import loadBackendFMGP from './src/backend/cheaters-stats.js';
     import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
-    import esportsearningsAPI from './src/backend/esportsearnings-stats.js';
+    import esportsearningsAPIv1 from './src/backend/esportsearnings-stats-v1.js';
+    import esportsearningsAPIv2 from './src/backend/esportsearnings-stats-v2.js';
 
     const app = express();
     app.use(cors());
@@ -26,7 +27,8 @@
     loadBackendFMGP(app)
 
     app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
-    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPI);
+    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
+    app.use(`${BASE_URL_API}/esportsearnings-stats/v2`, esportsearningsAPIv2);
 
     app.use(handler);
 
