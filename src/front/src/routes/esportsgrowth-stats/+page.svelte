@@ -64,6 +64,7 @@
             }
 
             if (res.status === 400) {
+                allResources = [];
                 error = 'Los datos de búsqueda no son válidos. Revisa los filtros.';
                 return;
             }
@@ -72,7 +73,16 @@
             
             allResources = await res.json();
             
-            if (allResources.length === 0 && !searchCountry && !searchGenre) {
+            if (allResources.length === 0 && (searchCountry || searchGenre || searchFrom || searchTo)) {
+                successMessage = null; 
+                let mensajeError = 'No existe ninguna estadística';
+                if (searchCountry) mensajeError += ` con el país ${searchCountry}`;
+                if (searchGenre) mensajeError += ` y género ${searchGenre}`;
+                error = mensajeError + '.'; 
+                return;
+            }
+            
+            if (allResources.length === 0 && !searchCountry && !searchGenre && !searchFrom) {
                 successMessage = 'La base de datos está vacía. Carga datos de ejemplo.';
             } else if (searchCountry || searchGenre || searchFrom) {
                 successMessage = `Búsqueda completada: ${allResources.length} resultados.`;
@@ -80,6 +90,7 @@
             
             currentPage = 1;
         } catch (e) {
+            allResources = [];
             error = 'Error de conexión con el servidor.';
         } finally {
             loading = false;
@@ -275,6 +286,10 @@
     .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;}
     .pagination { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;}
 </style>
+
+<svelte:head>
+    <title>Estadísticas de Crecimiento de eSports</title>
+</svelte:head>
 
 <div class="container">
     <h1>Estadísticas de Crecimiento de eSports</h1>
