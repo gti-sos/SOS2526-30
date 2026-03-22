@@ -13,7 +13,9 @@
     
     let currentPage = $state(1);
     let itemsPerPage = $state(5);
-    let totalPages = $derived(Math.ceil(allResources.length / itemsPerPage) || 1);
+    
+    // ESCUDO 1: Aseguramos que length nunca de error aunque vengan datos corruptos
+    let totalPages = $derived(Math.ceil((allResources?.length || 0) / itemsPerPage) || 1);
     
     let formData = $state({
         country: '',
@@ -34,9 +36,11 @@
     let searchTo = $state('');
 
     $effect(() => {
+        // ESCUDO 2: Si por algún motivo los datos no son una lista, forzamos una lista vacía
+        const safeResources = Array.isArray(allResources) ? allResources : [];
         const start = (currentPage - 1) * itemsPerPage;
         const end = start + itemsPerPage;
-        displayedResources = allResources.slice(start, end);
+        displayedResources = safeResources.slice(start, end);
     });
 
     function clearMessages() {
@@ -64,15 +68,27 @@
             }
 
             if (res.status === 400) {
+                allResources = [];
                 error = 'Los datos de búsqueda no son válidos. Revisa los filtros.';
                 return;
             }
 
             if (!res.ok) throw new Error('Error al cargar los datos');
             
-            allResources = await res.json();
+            // ESCUDO 3: Filtramos lo que viene del servidor
+            const data = await res.json();
+            allResources = Array.isArray(data) ? data : [];
             
-            if (allResources.length === 0 && !searchCountry && !searchGenre) {
+            if (allResources.length === 0 && (searchCountry || searchGenre || searchFrom || searchTo)) {
+                successMessage = null; 
+                let mensajeError = 'No existe ninguna estadística';
+                if (searchCountry) mensajeError += ` con el país ${searchCountry}`;
+                if (searchGenre) mensajeError += ` y género ${searchGenre}`;
+                error = mensajeError + '.'; 
+                return;
+            }
+            
+            if (allResources.length === 0 && !searchCountry && !searchGenre && !searchFrom) {
                 successMessage = 'La base de datos está vacía. Carga datos de ejemplo.';
             } else if (searchCountry || searchGenre || searchFrom) {
                 successMessage = `Búsqueda completada: ${allResources.length} resultados.`;
@@ -80,6 +96,7 @@
             
             currentPage = 1;
         } catch (e) {
+            allResources = [];
             error = 'Error de conexión con el servidor.';
         } finally {
             loading = false;
@@ -302,7 +319,7 @@
         <button class="btn-red" onclick={deleteAllResources}>Vaciar Base de Datos</button>
     </div>
 
-    {#if allResources.length > 0}
+    {#if Array.isArray(allResources) && allResources.length > 0}
         <div class="pagination">
             <div>
                 <button class="btn-gray" disabled={currentPage === 1} onclick={() => currentPage--}>Anterior</button>
@@ -323,9 +340,9 @@
 
     {#if loading}
         <p style="text-align: center; color: var(--p-600);">Cargando estadísticas...</p>
-    {:else if allResources.length === 0}
+    {:else if Array.isArray(allResources) && allResources.length === 0}
         <p style="text-align: center; color: gray; padding: 2rem; background: var(--p-50); border-radius: 8px;">No hay datos para mostrar en este momento.</p>
-    {:else}
+    {:else if Array.isArray(displayedResources)}
         {#each displayedResources as resource}
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -364,8 +381,8 @@
                     {editingResource ? 'Editar Registro' : 'Nuevo Registro'}
                 </h2>
                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                    <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource} placeholder="Ej: Spain"></div>
-                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource} placeholder="Ej: 2024"></div>
+                    <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource !== null} placeholder="Ej: Spain"></div>
+                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource !== null} placeholder="Ej: 2024"></div>
                     <div><label>Jugadores Activos (M)</label><input type="number" step="0.1" bind:value={formData.active_player_no} placeholder="Millones"></div>
                     <div><label>Espectadores (M)</label><input type="number" step="0.1" bind:value={formData.viewership} placeholder="Millones"></div>
                     <div><label>Género Top</label><input type="text" bind:value={formData.top_genre} placeholder="Ej: Shooter"></div>
