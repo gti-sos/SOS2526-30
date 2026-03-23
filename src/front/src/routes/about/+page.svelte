@@ -1,4 +1,5 @@
 <script>
+// @ts-nocheck
     // Información del equipo (se mantiene igual)
     const team = [
         { name: "David Real Pérez", dataSource: "esportsgrowth-stats", github: "https://github.com/davreaper" },
@@ -176,13 +177,14 @@
         --blue-100: #e0f2fe;
         --blue-200: #bae6fd;
         --blue-300: #7dd3fc;
+        --blue-400: #38bdf8;
         --blue-500: #0ea5e9;
         --blue-600: #0284c7;
         --blue-700: #0369a1;
         --blue-800: #075985;
     }
 
-    body {
+    :global(body) {
         font-family: 'Segoe UI', sans-serif;
         margin: 0;
         padding: 20px;
@@ -335,9 +337,5 @@
     footer p {
         margin: 0;
         font-size: 0.9rem;
-    }
-
-    .text-muted {
-        color: var(--blue-600);
     }
 </style>

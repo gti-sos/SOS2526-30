@@ -430,16 +430,6 @@
         margin-bottom: 1rem;
     }
 
-    .flex-row {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        align-items: flex-end;
-    }
-
-    .flex-2 { flex: 2; min-width: 200px; }
-    .flex-1 { flex: 1; min-width: 120px; }
-
     label {
         display: block;
         font-weight: 600;
