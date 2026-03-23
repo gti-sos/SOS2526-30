@@ -376,12 +376,12 @@ function loadBackendFMGP(app) {
         if (country) query.country = { $regex: new RegExp(country, 'i') };
         if (game) query.game = { $regex: new RegExp(game, 'i') };
         
-        // Búsqueda por año exacto o rango
-        if (year && !from && !to) {
+        // Búsqueda por año: PRIORIZAR año exacto sobre rango
+        if (year) {
+            // Si hay año exacto, se usa SOLO ese (ignora from/to)
             query.year = parseInt(year);
-        }
-        
-        if (from || to) {
+        } else if (from || to) {
+            // Solo si NO hay año exacto, se usa el rango
             query.year = {};
             if (from) query.year.$gte = parseInt(from);
             if (to) query.year.$lte = parseInt(to);
