@@ -12,8 +12,14 @@
 - **Live URL**: https://sos2526-30.onrender.com/
 
 - **APIs**:
-    - http://sos2526-30.onrender.com/api/v1/esportsgrowth-stats/docs (developed by David Real Pérez)
-    - http://sos2526-30.onrender.com/api/v1/esportsearnings-stats/docs (developed by Mario Ramos Tuñón)
-    - http://sos2526-30.onrender.com/api/v1/cheaters-stats/docs (developed by Francisco Manuel Gracía Patino)
+    - v1: http://sos2526-30.onrender.com/api/v1/esportsgrowth-stats/docs (developed by David Real Pérez)
+    - v2:  (developed by David Real Pérez)
+
+    - v1: http://sos2526-30.onrender.com/api/v1/esportsearnings-stats/docs (developed by Mario Ramos Tuñón)
+    - v2: http://sos2526-30.onrender.com/api/v2/esportsearnings-stats/docs (developed by Mario Ramos Tuñón)
+
+    - v1: http://sos2526-30.onrender.com/api/v1/cheaters-stats/docs (developed by Francisco Manuel Gracía Patino)
+    - v2: http://sos2526-30.onrender.com/api/v2/cheaters-stats/docs (developed by Francisco Manuel Gracía Patino)
+
     - v1: http://sos2526-30.onrender.com/api/v1/olympics-athlete-events/docs (developed by Gonzalo García Gómez)
     - v2: http://sos2526-30.onrender.com/api/v2/olympics-athlete-events/docs (developed by Gonzalo García Gómez)
