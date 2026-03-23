@@ -66,9 +66,15 @@
         <a href="/api/v1/esportsgrowth-stats" class="api-link">/api/v1/esportsgrowth-stats</a>
     </div>
 
-    <div class="api-item">
-        <span class="api-name">Esports Earnings:</span>
-        <a href="/api/v1/esportsearnings-stats" class="api-link">/api/v1/esportsearnings-stats</a>
+    <div class="grid-2">
+        <div class="api-item">
+            <span class="api-name">Esports Earnings v1:</span>
+            <a href="/api/v1/esportsearnings-stats" class="api-link">/api/v1/esportsearnings-stats</a>
+        </div>
+        <div class="api-item">
+            <span class="api-name">Esports Earnings v2:</span>
+            <a href="/api/v2/esportsearnings-stats" class="api-link">/api/v2/esportsearnings-stats</a>
+        </div>
     </div>
 
     <div class="api-item">
@@ -94,9 +100,15 @@
         <a href="/api/v1/esportsgrowth-stats/docs" class="api-link" target="_blank">/api/v1/esportsgrowth-stats/docs</a>
     </div>
 
-    <div class="api-item">
-        <span class="api-name">Mario Ramos Tuñón:</span>
-        <a href="/api/v1/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v1/esportsearnings-stats/docs</a>
+    <div class="grid-2">
+        <div class="api-item">
+            <span class="api-name">Mario Ramos (Docs v1):</span>
+            <a href="/api/v1/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v1/esportsearnings-stats/docs</a>
+        </div>
+        <div class="api-item">
+            <span class="api-name">Mario Ramos (Docs v2):</span>
+            <a href="/api/v2/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v2/esportsearnings-stats/docs</a>
+        </div>
     </div>
 
     <div class="api-item">
