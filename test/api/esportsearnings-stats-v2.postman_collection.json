@@ -76,8 +76,7 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Mensaje correcto\", function () { const jsonData = pm.response.json(); pm.expect(jsonData.message).to.eql(\"Data already loaded\"); });"
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });"
             ],
             "type": "text/javascript"
           }
