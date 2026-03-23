@@ -9,7 +9,6 @@
     let showDeleteModal = $state(false);
     let deleteTarget = $state(null);
     let showCreateForm = $state(false);
-    let editingResource = $state(null);
     
     let currentPage = $state(1);
     let itemsPerPage = $state(5);
@@ -180,49 +179,6 @@
         }
     }
 
-    async function saveResourceChanges() {
-        try {
-            const dataToSend = {
-                country: editingResource.country, 
-                year: parseInt(editingResource.year),
-                active_player_no: parseFloat(formData.active_player_no),
-                viewership: parseFloat(formData.viewership),
-                top_genre: formData.top_genre,
-                top_platform: formData.top_platform,
-                tournament_no: parseInt(formData.tournament_no),
-                pro_player_no: parseInt(formData.pro_player_no),
-                internet_penetration: parseFloat(formData.internet_penetration),
-                company_no: parseInt(formData.company_no)
-            };
-
-            const res = await fetch(`/api/v1/esportsgrowth-stats/${editingResource.country}/${editingResource.year}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSend)
-            });
-
-            if (res.status === 400) {
-                alert('No se pueden guardar los cambios: Asegúrate de que los campos numéricos sean correctos.');
-                return;
-            }
-
-            if (res.status === 404) {
-                alert(`No se puede editar: No existe ninguna estadística para ${editingResource.country} en el año ${editingResource.year}.`);
-                return;
-            }
-
-            if (!res.ok) throw new Error('Error al actualizar');
-
-            showCreateForm = false;
-            editingResource = null;
-            successMessage = 'Registro actualizado correctamente.';
-            resetForm();
-            await getResources();
-        } catch (e) {
-            alert('No se pudieron guardar los cambios. Revisa los datos.');
-        }
-    }
-
     async function deleteResource(country, year) {
         try {
             const res = await fetch(`/api/v1/esportsgrowth-stats/${country}/${year}`, { method: 'DELETE' });
@@ -259,12 +215,6 @@
         formData = { country: '', year: new Date().getFullYear(), active_player_no: '', viewership: '', top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '', internet_penetration: '', company_no: '' };
     }
 
-    function startEditing(resource) {
-        formData = { ...resource };
-        editingResource = resource;
-        showCreateForm = true;
-    }
-
     function clearSearch() {
         searchParams = {
             country: '', year: '', from: '', to: '', active_player_no: '', viewership: '', top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '', internet_penetration: '', company_no: ''
@@ -296,7 +246,7 @@
     .btn-blue { background: #0284c7; } .btn-blue:hover { background: #0369a1; }
     .btn-red { background: #dc2626; } .btn-red:hover { background: #b91c1c; }
     .btn-gray { background: #e5e7eb; color: #374151; } .btn-gray:hover { background: #d1d5db; }
-    .btn-orange { background: #f59e0b; } .btn-orange:hover { background: #d97706; }
+    .btn-orange { background: #f59e0b; color: white;} .btn-orange:hover { background: #d97706; }
     .card { border: 1px solid var(--p-200); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; transition: 0.2s;}
     .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.2); }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
@@ -370,7 +320,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h2 style="margin:0 0 1rem 0; color: var(--p-700);">{resource.country} ({resource.year})</h2>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn-orange" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick={() => startEditing(resource)}>Editar</button>
+                        <a href={`/esportsgrowth-stats/${resource.country}/${resource.year}`} class="btn-orange" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; text-decoration: none; display: inline-block;">Editar</a>
                         <button class="btn-red" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick={() => { deleteTarget = resource; showDeleteModal = true; }}>Eliminar</button>
                     </div>
                 </div>
@@ -396,15 +346,15 @@
         </div>
     {/if}
 
-    {#if showCreateForm || editingResource}
+    {#if showCreateForm}
         <div class="modal">
             <div class="modal-content">
                 <h2 style="margin-top:0; color: var(--p-700); border-bottom: 2px solid var(--p-200); padding-bottom: 0.5rem;">
-                    {editingResource ? 'Editar Registro' : 'Nuevo Registro'}
+                    Nuevo Registro
                 </h2>
                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                    <div><label for="formCountry">País *</label><input id="formCountry" type="text" bind:value={formData.country} disabled={editingResource !== null} placeholder="Ej: Spain"></div>
-                    <div><label for="formYear">Año *</label><input id="formYear" type="number" bind:value={formData.year} disabled={editingResource !== null} placeholder="Ej: 2024"></div>
+                    <div><label for="formCountry">País *</label><input id="formCountry" type="text" bind:value={formData.country} placeholder="Ej: Spain"></div>
+                    <div><label for="formYear">Año *</label><input id="formYear" type="number" bind:value={formData.year} placeholder="Ej: 2024"></div>
                     <div><label for="formActive">Jugadores Activos (M)</label><input id="formActive" type="number" step="0.1" bind:value={formData.active_player_no} placeholder="Millones"></div>
                     <div><label for="formViewers">Espectadores (M)</label><input id="formViewers" type="number" step="0.1" bind:value={formData.viewership} placeholder="Millones"></div>
                     <div><label for="formGenre">Género Top</label><input id="formGenre" type="text" bind:value={formData.top_genre} placeholder="Ej: Shooter"></div>
@@ -414,14 +364,9 @@
                     <div><label for="formInternet">Penetración Internet (%)</label><input id="formInternet" type="number" step="0.1" bind:value={formData.internet_penetration} placeholder="Ej: 95.5"></div>
                     <div><label for="formCompany">Nº Compañías</label><input id="formCompany" type="number" bind:value={formData.company_no} placeholder="Cantidad total"></div>
                 </div>
-                {#if editingResource}
-                    <p style="font-size:0.8rem; color: #7f8c8d; background: #f9f9f9; padding: 0.5rem; border-radius: 4px; margin-top:1rem; border-left: 3px solid var(--p-200);">
-                        El País y el Año no se pueden editar porque identifican el registro de forma única. Si son incorrectos, elimina el registro y crea uno nuevo.
-                    </p>
-                {/if}
                 <div style="margin-top: 2rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                    <button class="btn-gray" onclick={() => { showCreateForm = false; editingResource = null; resetForm(); }}>Cancelar</button>
-                    <button class="btn-purple" onclick={editingResource ? saveResourceChanges : saveNewResource}>Guardar Registro</button>
+                    <button class="btn-gray" onclick={() => { showCreateForm = false; resetForm(); }}>Cancelar</button>
+                    <button class="btn-purple" onclick={saveNewResource}>Guardar Registro</button>
                 </div>
             </div>
         </div>
