@@ -228,7 +228,7 @@
     .search-box { background: var(--p-50); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--p-200); }
     .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
     label { display: block; font-weight: bold; margin-bottom: 0.3rem; color: var(--p-700); font-size: 0.9rem;}
-    input { width: 100%; padding: 0.5rem; border: 1px solid var(--p-200); border-radius: 6px; box-sizing: border-box; }
+    input, select { width: 100%; padding: 0.5rem; border: 1px solid var(--p-200); border-radius: 6px; box-sizing: border-box; }
     .btn-group { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;}
     button { border: none; border-radius: 6px; padding: 0.6rem 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: white;}
     .btn-purple { background: var(--p-600); } .btn-purple:hover { background: var(--p-700); }
@@ -238,7 +238,7 @@
     .btn-orange { background: #f59e0b; } .btn-orange:hover { background: #d97706; }
     .card { border: 1px solid var(--p-200); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
-    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;}
     .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;}
     .pagination { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 </style>
@@ -251,10 +251,10 @@
 
     <div class="search-box">
         <div class="flex-row">
-            <div style="flex:1"><label>Juego</label><input type="text" bind:value={searchGame} placeholder="Ej: Fortnite"></div>
-            <div style="flex:1"><label>País</label><input type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
-            <div style="flex:1"><label>Desde el año</label><input type="number" bind:value={searchFrom}></div>
-            <div style="flex:1"><label>Hasta el año</label><input type="number" bind:value={searchTo}></div>
+            <div style="flex:1"><label for="searchGame">Juego</label><input id="searchGame" type="text" bind:value={searchGame} placeholder="Ej: Fortnite"></div>
+            <div style="flex:1"><label for="searchCountry">País</label><input id="searchCountry" type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
+            <div style="flex:1"><label for="searchFrom">Desde el año</label><input id="searchFrom" type="number" bind:value={searchFrom}></div>
+            <div style="flex:1"><label for="searchTo">Hasta el año</label><input id="searchTo" type="number" bind:value={searchTo}></div>
             <div style="display:flex; gap:0.5rem;">
                 <button class="btn-purple" onclick={getResources}>Buscar</button>
                 <button class="btn-gray" onclick={clearSearch}>Limpiar</button>
@@ -277,8 +277,8 @@
                 <button class="btn-gray" disabled={currentPage === totalPages} onclick={() => currentPage++}>Siguiente</button>
             </div>
             <div>
-                <label style="display:inline; margin-right:0.5rem;">Mostrar:</label>
-                <select bind:value={itemsPerPage} onchange={() => currentPage = 1}>
+                <label for="itemsPerPage" style="display:inline; margin-right:0.5rem;">Mostrar:</label>
+                <select id="itemsPerPage" bind:value={itemsPerPage} onchange={() => currentPage = 1}>
                     <option value={5}>5</option>
                     <option value={10}>10</option>
                     <option value={50}>50</option>
@@ -316,14 +316,14 @@
             <div class="modal-content">
                 <h2 style="margin-top:0;">{editingResource ? 'Editar Registro' : 'Nuevo Registro'}</h2>
                 <div class="grid">
-                    <div><label>Juego *</label><input type="text" bind:value={formData.game_name} disabled={editingResource}></div>
-                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource}></div>
-                    <div><label>País *</label><input type="text" bind:value={formData.country}></div>
-                    <div><label>Género</label><input type="text" bind:value={formData.genre}></div>
-                    <div><label>Dinero Total ($)</label><input type="number" step="0.01" bind:value={formData.total_money}></div>
-                    <div><label>Torneos</label><input type="number" bind:value={formData.tournament_no}></div>
-                    <div><label>Jugadores</label><input type="number" bind:value={formData.player_no}></div>
-                    <div><label>Ganancias País ($)</label><input type="number" step="0.01" bind:value={formData.top_country_earnings}></div>
+                    <div><label for="formGameName">Juego *</label><input id="formGameName" type="text" bind:value={formData.game_name} disabled={editingResource !== null}></div>
+                    <div><label for="formYear">Año *</label><input id="formYear" type="number" bind:value={formData.year} disabled={editingResource !== null}></div>
+                    <div><label for="formCountryEdit">País *</label><input id="formCountryEdit" type="text" bind:value={formData.country}></div>
+                    <div><label for="formGenre">Género</label><input id="formGenre" type="text" bind:value={formData.genre}></div>
+                    <div><label for="formTotalMoney">Dinero Total ($)</label><input id="formTotalMoney" type="number" step="0.01" bind:value={formData.total_money}></div>
+                    <div><label for="formTournaments">Torneos</label><input id="formTournaments" type="number" bind:value={formData.tournament_no}></div>
+                    <div><label for="formPlayerNo">Jugadores</label><input id="formPlayerNo" type="number" bind:value={formData.player_no}></div>
+                    <div><label for="formCountryEarnings">Ganancias País ($)</label><input id="formCountryEarnings" type="number" step="0.01" bind:value={formData.top_country_earnings}></div>
                 </div>
                 {#if editingResource}
                     <p style="font-size:0.8rem; color:gray; margin-top:1rem;">* El Juego y el Año no se pueden editar porque son identificadores. Si te equivocaste, elimínalo y créalo de nuevo.</p>

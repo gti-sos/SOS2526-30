@@ -576,41 +576,40 @@
     {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
     {#if error}<div class="msg-error">{error}</div>{/if}
 
-    <!-- BÚSQUEDA AVANZADA -->
     <div class="search-box">
         <h3 style="margin-top: 0; color: var(--blue-700);"> Búsqueda avanzada</h3>
         <div class="search-grid">
             <div>
-                <label>Nombre</label>
-                <input type="text" bind:value={searchFilters.name} placeholder="Ej: A Dijiang">
+                <label for="searchName">Nombre</label>
+                <input id="searchName" type="text" bind:value={searchFilters.name} placeholder="Ej: A Dijiang">
             </div>
             <div>
-                <label>Año</label>
-                <input type="number" bind:value={searchFilters.year} placeholder="Ej: 1992">
+                <label for="searchYear">Año</label>
+                <input id="searchYear" type="number" bind:value={searchFilters.year} placeholder="Ej: 1992">
             </div>
             <div>
-                <label>País</label>
-                <input type="text" bind:value={searchFilters.team} placeholder="Ej: China">
+                <label for="searchTeam">País</label>
+                <input id="searchTeam" type="text" bind:value={searchFilters.team} placeholder="Ej: China">
             </div>
             <div>
-                <label>Deporte</label>
-                <input type="text" bind:value={searchFilters.sport} placeholder="Ej: Baloncesto">
+                <label for="searchSport">Deporte</label>
+                <input id="searchSport" type="text" bind:value={searchFilters.sport} placeholder="Ej: Baloncesto">
             </div>
             <div>
-                <label>Evento</label>
-                <input type="text" bind:value={searchFilters.event} placeholder="Ej: 100m">
+                <label for="searchEvent">Evento</label>
+                <input id="searchEvent" type="text" bind:value={searchFilters.event} placeholder="Ej: 100m">
             </div>
             <div>
-                <label>Temporada</label>
-                <select bind:value={searchFilters.season}>
+                <label for="searchSeason">Temporada</label>
+                <select id="searchSeason" bind:value={searchFilters.season}>
                     <option value="">Todas</option>
                     <option value="Summer">Verano</option>
                     <option value="Winter">Invierno</option>
                 </select>
             </div>
             <div>
-                <label>Medalla</label>
-                <select bind:value={searchFilters.medal}>
+                <label for="searchMedal">Medalla</label>
+                <select id="searchMedal" bind:value={searchFilters.medal}>
                     <option value="">Todas</option>
                     <option value="Gold">Oro</option>
                     <option value="Silver">Plata</option>
@@ -619,16 +618,16 @@
                 </select>
             </div>
             <div>
-                <label>Sexo</label>
-                <select bind:value={searchFilters.sex}>
+                <label for="searchSex">Sexo</label>
+                <select id="searchSex" bind:value={searchFilters.sex}>
                     <option value="">Todos</option>
                     <option value="M">Masculino</option>
                     <option value="F">Femenino</option>
                 </select>
             </div>
             <div>
-                <label>Ciudad</label>
-                <input type="text" bind:value={searchFilters.city} placeholder="Ej: Barcelona">
+                <label for="searchCity">Ciudad</label>
+                <input id="searchCity" type="text" bind:value={searchFilters.city} placeholder="Ej: Barcelona">
             </div>
         </div>
         <div class="search-actions">
@@ -668,7 +667,6 @@
         {/if}
     </div>
 
-    <!-- BOTONES PRINCIPALES -->
     <div class="btn-group">
         <button onclick={loadSampleData} disabled={loading} class="btn-green">Cargar datos ejemplo</button>
         <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo atleta</button>
@@ -678,12 +676,11 @@
         <button onclick={deleteAllAthletes} class="btn-red"> Eliminar todos</button>
     </div>
 
-    <!-- PAGINACIÓN -->
     {#if !searchMode && athletes.length > 0}
         <div class="pagination">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <label>Mostrar:</label>
-                <select bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
+                <label for="itemsPerPageTop">Mostrar:</label>
+                <select id="itemsPerPageTop" bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
                     <option value={5}>5</option>
                     <option value={10}>10</option>
                     <option value={20}>20</option>
@@ -701,27 +698,25 @@
         </div>
     {/if}
 
-    <!-- FORMULARIO MODAL -->
     {#if showCreateForm || editingAthlete}
         <div class="modal">
             <div class="modal-content">
                 <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? 'Editar atleta' : '➕ Nuevo atleta'}</h2>
-                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div class="grid-2">
-                    <div><label>Nombre *</label><input type="text" bind:value={formData.name} disabled={editingAthlete}></div>
-                    <div><label>Sexo</label><select bind:value={formData.sex}><option value="M">M</option><option value="F">F</option></select></div>
-                    <div><label>Edad</label><input type="number" bind:value={formData.age} placeholder="25"></div>
-                    <div><label>Altura (cm)</label><input type="number" bind:value={formData.height} placeholder="180"></div>
-                    <div><label>Peso (kg)</label><input type="number" step="0.1" bind:value={formData.weight} placeholder="75.5"></div>
-                    <div><label>País *</label><input type="text" bind:value={formData.team} placeholder="China"></div>
-                    <div><label>Código NOC</label><input type="text" bind:value={formData.noc} placeholder="CHN"></div>
-                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingAthlete}></div>
-                    <div><label>Temporada</label><select bind:value={formData.season}><option value="Summer">Verano</option><option value="Winter">Invierno</option></select></div>
-                    <div><label>Ciudad</label><input type="text" bind:value={formData.city} placeholder="Barcelona"></div>
-                    <div><label>Deporte *</label><input type="text" bind:value={formData.sport} placeholder="Baloncesto"></div>
-                    <div><label>Evento *</label><input type="text" bind:value={formData.event} placeholder="Baloncesto masculino"></div>
-                    <div style="grid-column: span 2;"><label>Medalla</label>
-                        <select bind:value={formData.medal}>
+                    <div><label for="formName">Nombre *</label><input id="formName" type="text" bind:value={formData.name} disabled={editingAthlete !== null}></div>
+                    <div><label for="formSex">Sexo</label><select id="formSex" bind:value={formData.sex}><option value="M">M</option><option value="F">F</option></select></div>
+                    <div><label for="formAge">Edad</label><input id="formAge" type="number" bind:value={formData.age} placeholder="25"></div>
+                    <div><label for="formHeight">Altura (cm)</label><input id="formHeight" type="number" bind:value={formData.height} placeholder="180"></div>
+                    <div><label for="formWeight">Peso (kg)</label><input id="formWeight" type="number" step="0.1" bind:value={formData.weight} placeholder="75.5"></div>
+                    <div><label for="formTeam">País *</label><input id="formTeam" type="text" bind:value={formData.team} placeholder="China"></div>
+                    <div><label for="formNoc">Código NOC</label><input id="formNoc" type="text" bind:value={formData.noc} placeholder="CHN"></div>
+                    <div><label for="formYearEdit">Año *</label><input id="formYearEdit" type="number" bind:value={formData.year} disabled={editingAthlete !== null}></div>
+                    <div><label for="formSeason">Temporada</label><select id="formSeason" bind:value={formData.season}><option value="Summer">Verano</option><option value="Winter">Invierno</option></select></div>
+                    <div><label for="formCity">Ciudad</label><input id="formCity" type="text" bind:value={formData.city} placeholder="Barcelona"></div>
+                    <div><label for="formSport">Deporte *</label><input id="formSport" type="text" bind:value={formData.sport} placeholder="Baloncesto"></div>
+                    <div><label for="formEvent">Evento *</label><input id="formEvent" type="text" bind:value={formData.event} placeholder="Baloncesto masculino"></div>
+                    <div style="grid-column: span 2;"><label for="formMedal">Medalla</label>
+                        <select id="formMedal" bind:value={formData.medal}>
                             <option value="NA">Ninguna</option><option value="Gold">Oro</option><option value="Silver">Plata</option><option value="Bronze">Bronce</option>
                         </select>
                     </div>
@@ -736,7 +731,6 @@
         </div>
     {/if}
 
-    <!-- LISTA DE ATLETAS -->
     {#if loading}
         <p class="text-center text-muted">Cargando...</p>
     {:else if athletes.length > 0 && !searchMode}
@@ -778,7 +772,6 @@
             </div>
         {/each}
 
-        <!-- PAGINACIÓN INFERIOR -->
         <div style="display: flex; justify-content: center; gap: 0.5rem; margin: 2rem 0;">
             <button onclick={() => goToPage(1)} disabled={currentPage === 1} class="btn-gray">⏮️</button>
             <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">◀</button>
@@ -797,7 +790,6 @@
         <p class="text-center text-muted" style="padding: 2rem;"> No hay atletas. Carga datos de ejemplo o añade uno nuevo.</p>
     {/if}
 
-    <!-- MODAL CONFIRMACIÓN ELIMINAR -->
     {#if showDeleteModal && deleteTarget}
         <div class="modal">
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">

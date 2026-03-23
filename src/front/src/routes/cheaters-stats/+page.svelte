@@ -620,13 +620,12 @@
     {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
     {#if error}<div class="msg-error">{error}</div>{/if}
 
-    <!-- BUSCADOR / FILTROS AVANZADOS -->
     <div class="search-box">
         <h3 style="margin-top: 0; color: var(--purple-700);">Buscar registros</h3>
         <div class="flex-row">
             <div class="flex-2">
-                <label>País</label>
-                <select bind:value={searchCountry}>
+                <label for="searchCountry">País</label>
+                <select id="searchCountry" bind:value={searchCountry}>
                     <option value="">Todos</option>
                     {#each countries as country}
                         <option value={country}>{country}</option>
@@ -634,8 +633,8 @@
                 </select>
             </div>
             <div class="flex-2">
-                <label>Juego</label>
-                <select bind:value={searchGame}>
+                <label for="searchGame">Juego</label>
+                <select id="searchGame" bind:value={searchGame}>
                     <option value="">Todos</option>
                     {#each games as game}
                         <option value={game}>{game}</option>
@@ -643,8 +642,8 @@
                 </select>
             </div>
             <div class="flex-1">
-                <label>Año exacto</label>
-                <select bind:value={searchYear}>
+                <label for="searchYear">Año exacto</label>
+                <select id="searchYear" bind:value={searchYear}>
                     <option value="">Todos</option>
                     {#each years as year}
                         <option value={year}>{year}</option>
@@ -652,12 +651,12 @@
                 </select>
             </div>
             <div class="flex-1">
-                <label>Desde año</label>
-                <input type="number" bind:value={searchFrom} placeholder="Ej: 2010">
+                <label for="searchFrom">Desde año</label>
+                <input id="searchFrom" type="number" bind:value={searchFrom} placeholder="Ej: 2010">
             </div>
             <div class="flex-1">
-                <label>Hasta año</label>
-                <input type="number" bind:value={searchTo} placeholder="Ej: 2020">
+                <label for="searchTo">Hasta año</label>
+                <input id="searchTo" type="number" bind:value={searchTo} placeholder="Ej: 2020">
             </div>
             <div style="display: flex; gap: 0.5rem;">
                 <button onclick={searchResources} disabled={searching} class="btn-purple" style="height: 2.5rem;">
@@ -685,7 +684,6 @@
         {/if}
     </div>
 
-    <!-- BOTONES PRINCIPALES -->
     <div class="btn-group">
         <button onclick={loadSampleData} disabled={loading} class="btn-purple">Cargar datos de ejemplo</button>
         <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo registro</button>
@@ -696,12 +694,11 @@
         <a href="/api/v2/cheaters-stats/docs" target="_blank" class="btn-purple" style="background: #8b5cf6; display: inline-block; text-decoration: none;">Documentación v2</a>
     </div>
 
-    <!-- PAGINACIÓN SUPERIOR -->
     {#if !searchMode && resources.length > 0}
         <div class="pagination">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <label>Mostrar:</label>
-                <select bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
+                <label for="itemsPerPage">Mostrar:</label>
+                <select id="itemsPerPage" bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
                     <option value={5}>5</option>
                     <option value={10}>10</option>
                     <option value={20}>20</option>
@@ -719,20 +716,19 @@
         </div>
     {/if}
 
-    <!-- FORMULARIO MODAL -->
     {#if showCreateForm || editingResource}
         <div class="modal">
             <div class="modal-content">
                 <h2 style="color: var(--purple-700); margin-top: 0;">{editingResource ? 'Editar registro' : 'Nuevo registro'}</h2>
                 <div class="grid-2">
-                    <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource} placeholder="Ej: Spain"></div>
-                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource} placeholder="Ej: 2020"></div>
-                    <div><label>Juego *</label><input type="text" bind:value={formData.game} disabled={editingResource} placeholder="Ej: csgo"></div>
-                    <div><label>Reportes de tramposos *</label><input type="number" bind:value={formData.cheater_report} placeholder="Ej: 100"></div>
-                    <div><label>Baneos confirmados *</label><input type="number" bind:value={formData.confirmed_ban} placeholder="Ej: 50"></div>
-                    <div><label>Porcentaje estimado de tramposos</label><input type="number" step="0.01" bind:value={formData.estimated_cheater} placeholder="Ej: 2.5"></div>
-                    <div><label>Cuentas suspendidas</label><input type="number" bind:value={formData.suspended_account} placeholder="Ej: 30"></div>
-                    <div><label>Reincidentes</label><input type="number" bind:value={formData.repeat_offender} placeholder="Ej: 10"></div>
+                    <div><label for="formCountry">País *</label><input id="formCountry" type="text" bind:value={formData.country} disabled={editingResource !== null} placeholder="Ej: Spain"></div>
+                    <div><label for="formYear">Año *</label><input id="formYear" type="number" bind:value={formData.year} disabled={editingResource !== null} placeholder="Ej: 2020"></div>
+                    <div><label for="formGame">Juego *</label><input id="formGame" type="text" bind:value={formData.game} disabled={editingResource !== null} placeholder="Ej: csgo"></div>
+                    <div><label for="formCheaterReport">Reportes de tramposos *</label><input id="formCheaterReport" type="number" bind:value={formData.cheater_report} placeholder="Ej: 100"></div>
+                    <div><label for="formConfirmedBan">Baneos confirmados *</label><input id="formConfirmedBan" type="number" bind:value={formData.confirmed_ban} placeholder="Ej: 50"></div>
+                    <div><label for="formEstimatedCheater">Porcentaje estimado de tramposos</label><input id="formEstimatedCheater" type="number" step="0.01" bind:value={formData.estimated_cheater} placeholder="Ej: 2.5"></div>
+                    <div><label for="formSuspendedAccount">Cuentas suspendidas</label><input id="formSuspendedAccount" type="number" bind:value={formData.suspended_account} placeholder="Ej: 30"></div>
+                    <div><label for="formRepeatOffender">Reincidentes</label><input id="formRepeatOffender" type="number" bind:value={formData.repeat_offender} placeholder="Ej: 10"></div>
                 </div>
                 {#if editingResource}
                     <p style="color: var(--purple-600); font-size: 0.9rem; margin-top: 1rem;">
@@ -749,7 +745,6 @@
         </div>
     {/if}
 
-    <!-- LISTA DE RECURSOS -->
     {#if loading}
         <p class="text-center text-muted">Cargando registros...</p>
     {:else if resources.length > 0}
@@ -778,7 +773,6 @@
             </div>
         {/each}
 
-        <!-- PAGINACIÓN INFERIOR -->
         <div style="display: flex; justify-content: center; gap: 0.5rem; margin: 2rem 0;">
             <button onclick={() => goToPage(1)} disabled={currentPage === 1} class="btn-gray">Primera</button>
             <button onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} class="btn-gray">Anterior</button>
@@ -797,7 +791,6 @@
         <p class="text-center text-muted" style="padding: 2rem;">No hay registros. Carga datos de ejemplo o añade uno nuevo.</p>
     {/if}
 
-    <!-- MODAL CONFIRMACIÓN ELIMINAR -->
     {#if showDeleteModal && deleteTarget}
         <div class="modal">
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
