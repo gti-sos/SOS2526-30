@@ -49,7 +49,7 @@ try {
             return value;
         }
     });
-    console.log(`✅ CSV cargado correctamente: ${csvContent.length} registros`);
+    
 } catch (err) {
     console.error("Error leyendo CSV:", err.message);
 }
