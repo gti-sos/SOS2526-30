@@ -30,10 +30,21 @@
         company_no: ''
     });
 
-    let searchCountry = $state('');
-    let searchGenre = $state('');
-    let searchFrom = $state('');
-    let searchTo = $state('');
+    // Filtros de Búsqueda Avanzada (Todos los campos de la API)
+    let searchParams = $state({
+        country: '',
+        year: '',
+        from: '',
+        to: '',
+        active_player_no: '',
+        viewership: '',
+        top_genre: '',
+        top_platform: '',
+        tournament_no: '',
+        pro_player_no: '',
+        internet_penetration: '',
+        company_no: ''
+    });
 
     $effect(() => {
         // ESCUDO 2: Si por algún motivo los datos no son una lista, forzamos una lista vacía
@@ -51,19 +62,19 @@
         loading = true;
         try {
             const params = new URLSearchParams();
-            if (searchCountry) params.append('country', searchCountry);
-            if (searchGenre) params.append('top_genre', searchGenre);
-            if (searchFrom) params.append('from', searchFrom);
-            if (searchTo) params.append('to', searchTo);
+            
+            // Añadimos solo los parámetros que el usuario ha rellenado
+            for (const [key, value] of Object.entries(searchParams)) {
+                if (value !== '' && value !== null) {
+                    params.append(key, value);
+                }
+            }
 
             const res = await fetch(`/api/v1/esportsgrowth-stats?${params.toString()}`);
             
             if (res.status === 404) {
                 allResources = [];
-                let mensajeError = 'No existe ninguna estadística';
-                if (searchCountry) mensajeError += ` con el país ${searchCountry}`;
-                if (searchGenre) mensajeError += ` y género ${searchGenre}`;
-                error = mensajeError + '.';
+                error = 'No existe ninguna estadística con esos filtros de búsqueda.';
                 return;
             }
 
@@ -79,18 +90,17 @@
             const data = await res.json();
             allResources = Array.isArray(data) ? data : [];
             
-            if (allResources.length === 0 && (searchCountry || searchGenre || searchFrom || searchTo)) {
+            const hasSearchFilters = Object.values(searchParams).some(val => val !== '');
+
+            if (allResources.length === 0 && hasSearchFilters) {
                 successMessage = null; 
-                let mensajeError = 'No existe ninguna estadística';
-                if (searchCountry) mensajeError += ` con el país ${searchCountry}`;
-                if (searchGenre) mensajeError += ` y género ${searchGenre}`;
-                error = mensajeError + '.'; 
+                error = 'No existe ninguna estadística con esos filtros.'; 
                 return;
             }
             
-            if (allResources.length === 0 && !searchCountry && !searchGenre && !searchFrom) {
+            if (allResources.length === 0 && !hasSearchFilters) {
                 successMessage = 'La base de datos está vacía. Carga datos de ejemplo.';
-            } else if (searchCountry || searchGenre || searchFrom) {
+            } else if (hasSearchFilters) {
                 successMessage = `Búsqueda completada: ${allResources.length} resultados.`;
             }
             
@@ -256,7 +266,9 @@
     }
 
     function clearSearch() {
-        searchCountry = ''; searchGenre = ''; searchFrom = ''; searchTo = '';
+        searchParams = {
+            country: '', year: '', from: '', to: '', active_player_no: '', viewership: '', top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '', internet_penetration: '', company_no: ''
+        };
         getResources();
     }
 
@@ -274,7 +286,7 @@
     .msg-success { background: #d1fae5; color: #065f46; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem; border: 1px solid #10b981;}
     .msg-error { background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem; border: 1px solid #dc2626;}
     .search-box { background: var(--p-50); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--p-200); }
-    .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+    .search-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
     label { display: block; font-weight: bold; margin-bottom: 0.3rem; color: var(--p-700); font-size: 0.9rem;}
     input, select { width: 100%; padding: 0.5rem; border: 1px solid var(--p-200); border-radius: 6px; box-sizing: border-box; }
     input:focus, select:focus { outline: none; border-color: var(--p-500); box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2); }
@@ -291,6 +303,7 @@
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
     .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;}
     .pagination { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;}
+    .search-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
 </style>
 
 <div class="container">
@@ -300,15 +313,24 @@
     {#if error}<div class="msg-error">{error}</div>{/if}
 
     <div class="search-box">
-        <div class="flex-row">
-            <div style="flex:1"><label for="searchCountry">País</label><input id="searchCountry" type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
-            <div style="flex:1"><label for="searchGenre">Género (Top)</label><input id="searchGenre" type="text" bind:value={searchGenre} placeholder="Ej: FPS"></div>
-            <div style="flex:1"><label for="searchFrom">Desde el año</label><input id="searchFrom" type="number" bind:value={searchFrom}></div>
-            <div style="flex:1"><label for="searchTo">Hasta el año</label><input id="searchTo" type="number" bind:value={searchTo}></div>
-            <div style="display:flex; gap:0.5rem;">
-                <button class="btn-purple" onclick={getResources}>Buscar</button>
-                <button class="btn-gray" onclick={clearSearch}>Limpiar</button>
-            </div>
+        <h3 style="margin-top: 0; color: var(--p-700); margin-bottom: 1rem;">Búsqueda Avanzada</h3>
+        <div class="search-grid">
+            <div><label for="s_country">País</label><input id="s_country" type="text" bind:value={searchParams.country} placeholder="Ej: Spain"></div>
+            <div><label for="s_year">Año exacto</label><input id="s_year" type="number" bind:value={searchParams.year} placeholder="Ej: 2019"></div>
+            <div><label for="s_from">Desde el año</label><input id="s_from" type="number" bind:value={searchParams.from} placeholder="Ej: 2010"></div>
+            <div><label for="s_to">Hasta el año</label><input id="s_to" type="number" bind:value={searchParams.to} placeholder="Ej: 2020"></div>
+            <div><label for="s_genre">Género Top</label><input id="s_genre" type="text" bind:value={searchParams.top_genre} placeholder="Ej: FPS"></div>
+            <div><label for="s_platform">Plataforma Top</label><input id="s_platform" type="text" bind:value={searchParams.top_platform} placeholder="Ej: PC"></div>
+            <div><label for="s_active">Jugadores Activos (M)</label><input id="s_active" type="number" step="0.1" bind:value={searchParams.active_player_no}></div>
+            <div><label for="s_viewers">Espectadores (M)</label><input id="s_viewers" type="number" step="0.1" bind:value={searchParams.viewership}></div>
+            <div><label for="s_tournaments">Nº Torneos</label><input id="s_tournaments" type="number" bind:value={searchParams.tournament_no}></div>
+            <div><label for="s_pro">Nº Jugadores Pro</label><input id="s_pro" type="number" bind:value={searchParams.pro_player_no}></div>
+            <div><label for="s_internet">Penetración Internet (%)</label><input id="s_internet" type="number" step="0.1" bind:value={searchParams.internet_penetration}></div>
+            <div><label for="s_company">Nº Compañías</label><input id="s_company" type="number" bind:value={searchParams.company_no}></div>
+        </div>
+        <div class="search-actions">
+            <button class="btn-purple" onclick={getResources}>Buscar</button>
+            <button class="btn-gray" onclick={clearSearch}>Limpiar</button>
         </div>
     </div>
 
