@@ -106,6 +106,16 @@
         <a href="/api/v1/esportsgrowth-stats/docs" class="api-link" target="_blank">/api/v1/esportsgrowth-stats/docs</a>
     </div>
 
+    <div class="grid-2">
+        <div class="api-item">
+            <span class="api-name">Mario Ramos (Docs v1):</span>
+            <a href="/api/v1/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v1/esportsearnings-stats/docs</a>
+        </div>
+        <div class="api-item">
+            <span class="api-name">Mario Ramos (Docs v2):</span>
+            <a href="/api/v2/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v2/esportsearnings-stats/docs</a>
+        </div>
+    </div>
 
     <div class="grid-2">
         <div class="api-item">
