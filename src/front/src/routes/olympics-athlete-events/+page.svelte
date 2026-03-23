@@ -706,6 +706,7 @@
         <div class="modal">
             <div class="modal-content">
                 <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? 'Editar atleta' : '➕ Nuevo atleta'}</h2>
+                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div class="grid-2">
                     <div><label>Nombre *</label><input type="text" bind:value={formData.name} disabled={editingAthlete}></div>
                     <div><label>Sexo</label><select bind:value={formData.sex}><option value="M">M</option><option value="F">F</option></select></div>

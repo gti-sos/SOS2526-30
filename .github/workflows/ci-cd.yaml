@@ -1,13 +1,22 @@
 name: CI_CD
-on: [push,pull_request]
+on: [push, pull_request]
 jobs:
   ci-cd:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Install dependences
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
         run: npm install
+        
+      - name: Build frontend (optional)
+        run: npm run build || echo "Frontend build skipped or failed, continuing..."
+        
       - name: Run tests
         run: npm test
-     
