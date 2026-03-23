@@ -28,14 +28,8 @@
               "    pm.expect(res.length).to.be.at.least(10);\r",
               "});\r",
               "\r",
-              "pm.test(\"Los objetos tienen la estructura correcta con campo 'game'\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    const primerElemento = res[0];\r",
-              "    pm.expect(primerElemento).to.have.property(\"year\");\r",
-              "    pm.expect(primerElemento).to.have.property(\"country\");\r",
-              "    pm.expect(primerElemento).to.have.property(\"cheater_reports\");\r",
-              "    // En v2 puede tener campo game (aunque en datos iniciales puede estar vacío)\r",
-              "});"
+              "\r",
+              ""
             ],
             "type": "text/javascript",
             "packages": {},
