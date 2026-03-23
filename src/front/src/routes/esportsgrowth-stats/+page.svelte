@@ -301,10 +301,10 @@
 
     <div class="search-box">
         <div class="flex-row">
-            <div style="flex:1"><label>País</label><input type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
-            <div style="flex:1"><label>Género (Top)</label><input type="text" bind:value={searchGenre} placeholder="Ej: FPS"></div>
-            <div style="flex:1"><label>Desde el año</label><input type="number" bind:value={searchFrom}></div>
-            <div style="flex:1"><label>Hasta el año</label><input type="number" bind:value={searchTo}></div>
+            <div style="flex:1"><label for="searchCountry">País</label><input id="searchCountry" type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
+            <div style="flex:1"><label for="searchGenre">Género (Top)</label><input id="searchGenre" type="text" bind:value={searchGenre} placeholder="Ej: FPS"></div>
+            <div style="flex:1"><label for="searchFrom">Desde el año</label><input id="searchFrom" type="number" bind:value={searchFrom}></div>
+            <div style="flex:1"><label for="searchTo">Hasta el año</label><input id="searchTo" type="number" bind:value={searchTo}></div>
             <div style="display:flex; gap:0.5rem;">
                 <button class="btn-purple" onclick={getResources}>Buscar</button>
                 <button class="btn-gray" onclick={clearSearch}>Limpiar</button>
@@ -327,8 +327,8 @@
                 <button class="btn-gray" disabled={currentPage === totalPages} onclick={() => currentPage++}>Siguiente</button>
             </div>
             <div>
-                <label style="display:inline; margin-right:0.5rem;">Mostrar:</label>
-                <select bind:value={itemsPerPage} onchange={() => currentPage = 1} style="width: auto;">
+                <label for="selectItems" style="display:inline; margin-right:0.5rem;">Mostrar:</label>
+                <select id="selectItems" bind:value={itemsPerPage} onchange={() => currentPage = 1} style="width: auto;">
                     <option value={5}>5</option>
                     <option value={10}>10</option>
                     <option value={50}>50</option>
@@ -381,16 +381,16 @@
                     {editingResource ? 'Editar Registro' : 'Nuevo Registro'}
                 </h2>
                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                    <div><label>País *</label><input type="text" bind:value={formData.country} disabled={editingResource !== null} placeholder="Ej: Spain"></div>
-                    <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingResource !== null} placeholder="Ej: 2024"></div>
-                    <div><label>Jugadores Activos (M)</label><input type="number" step="0.1" bind:value={formData.active_player_no} placeholder="Millones"></div>
-                    <div><label>Espectadores (M)</label><input type="number" step="0.1" bind:value={formData.viewership} placeholder="Millones"></div>
-                    <div><label>Género Top</label><input type="text" bind:value={formData.top_genre} placeholder="Ej: Shooter"></div>
-                    <div><label>Plataforma Top</label><input type="text" bind:value={formData.top_platform} placeholder="Ej: PC"></div>
-                    <div><label>Nº Torneos</label><input type="number" bind:value={formData.tournament_no} placeholder="Cantidad total"></div>
-                    <div><label>Nº Jugadores Pro</label><input type="number" bind:value={formData.pro_player_no} placeholder="Cantidad total"></div>
-                    <div><label>Penetración Internet (%)</label><input type="number" step="0.1" bind:value={formData.internet_penetration} placeholder="Ej: 95.5"></div>
-                    <div><label>Nº Compañías</label><input type="number" bind:value={formData.company_no} placeholder="Cantidad total"></div>
+                    <div><label for="formCountry">País *</label><input id="formCountry" type="text" bind:value={formData.country} disabled={editingResource !== null} placeholder="Ej: Spain"></div>
+                    <div><label for="formYear">Año *</label><input id="formYear" type="number" bind:value={formData.year} disabled={editingResource !== null} placeholder="Ej: 2024"></div>
+                    <div><label for="formActive">Jugadores Activos (M)</label><input id="formActive" type="number" step="0.1" bind:value={formData.active_player_no} placeholder="Millones"></div>
+                    <div><label for="formViewers">Espectadores (M)</label><input id="formViewers" type="number" step="0.1" bind:value={formData.viewership} placeholder="Millones"></div>
+                    <div><label for="formGenre">Género Top</label><input id="formGenre" type="text" bind:value={formData.top_genre} placeholder="Ej: Shooter"></div>
+                    <div><label for="formPlatform">Plataforma Top</label><input id="formPlatform" type="text" bind:value={formData.top_platform} placeholder="Ej: PC"></div>
+                    <div><label for="formTournaments">Nº Torneos</label><input id="formTournaments" type="number" bind:value={formData.tournament_no} placeholder="Cantidad total"></div>
+                    <div><label for="formPro">Nº Jugadores Pro</label><input id="formPro" type="number" bind:value={formData.pro_player_no} placeholder="Cantidad total"></div>
+                    <div><label for="formInternet">Penetración Internet (%)</label><input id="formInternet" type="number" step="0.1" bind:value={formData.internet_penetration} placeholder="Ej: 95.5"></div>
+                    <div><label for="formCompany">Nº Compañías</label><input id="formCompany" type="number" bind:value={formData.company_no} placeholder="Cantidad total"></div>
                 </div>
                 {#if editingResource}
                     <p style="font-size:0.8rem; color: #7f8c8d; background: #f9f9f9; padding: 0.5rem; border-radius: 4px; margin-top:1rem; border-left: 3px solid var(--p-200);">
