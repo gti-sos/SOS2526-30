@@ -13,7 +13,6 @@
 
 - **APIs**:
     - v1: http://sos2526-30.onrender.com/api/v1/esportsgrowth-stats/docs (developed by David Real Pérez)
-    - v2:  (developed by David Real Pérez)
 
     - v1: http://sos2526-30.onrender.com/api/v1/esportsearnings-stats/docs (developed by Mario Ramos Tuñón)
     - v2: http://sos2526-30.onrender.com/api/v2/esportsearnings-stats/docs (developed by Mario Ramos Tuñón)

@@ -17,13 +17,24 @@
     let totalPages = $state(1);
     let paginationData = $state(null);
     
-    // Variables para búsqueda
-    let searchName = $state('');
-    let searchYear = $state('');
-    let searchResults = $state(null);
+    // Variables para búsqueda avanzada
+    let searchMode = $state(false);
     let searching = $state(false);
     let searchError = $state(null);
-    let searchMode = $state(false);
+    let searchResults = $state(null);
+    
+    // Campos de búsqueda
+    let searchFilters = $state({
+        name: '',
+        year: '',
+        team: '',
+        sport: '',
+        event: '',
+        season: '',
+        medal: '',
+        sex: '',
+        city: ''
+    });
     
     // Formulario para nuevo/editar atleta
     let formData = $state({
@@ -56,6 +67,7 @@
         error = null;
         successMessage = null;
         searchMode = false;
+        searchResults = null;
         
         try {
             const res = await fetch(`/api/v2/olympics-athlete-events?page=${page}&limit=${itemsPerPage}&t=${Date.now()}`);
@@ -102,9 +114,19 @@
         getAthletes(1);
     }
 
-    async function searchAthlete() {
-        if (!searchName.trim()) {
-            searchError = 'Por favor, introduce un nombre para buscar.';
+    // Búsqueda avanzada por múltiples campos
+    async function advancedSearch() {
+        // Construir query string con todos los filtros no vacíos
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of Object.entries(searchFilters)) {
+            if (value && value.trim() !== '') {
+                params.append(key, value.trim());
+            }
+        }
+        
+        if (params.toString() === '') {
+            searchError = 'Por favor, introduce al menos un criterio de búsqueda.';
             return;
         }
         
@@ -114,43 +136,38 @@
         searchMode = true;
         
         try {
-            const url = searchYear 
-                ? `/api/v2/olympics-athlete-events/${encodeURIComponent(searchName.trim())}/${searchYear}`
-                : `/api/v2/olympics-athlete-events/${encodeURIComponent(searchName.trim())}`;
-            
-            const res = await fetch(url);
+            const res = await fetch(`/api/v2/olympics-athlete-events?${params.toString()}&t=${Date.now()}`);
             
             if (res.status === 404) {
-                searchError = searchYear 
-                    ? `No existe ningún atleta llamado "${searchName}" que participara en el año ${searchYear}.`
-                    : `No existe ningún atleta con el nombre "${searchName}". Prueba con otro nombre.`;
-                searchResults = null;
-                return;
-            }
-            
-            if (res.status === 400) {
-                searchError = 'La búsqueda no es válida. Comprueba que el nombre y el año sean correctos.';
+                searchError = 'No se encontraron resultados con los criterios especificados.';
+                searchResults = [];
                 return;
             }
             
             if (!res.ok) {
-                throw new Error('Error al buscar el atleta');
+                throw new Error('Error en la búsqueda');
             }
             
             const data = await res.json();
-            searchResults = data;
             
-            if (searchYear) {
-                successMessage = `Atleta encontrado: ${data.name} (${data.year})`;
-            } else if (Array.isArray(data) && data.length === 0) {
-                searchError = `No se encontraron atletas con el nombre "${searchName}".`;
+            // Verificar si la respuesta es paginada o directa
+            if (data.data) {
+                searchResults = data.data;
+            } else if (Array.isArray(data)) {
+                searchResults = data;
             } else {
-                const count = Array.isArray(data) ? data.length : 1;
-                successMessage = `Se encontraron ${count} atleta(s) con el nombre "${searchName}".`;
+                searchResults = [data];
+            }
+            
+            if (searchResults.length === 0) {
+                searchError = 'No se encontraron resultados con los criterios especificados.';
+            } else {
+                successMessage = `Se encontraron ${searchResults.length} resultado(s).`;
             }
             
         } catch (e) {
             searchError = 'Error al buscar. Por favor, inténtalo de nuevo.';
+            console.error(e);
         } finally {
             searching = false;
             clearMessages();
@@ -158,8 +175,17 @@
     }
 
     function clearSearch() {
-        searchName = '';
-        searchYear = '';
+        searchFilters = {
+            name: '',
+            year: '',
+            team: '',
+            sport: '',
+            event: '',
+            season: '',
+            medal: '',
+            sex: '',
+            city: ''
+        };
         searchResults = null;
         searchError = null;
         searchMode = false;
@@ -355,7 +381,7 @@
     }
 
     .container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
         background: white;
         padding: 2rem;
@@ -397,6 +423,13 @@
         border: 1px solid var(--blue-200);
     }
 
+    .search-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
     .flex-row {
         display: flex;
         gap: 1rem;
@@ -412,6 +445,7 @@
         font-weight: 600;
         margin-bottom: 0.3rem;
         color: var(--blue-700);
+        font-size: 0.9rem;
     }
 
     input, select {
@@ -533,6 +567,7 @@
     a { color: var(--blue-600); text-decoration: none; font-weight: 500; }
     a:hover { text-decoration: underline; color: var(--blue-800); }
     .footer-links { display: flex; gap: 2rem; justify-content: center; }
+    .search-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem; }
 </style>
 
 <div class="container">
@@ -541,64 +576,111 @@
     {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
     {#if error}<div class="msg-error">{error}</div>{/if}
 
-    <!-- BUSCADOR -->
+    <!-- BÚSQUEDA AVANZADA -->
     <div class="search-box">
-        <h3 style="margin-top: 0; color: var(--blue-700);">Buscar atletas</h3>
-        <div class="flex-row">
-        <!-- svelte-ignore a11y_label_has_associated_control -->
-            <div class="flex-2">
-                <label>Nombre *</label>
-                <input type="text" bind:value={searchName} placeholder="Ej: A Dijiang"
-                       onkeypress={(e) => e.key === 'Enter' && searchAthlete()}>
+        <h3 style="margin-top: 0; color: var(--blue-700);"> Búsqueda avanzada</h3>
+        <div class="search-grid">
+            <div>
+                <label>Nombre</label>
+                <input type="text" bind:value={searchFilters.name} placeholder="Ej: A Dijiang">
             </div>
-            <div class="flex-1">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
+            <div>
                 <label>Año</label>
-                <input type="number" bind:value={searchYear} placeholder="Ej: 1992"
-                       onkeypress={(e) => e.key === 'Enter' && searchAthlete()}>
+                <input type="number" bind:value={searchFilters.year} placeholder="Ej: 1992">
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <button onclick={searchAthlete} disabled={searching} class="btn-blue" style="height: 2.5rem;">
-                    {searching ? 'Buscando...' : 'Buscar'}
-                </button>
-                <button onclick={clearSearch} class="btn-gray" style="height: 2.5rem;">Limpiar</button>
+            <div>
+                <label>País</label>
+                <input type="text" bind:value={searchFilters.team} placeholder="Ej: China">
             </div>
+            <div>
+                <label>Deporte</label>
+                <input type="text" bind:value={searchFilters.sport} placeholder="Ej: Baloncesto">
+            </div>
+            <div>
+                <label>Evento</label>
+                <input type="text" bind:value={searchFilters.event} placeholder="Ej: 100m">
+            </div>
+            <div>
+                <label>Temporada</label>
+                <select bind:value={searchFilters.season}>
+                    <option value="">Todas</option>
+                    <option value="Summer">Verano</option>
+                    <option value="Winter">Invierno</option>
+                </select>
+            </div>
+            <div>
+                <label>Medalla</label>
+                <select bind:value={searchFilters.medal}>
+                    <option value="">Todas</option>
+                    <option value="Gold">Oro</option>
+                    <option value="Silver">Plata</option>
+                    <option value="Bronze">Bronce</option>
+                    <option value="NA">Ninguna</option>
+                </select>
+            </div>
+            <div>
+                <label>Sexo</label>
+                <select bind:value={searchFilters.sex}>
+                    <option value="">Todos</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                </select>
+            </div>
+            <div>
+                <label>Ciudad</label>
+                <input type="text" bind:value={searchFilters.city} placeholder="Ej: Barcelona">
+            </div>
+        </div>
+        <div class="search-actions">
+            <button onclick={advancedSearch} disabled={searching} class="btn-blue">
+                {searching ? 'Buscando...' : 'Buscar'}
+            </button>
+            <button onclick={clearSearch} class="btn-gray">Limpiar búsqueda</button>
         </div>
         
         {#if searchError}<div class="msg-error" style="margin-top: 1rem;">{searchError}</div>{/if}
         
-        {#if searchResults !== null}
+        {#if searchResults !== null && searchResults.length > 0}
             <div style="margin-top: 1.5rem; border-top: 2px solid var(--blue-200); padding-top: 1rem;">
-                <h4 style="color: var(--blue-700);">Resultados:</h4>
-                {#if Array.isArray(searchResults)}
-                    {#each searchResults as athlete}
-                        <div style="padding: 0.5rem; background: white; border: 1px solid var(--blue-200); border-radius: 4px; margin-bottom: 0.3rem;">
-                            <strong>{athlete.name}</strong> - {athlete.team} ({athlete.year}) - {athlete.sport}
+                <h4 style="color: var(--blue-700);">Resultados de búsqueda ({searchResults.length}):</h4>
+                {#each searchResults as athlete}
+                    <div class="athlete-card" style="margin: 0.5rem 0; padding: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: var(--blue-700); font-size: 1.1rem;">{athlete.name}</strong>
+                                <span style="margin-left: 0.5rem; color: var(--blue-600);">({athlete.year})</span>
+                                <div style="font-size: 0.85rem; margin-top: 0.3rem;">
+                                    <span>{athlete.team} • {athlete.sport} • {athlete.event}</span>
+                                    {#if athlete.medal && athlete.medal !== 'NA'}
+                                        <span style="background: gold; padding: 0.1rem 0.4rem; border-radius: 12px; margin-left: 0.5rem; font-weight: bold;">{athlete.medal}</span>
+                                    {/if}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.3rem;">
+                                <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Editar</button>
+                                <button onclick={() => { deleteTarget = { name: athlete.name, year: athlete.year }; showDeleteModal = true; }} 
+                                        class="btn-red" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Borrar</button>
+                            </div>
                         </div>
-                    {/each}
-                {:else}
-                    <div style="background: var(--blue-50); padding: 1rem; border-radius: 4px;">
-                        <p><strong>{searchResults.name}</strong> - {searchResults.team} ({searchResults.year})</p>
                     </div>
-                {/if}
+                {/each}
             </div>
         {/if}
     </div>
 
     <!-- BOTONES PRINCIPALES -->
     <div class="btn-group">
-        <button onclick={loadSampleData} disabled={loading} class="btn-green">Cargar datos </button>
+        <button onclick={loadSampleData} disabled={loading} class="btn-green">Cargar datos ejemplo</button>
         <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo atleta</button>
         <button onclick={() => getAthletes(currentPage)} disabled={loading} class="btn-gray">
-            {loading ? 'Cargando...' : 'Actualizar lista'}
+            {loading ? 'Cargando...' : ' Actualizar lista'}
         </button>
-        <button onclick={deleteAllAthletes} class="btn-red">Eliminar todos</button>
+        <button onclick={deleteAllAthletes} class="btn-red"> Eliminar todos</button>
     </div>
 
     <!-- PAGINACIÓN -->
     {#if !searchMode && athletes.length > 0}
         <div class="pagination">
-        <!-- svelte-ignore a11y_label_has_associated_control -->
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <label>Mostrar:</label>
                 <select bind:value={itemsPerPage} onchange={changeItemsPerPage} style="width: auto;">
@@ -623,16 +705,15 @@
     {#if showCreateForm || editingAthlete}
         <div class="modal">
             <div class="modal-content">
-                <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? ' Editar atleta' : ' Nuevo atleta'}</h2>
-                <!-- svelte-ignore a11y_label_has_associated_control -->
+                <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? 'Editar atleta' : '➕ Nuevo atleta'}</h2>
                 <div class="grid-2">
                     <div><label>Nombre *</label><input type="text" bind:value={formData.name} disabled={editingAthlete}></div>
                     <div><label>Sexo</label><select bind:value={formData.sex}><option value="M">M</option><option value="F">F</option></select></div>
                     <div><label>Edad</label><input type="number" bind:value={formData.age} placeholder="25"></div>
-                    <div><label>Altura</label><input type="number" bind:value={formData.height} placeholder="180 cm"></div>
-                    <div><label>Peso</label><input type="number" step="0.1" bind:value={formData.weight} placeholder="75.5 kg"></div>
+                    <div><label>Altura (cm)</label><input type="number" bind:value={formData.height} placeholder="180"></div>
+                    <div><label>Peso (kg)</label><input type="number" step="0.1" bind:value={formData.weight} placeholder="75.5"></div>
                     <div><label>País *</label><input type="text" bind:value={formData.team} placeholder="China"></div>
-                    <div><label>Código</label><input type="text" bind:value={formData.noc} placeholder="CHN"></div>
+                    <div><label>Código NOC</label><input type="text" bind:value={formData.noc} placeholder="CHN"></div>
                     <div><label>Año *</label><input type="number" bind:value={formData.year} disabled={editingAthlete}></div>
                     <div><label>Temporada</label><select bind:value={formData.season}><option value="Summer">Verano</option><option value="Winter">Invierno</option></select></div>
                     <div><label>Ciudad</label><input type="text" bind:value={formData.city} placeholder="Barcelona"></div>
@@ -654,10 +735,10 @@
         </div>
     {/if}
 
-    <!-- LISTA DE ATLETAS - AHORA CON TODOS LOS CAMPOS -->
+    <!-- LISTA DE ATLETAS -->
     {#if loading}
         <p class="text-center text-muted">Cargando...</p>
-    {:else if athletes.length > 0}
+    {:else if athletes.length > 0 && !searchMode}
         <p class="text-center"><strong>Mostrando {athletes.length} atletas (página {currentPage} de {totalPages})</strong></p>
         
         {#each athletes as athlete}
@@ -680,15 +761,15 @@
                             <p class="detail-item"><span class="detail-label">Deporte:</span> {athlete.sport}</p>
                             <p class="detail-item"><span class="detail-label">Evento:</span> {athlete.event}</p>
                             <p class="detail-item"><span class="detail-label">Medalla:</span> {
-                                athlete.medal === 'Gold' ? 'Oro' : 
-                                athlete.medal === 'Silver' ? 'Plata' : 
+                                athlete.medal === 'Gold' ? ' Oro' : 
+                                athlete.medal === 'Silver' ? ' Plata' : 
                                 athlete.medal === 'Bronze' ? 'Bronce' : 
                                 athlete.medal ?? 'Ninguna'
                             }</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">
-                        <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.3rem 0.8rem;">Editar</button>
+                        <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.3rem 0.8rem;">✏️ Editar</button>
                         <button onclick={() => { deleteTarget = { name: athlete.name, year: athlete.year }; showDeleteModal = true; }} 
                                 class="btn-red" style="padding: 0.3rem 0.8rem;">Borrar</button>
                     </div>
@@ -708,21 +789,22 @@
         <hr>
         <div class="footer-links">
             <a href="/"> Inicio</a>
-            <a href="/about">ℹ Acerca de</a>
-            <a href="/api/v2/olympics-athlete-events/docs" target="_blank">📄 Docs v2</a>
+            <a href="/about">Acerca de</a>
+            <a href="/api/v2/olympics-athlete-events/docs" target="_blank"> Docs v2</a>
         </div>
     {:else if !loading && !searchMode}
-        <p class="text-center text-muted" style="padding: 2rem;">No hay atletas. Carga datos de ejemplo o añade uno nuevo.</p>
+        <p class="text-center text-muted" style="padding: 2rem;"> No hay atletas. Carga datos de ejemplo o añade uno nuevo.</p>
     {/if}
 
     <!-- MODAL CONFIRMACIÓN ELIMINAR -->
     {#if showDeleteModal && deleteTarget}
         <div class="modal">
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
-                <h3 style="color: #dc2626; margin-top: 0;">Confirmar eliminación</h3>
-                <p>¿Eliminar a <strong>{deleteTarget.name}</strong> ({deleteTarget.year})?</p>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button onclick={() => showDeleteModal = false} class="btn-gray">Cancelar</button>
+                <h3 style="color: #dc2626; margin-top: 0;"> Confirmar eliminación</h3>
+                <p>¿Estás seguro de que quieres eliminar a <strong>{deleteTarget.name}</strong> ({deleteTarget.year})?</p>
+                <p style="color: #666; font-size: 0.9rem;">Esta acción no se puede deshacer.</p>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button onclick={() => { showDeleteModal = false; deleteTarget = null; }} class="btn-gray">Cancelar</button>
                     <button onclick={() => deleteAthlete(deleteTarget.name, deleteTarget.year)} class="btn-red">Sí, eliminar</button>
                 </div>
             </div>
