@@ -17,12 +17,16 @@
     let totalPages = $state(1);
     let paginationData = $state(null);
     
-    // Variables para búsqueda/filtros
+    // Variables para búsqueda/filtros - TODOS LOS CAMPOS (sin juego)
     let searchCountry = $state('');
-    let searchGame = $state('');
     let searchYear = $state('');
     let searchFrom = $state('');
     let searchTo = $state('');
+    let searchCheaterReport = $state('');
+    let searchConfirmedBan = $state('');
+    let searchEstimatedCheater = $state('');
+    let searchSuspendedAccount = $state('');
+    let searchRepeatOffender = $state('');
     let searchResults = $state(null);
     let searching = $state(false);
     let searchError = $state(null);
@@ -30,14 +34,12 @@
     
     // Variables para listas de filtros
     let countries = $state([]);
-    let games = $state([]);
     let years = $state([]);
     
-    // Formulario para nuevo/editar recurso
+    // Formulario para nuevo/editar recurso (sin juego)
     let formData = $state({
         country: '',
         year: new Date().getFullYear(),
-        game: '',
         cheater_report: '',
         confirmed_ban: '',
         estimated_cheater: '',
@@ -64,14 +66,12 @@
     // Cargar listas para filtros
     async function loadFilters() {
         try {
-            const [countriesRes, gamesRes, yearsRes] = await Promise.all([
+            const [countriesRes, yearsRes] = await Promise.all([
                 fetch('/api/v2/cheaters-stats/countries'),
-                fetch('/api/v2/cheaters-stats/games'),
                 fetch('/api/v2/cheaters-stats/years')
             ]);
             
             if (countriesRes.ok) countries = await countriesRes.json();
-            if (gamesRes.ok) games = await gamesRes.json();
             if (yearsRes.ok) years = await yearsRes.json();
         } catch (e) {
             console.error('Error loading filters:', e);
@@ -90,6 +90,21 @@
             params.append('page', page);
             params.append('limit', itemsPerPage);
             params.append('t', Date.now());
+            
+            // Añadir filtros de país
+            if (searchCountry) params.append('country', searchCountry);
+            
+            // Añadir filtros de año
+            if (searchYear) params.append('year', searchYear);
+            if (searchFrom) params.append('from', searchFrom);
+            if (searchTo) params.append('to', searchTo);
+            
+            // Añadir filtros para todos los campos numéricos
+            if (searchCheaterReport) params.append('cheater_report', searchCheaterReport);
+            if (searchConfirmedBan) params.append('confirmed_ban', searchConfirmedBan);
+            if (searchEstimatedCheater) params.append('estimated_cheater', searchEstimatedCheater);
+            if (searchSuspendedAccount) params.append('suspended_account', searchSuspendedAccount);
+            if (searchRepeatOffender) params.append('repeat_offender', searchRepeatOffender);
             
             const url = `/api/v2/cheaters-stats?${params.toString()}`;
             const res = await fetch(url);
@@ -113,7 +128,7 @@
             }
             
             if (resources.length === 0) {
-                successMessage = 'La lista está vacía. Puedes cargar datos de ejemplo o añadir un nuevo registro.';
+                successMessage = 'La lista está vacía. Puedes añadir un nuevo registro.';
             }
             
             await loadFilters();
@@ -147,11 +162,17 @@
         
         try {
             const params = new URLSearchParams();
+            
+            // Añadir todos los filtros
             if (searchCountry) params.append('country', searchCountry);
-            if (searchGame) params.append('game', searchGame);
             if (searchYear) params.append('year', searchYear);
             if (searchFrom) params.append('from', searchFrom);
             if (searchTo) params.append('to', searchTo);
+            if (searchCheaterReport) params.append('cheater_report', searchCheaterReport);
+            if (searchConfirmedBan) params.append('confirmed_ban', searchConfirmedBan);
+            if (searchEstimatedCheater) params.append('estimated_cheater', searchEstimatedCheater);
+            if (searchSuspendedAccount) params.append('suspended_account', searchSuspendedAccount);
+            if (searchRepeatOffender) params.append('repeat_offender', searchRepeatOffender);
             
             const url = `/api/v2/cheaters-stats?${params.toString()}`;
             const res = await fetch(url);
@@ -185,14 +206,18 @@
 
     function clearSearch() {
         searchCountry = '';
-        searchGame = '';
         searchYear = '';
         searchFrom = '';
         searchTo = '';
+        searchCheaterReport = '';
+        searchConfirmedBan = '';
+        searchEstimatedCheater = '';
+        searchSuspendedAccount = '';
+        searchRepeatOffender = '';
         searchResults = null;
         searchError = null;
         searchMode = false;
-        getResources(1);
+        getResources(currentPage);
     }
 
     async function loadSampleData() {
@@ -200,7 +225,6 @@
         error = null;
         successMessage = null;
         try {
-            // Primero verificamos si ya hay datos
             const checkRes = await fetch('/api/v2/cheaters-stats?limit=1');
             const checkData = await checkRes.json();
             
@@ -234,7 +258,7 @@
 
     async function saveNewResource() {
         try {
-            if (!formData.country || !formData.game || !formData.year || !formData.cheater_report || !formData.confirmed_ban) {
+            if (!formData.country || !formData.year || !formData.cheater_report || !formData.confirmed_ban) {
                 alert('Por favor, completa todos los campos obligatorios (*)');
                 return;
             }
@@ -242,7 +266,6 @@
             const dataToSend = {
                 country: formData.country,
                 year: parseInt(formData.year),
-                game: formData.game,
                 cheater_report: parseInt(formData.cheater_report),
                 confirmed_ban: parseInt(formData.confirmed_ban)
             };
@@ -264,7 +287,7 @@
             });
             
             if (res.status === 409) {
-                alert(`Ya existe un registro para "${formData.country}" en ${formData.year} con el juego "${formData.game}".`);
+                alert(`Ya existe un registro para "${formData.country}" en ${formData.year}.`);
                 return;
             }
             
@@ -276,7 +299,8 @@
             
             if (!res.ok) throw new Error('Error al guardar');
             
-            await getResources(1);
+            await getResources(currentPage);
+            
             showCreateForm = false;
             resetForm();
             successMessage = `El registro para "${formData.country}" (${formData.year}) ha sido añadido correctamente.`;
@@ -291,17 +315,15 @@
         try {
             const originalCountry = editingResource.country;
             const originalYear = editingResource.year;
-            const originalGame = editingResource.game;
             
-            if (formData.country !== originalCountry || parseInt(formData.year) !== originalYear || formData.game !== originalGame) {
-                alert('No se puede cambiar el país, año o juego del registro.');
+            if (formData.country !== originalCountry || parseInt(formData.year) !== originalYear) {
+                alert('No se puede cambiar el país o año del registro.');
                 return;
             }
             
             const dataToSend = {
                 country: formData.country,
                 year: parseInt(formData.year),
-                game: formData.game,
                 cheater_report: parseInt(formData.cheater_report),
                 confirmed_ban: parseInt(formData.confirmed_ban)
             };
@@ -317,7 +339,7 @@
             }
             
             const res = await fetch(
-                `/api/v2/cheaters-stats/country/${encodeURIComponent(originalCountry)}/year/${originalYear}/game/${encodeURIComponent(originalGame)}`,
+                `/api/v2/cheaters-stats/country/${encodeURIComponent(originalCountry)}/year/${originalYear}`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -335,7 +357,8 @@
             
             if (!res.ok) throw new Error('Error al guardar los cambios');
             
-            await getResources(1);
+            await getResources(currentPage);
+            
             editingResource = null;
             showCreateForm = false;
             resetForm();
@@ -347,17 +370,17 @@
         }
     }
 
-    async function deleteResource(country, year, game) {
+    async function deleteResource(country, year) {
         try {
             const res = await fetch(
-                `/api/v2/cheaters-stats/country/${encodeURIComponent(country)}/year/${year}/game/${encodeURIComponent(game)}`,
+                `/api/v2/cheaters-stats/country/${encodeURIComponent(country)}/year/${year}`,
                 {
                     method: 'DELETE'
                 }
             );
             
             if (res.status === 404) {
-                alert(`No se encontró el registro para "${country}" (${year}, ${game}).`);
+                alert(`No se encontró el registro para "${country}" (${year}).`);
                 showDeleteModal = false;
                 deleteTarget = null;
                 return;
@@ -365,10 +388,16 @@
             
             if (!res.ok && res.status !== 204) throw new Error('Error al eliminar');
             
-            await getResources(1);
+            await getResources(currentPage);
+            
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+                await getResources(currentPage);
+            }
+            
             showDeleteModal = false;
             deleteTarget = null;
-            successMessage = `El registro para "${country}" (${year}, ${game}) ha sido eliminado correctamente.`;
+            successMessage = `El registro para "${country}" (${year}) ha sido eliminado correctamente.`;
         } catch (e) {
             alert('No se pudo eliminar el registro.');
         } finally {
@@ -387,6 +416,7 @@
             if (!res.ok) throw new Error('Error al eliminar todos');
             
             await getResources(1);
+            
             successMessage = 'Todos los registros han sido eliminados correctamente.';
         } catch (e) {
             alert('No se pudieron eliminar todos los registros.');
@@ -399,7 +429,6 @@
         formData = {
             country: '',
             year: new Date().getFullYear(),
-            game: '',
             cheater_report: '',
             confirmed_ban: '',
             estimated_cheater: '',
@@ -476,15 +505,39 @@
         border: 1px solid var(--purple-200);
     }
 
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        color: var(--purple-700);
+        font-size: 0.85rem;
+    }
+
+    .filter-group input, .filter-group select {
+        padding: 0.5rem;
+        border: 1px solid var(--purple-200);
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+
     .flex-row {
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
         align-items: flex-end;
+        margin-top: 1rem;
     }
-
-    .flex-2 { flex: 2; min-width: 200px; }
-    .flex-1 { flex: 1; min-width: 120px; }
 
     label {
         display: block;
@@ -622,8 +675,9 @@
 
     <div class="search-box">
         <h3 style="margin-top: 0; color: var(--purple-700);">Buscar registros</h3>
-        <div class="flex-row">
-            <div class="flex-2">
+        
+        <div class="filters-grid">
+            <div class="filter-group">
                 <label for="searchCountry">País</label>
                 <select id="searchCountry" bind:value={searchCountry}>
                     <option value="">Todos</option>
@@ -632,16 +686,8 @@
                     {/each}
                 </select>
             </div>
-            <div class="flex-2">
-                <label for="searchGame">Juego</label>
-                <select id="searchGame" bind:value={searchGame}>
-                    <option value="">Todos</option>
-                    {#each games as game}
-                        <option value={game}>{game}</option>
-                    {/each}
-                </select>
-            </div>
-            <div class="flex-1">
+            
+            <div class="filter-group">
                 <label for="searchYear">Año exacto</label>
                 <select id="searchYear" bind:value={searchYear}>
                     <option value="">Todos</option>
@@ -650,14 +696,44 @@
                     {/each}
                 </select>
             </div>
-            <div class="flex-1">
+            
+            <div class="filter-group">
                 <label for="searchFrom">Desde año</label>
                 <input id="searchFrom" type="number" bind:value={searchFrom} placeholder="Ej: 2010">
             </div>
-            <div class="flex-1">
+            
+            <div class="filter-group">
                 <label for="searchTo">Hasta año</label>
                 <input id="searchTo" type="number" bind:value={searchTo} placeholder="Ej: 2020">
             </div>
+            
+            <div class="filter-group">
+                <label for="searchCheaterReport">Reportes de tramposos</label>
+                <input id="searchCheaterReport" type="number" bind:value={searchCheaterReport} placeholder="Ej: 704">
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchConfirmedBan">Baneos confirmados</label>
+                <input id="searchConfirmedBan" type="number" bind:value={searchConfirmedBan} placeholder="Ej: 367">
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchEstimatedCheater">% Estimado</label>
+                <input id="searchEstimatedCheater" type="number" step="0.01" bind:value={searchEstimatedCheater} placeholder="Ej: 2.48">
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchSuspendedAccount">Cuentas suspendidas</label>
+                <input id="searchSuspendedAccount" type="number" bind:value={searchSuspendedAccount} placeholder="Ej: 308">
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchRepeatOffender">Reincidentes</label>
+                <input id="searchRepeatOffender" type="number" bind:value={searchRepeatOffender} placeholder="Ej: 62">
+            </div>
+        </div>
+        
+        <div class="flex-row">
             <div style="display: flex; gap: 0.5rem;">
                 <button onclick={searchResources} disabled={searching} class="btn-purple" style="height: 2.5rem;">
                     {searching ? 'Buscando...' : 'Buscar'}
@@ -676,7 +752,7 @@
                 {:else}
                     {#each searchResults as resource}
                         <div style="padding: 0.5rem; background: white; border: 1px solid var(--purple-200); border-radius: 4px; margin-bottom: 0.3rem;">
-                            <strong>{resource.country}</strong> - {resource.game} ({resource.year}) - Reportes: {resource.cheater_report}
+                            <strong>{resource.country}</strong> ({resource.year}) - Reportes: {resource.cheater_report}
                         </div>
                     {/each}
                 {/if}
@@ -687,9 +763,6 @@
     <div class="btn-group">
         <button onclick={loadSampleData} disabled={loading} class="btn-purple">Cargar datos de ejemplo</button>
         <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo registro</button>
-        <button onclick={() => getResources(currentPage)} disabled={loading} class="btn-gray">
-            {loading ? 'Cargando...' : 'Actualizar lista'}
-        </button>
         <button onclick={deleteAllResources} class="btn-red">Eliminar todos</button>
         <a href="/api/v2/cheaters-stats/docs" target="_blank" class="btn-purple" style="background: #8b5cf6; display: inline-block; text-decoration: none;">Documentación v2</a>
     </div>
@@ -723,7 +796,6 @@
                 <div class="grid-2">
                     <div><label for="formCountry">País *</label><input id="formCountry" type="text" bind:value={formData.country} disabled={editingResource !== null} placeholder="Ej: Spain"></div>
                     <div><label for="formYear">Año *</label><input id="formYear" type="number" bind:value={formData.year} disabled={editingResource !== null} placeholder="Ej: 2020"></div>
-                    <div><label for="formGame">Juego *</label><input id="formGame" type="text" bind:value={formData.game} disabled={editingResource !== null} placeholder="Ej: csgo"></div>
                     <div><label for="formCheaterReport">Reportes de tramposos *</label><input id="formCheaterReport" type="number" bind:value={formData.cheater_report} placeholder="Ej: 100"></div>
                     <div><label for="formConfirmedBan">Baneos confirmados *</label><input id="formConfirmedBan" type="number" bind:value={formData.confirmed_ban} placeholder="Ej: 50"></div>
                     <div><label for="formEstimatedCheater">Porcentaje estimado de tramposos</label><input id="formEstimatedCheater" type="number" step="0.01" bind:value={formData.estimated_cheater} placeholder="Ej: 2.5"></div>
@@ -732,7 +804,7 @@
                 </div>
                 {#if editingResource}
                     <p style="color: var(--purple-600); font-size: 0.9rem; margin-top: 1rem;">
-                        Para cambiar país, año o juego, elimina el registro y crea uno nuevo.
+                        Para cambiar país o año, elimina el registro y crea uno nuevo.
                     </p>
                 {/if}
                 <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
@@ -754,7 +826,7 @@
             <div class="resource-card">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="flex-grow: 1;">
-                        <h3 style="margin: 0 0 1rem 0; color: var(--purple-700);">{resource.country} - {resource.game}</h3>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--purple-700);">{resource.country}</h3>
                         <div class="resource-details-grid">
                             <p class="detail-item"><span class="detail-label">Año:</span> {resource.year}</p>
                             <p class="detail-item"><span class="detail-label">Reportes de tramposos:</span> {resource.cheater_report}</p>
@@ -766,7 +838,7 @@
                     </div>
                     <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">
                         <button onclick={() => startEditing(resource)} class="btn-orange" style="padding: 0.3rem 0.8rem;">Editar</button>
-                        <button onclick={() => { deleteTarget = { country: resource.country, year: resource.year, game: resource.game }; showDeleteModal = true; }} 
+                        <button onclick={() => { deleteTarget = { country: resource.country, year: resource.year }; showDeleteModal = true; }} 
                                 class="btn-red" style="padding: 0.3rem 0.8rem;">Eliminar</button>
                     </div>
                 </div>
@@ -796,10 +868,10 @@
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
                 <h3 style="color: #dc2626; margin-top: 0;">Confirmar eliminación</h3>
                 <p>¿Eliminar este registro?</p>
-                <p><strong>{deleteTarget.country} - {deleteTarget.game} ({deleteTarget.year})</strong></p>
+                <p><strong>{deleteTarget.country} ({deleteTarget.year})</strong></p>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                     <button onclick={() => showDeleteModal = false} class="btn-gray">Cancelar</button>
-                    <button onclick={() => deleteResource(deleteTarget.country, deleteTarget.year, deleteTarget.game)} class="btn-red">Sí, eliminar</button>
+                    <button onclick={() => deleteResource(deleteTarget.country, deleteTarget.year)} class="btn-red">Sí, eliminar</button>
                 </div>
             </div>
         </div>
