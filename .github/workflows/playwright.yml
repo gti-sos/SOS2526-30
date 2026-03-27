@@ -14,9 +14,9 @@ jobs:
       with:
         node-version: lts/*
     - name: Install dependencies
-    - name: Build frontend (optional)
-        run: npm run build || echo "Frontend build skipped or failed, continuing..."
       run: npm ci
+    - name: Build frontend (optional)
+      run: npm run build || echo "Frontend build skipped or failed, continuing..."
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run E2E tests
