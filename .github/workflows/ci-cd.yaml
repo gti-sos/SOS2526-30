@@ -18,17 +18,20 @@ jobs:
       - name: Build frontend (optional)
         run: npm run build || echo "Frontend build skipped or failed, continuing..."
 
-      
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - name: Start server in background
+        run: |
+          npm run start &
+          sleep 10
         
       - name: Run tests
         run: npm test
 
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
           
       - name: Run Playwright tests
         run: npx playwright test
-
+        
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
