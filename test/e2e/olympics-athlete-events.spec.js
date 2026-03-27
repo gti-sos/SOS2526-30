@@ -1,12 +1,13 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
 
-let app = 'https://sos2526-30.onrender.com';
+let app = 'http://localhost:3000/';
 
 test('has title', async ({ page }) => {
   await page.goto(app);
   await expect(page).toHaveTitle(/SOS2526-30 - Panel de Control/);
 });
+
 //  test('prueba link', async ({ page }) => {
 //   await page.goto(app);
 //   await page.getByRole('link', { name: 'Acerca de' }).click();
