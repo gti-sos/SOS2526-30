@@ -497,7 +497,7 @@ import { onMount } from 'svelte';
 </script>
 
 <svelte:head>
-    <title>Gestión de Atletas Olímpicos (API v2)</title>
+    <title>Gestion de Atletas Olimpicos</title>
 </svelte:head>
 
 <style>
