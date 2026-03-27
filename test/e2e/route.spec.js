@@ -1,12 +1,12 @@
-// // @ts-check
-// import { test, expect } from '@playwright/test';
+// @ts-check
+import { test, expect } from '@playwright/test';
 
-// let app = 'sos2526-30.onrender.com';
+let app = 'sos2526-30.onrender.com';
 
-// test('has title', async ({ page }) => {
-//   await page.goto(app);
-//   await expect(page).toHaveTitle(/SOS2526-30 Inicio/);
-// });
+test('has title', async ({ page }) => {
+  await page.goto(app);
+  await expect(page).toHaveTitle(/SOS2526-30 - Panel de Control/);
+});
 //  test('prueba link', async ({ page }) => {
 //   await page.goto(app);
 //   await page.getByRole('link', { name: 'Acerca de' }).click();

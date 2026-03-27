@@ -32,7 +32,7 @@
 </script>
 
 <svelte:head>
-    <title>SOS2526-30 Inicio</title>
+    <title>SOS2526-30 - Panel de Control</title>
 </svelte:head>
 
 <div class="cards-grid">
