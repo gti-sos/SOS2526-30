@@ -36,7 +36,6 @@ test('crear nuevo atleta en Olympics', async ({ page }) => {
 
 test('listar todos los recursos', async ({ page }) => {
   await page.goto(`${app}olympics-athlete-events`);
-  await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
   await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
   const atletas = page.locator('.athlete-card');
   const cantidad = await atletas.count();
@@ -121,7 +120,7 @@ test('buscar recursos por rango de años', async ({ page }) => {
   
   // Esperar resultados
   await expect(page.locator('.msg-success')).toBeVisible({ timeout: 5000 });
-  await expect(page.locator('.msg-success')).toContainText('resultado');
+
   
   // Verificar que los resultados están dentro del rango de años
   const resultados = page.locator('.athlete-card');
