@@ -255,7 +255,7 @@
               "    const res = pm.response.json();\r",
               "    console.log(res);\r",
               "    pm.expect(res).to.have.property(\"country\");\r",
-              "    pm.expect(res.country).to.equal(\"testpais2025\");\r",
+              "    pm.expect(res.country).to.equal(\"testpais\");\r",
               "    pm.expect(res).to.have.property(\"year\");\r",
               "    pm.expect(res.year).to.equal(2099);\r",
               "});"
@@ -325,7 +325,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 100,\r\n    \"confirmed_ban\": 50\r\n}",
+          "raw": "{\r\n        \"year\": 2020,\r\n        \"country\": \"Spain\",\r\n        \"cheater_report\": 704,\r\n        \"confirmed_ban\": 367,\r\n        \"estimated_cheater\": 2.48,\r\n        \"suspended_account\": 308,\r\n        \"repeat_offender\": 62\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -431,7 +431,7 @@
           "raw": "{\r\n    \"country\": \"Spain\",\r\n    \"year\": 2026,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0\r\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2021/game/testgame",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2021/",
           "host": [
             "{{base_url}}"
           ],
@@ -443,8 +443,7 @@
             "Spain",
             "year",
             "2021",
-            "game",
-            "testgame"
+            ""
           ]
         }
       },
@@ -469,9 +468,8 @@
               "\r",
               "pm.test(\"Mantiene los identificadores\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res.country).to.equal(\"nuevopais\");\r",
-              "    pm.expect(res.year).to.equal(2025);\r",
-              "    pm.expect(res.game).to.equal(\"testgame\");\r",
+              "    pm.expect(res.country).to.equal(\"Spain\");\r",
+              "    pm.expect(res.year).to.equal(2020);\r",
               "});"
             ],
             "type": "text/javascript",
@@ -485,7 +483,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0,\r\n    \"estimated_cheater\": 0,\r\n    \"suspended_account\": 0,\r\n    \"repeat_offender\": 0\r\n}",
+          "raw": "{\r\n    \"year\": 2020,\r\n    \"country\": \"Spain\",\r\n    \"cheater_report\": 0,\r\n    \"confirmed_ban\": 0\r\n    \r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -493,7 +491,7 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/v2/cheaters-stats/country/nuevopais/year/2025/game/testgame",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2020",
           "host": [
             "{{base_url}}"
           ],
@@ -502,11 +500,9 @@
             "v2",
             "cheaters-stats",
             "country",
-            "nuevopais",
+            "Spain",
             "year",
-            "2025",
-            "game",
-            "testgame"
+            "2020"
           ]
         }
       },
@@ -543,7 +539,7 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2026/game/testgame",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2026",
           "host": [
             "{{base_url}}"
           ],
@@ -554,9 +550,7 @@
             "country",
             "Spain",
             "year",
-            "2026",
-            "game",
-            "testgame"
+            "2026"
           ]
         }
       },
@@ -637,7 +631,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v2/cheaters-stats/country/paisinexistente/year/9999/game/juegoinexistente",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/paisinexistente/year/9999",
           "host": [
             "{{base_url}}"
           ],
@@ -648,9 +642,7 @@
             "country",
             "paisinexistente",
             "year",
-            "9999",
-            "game",
-            "juegoinexistente"
+            "9999"
           ]
         }
       },
@@ -681,7 +673,7 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/v2/cheaters-stats/country/nuevopais/year/2025/game/testgame",
+          "raw": "{{base_url}}/api/v2/cheaters-stats/country/Spain/year/2020",
           "host": [
             "{{base_url}}"
           ],
@@ -690,11 +682,9 @@
             "v2",
             "cheaters-stats",
             "country",
-            "nuevopais",
+            "Spain",
             "year",
-            "2025",
-            "game",
-            "testgame"
+            "2020"
           ]
         }
       },
