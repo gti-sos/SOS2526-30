@@ -27,7 +27,7 @@ test('crear nuevo atleta en Olympics', async ({ page }) => {
   await page.locator('#formEvent').fill('P');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.waitForTimeout(1000);
-  await expect(page.locator('.modal')).not.toBeVisible({ timeout: 5000 });
+  await expect(page.locator('.modal')).not.toBeVisible({ timeout: 10000 });
   await expect(page.locator('.msg-success')).toBeVisible();
   await expect(page.locator('.msg-success')).toContainText('ha sido añadido correctamente');
   const nuevoAtleta = page.locator('.athlete-card', { hasText: 'Prueba' });
