@@ -47,7 +47,6 @@ try {
             return value;
         }
     });
-    console.log(`✅ CSV cargado correctamente: ${csvContent.length} registros`);
 } catch (err) {
     console.error("Error leyendo CSV:", err.message);
 }
@@ -62,7 +61,6 @@ dbV2.count({}, (err, count) => {
     }
     
     if (count === 0) {
-        console.log("📦 Base de datos v2 vacía. Cargando datos iniciales...");
         const initialData = csvContent.slice(0, 15).map(item => ({
             year: item.year,
             country: item.country,
@@ -76,12 +74,8 @@ dbV2.count({}, (err, count) => {
         dbV2.insert(initialData, (err, newDocs) => {
             if (err) {
                 console.error("Error al insertar datos iniciales v2:", err);
-            } else {
-                console.log(`✅ Datos iniciales de cheaters-stats v2 cargados automáticamente: ${newDocs.length} registros`);
             }
         });
-    } else {
-        console.log(`📊 Base de datos v2 ya contiene ${count} registros. No se cargan datos iniciales.`);
     }
 });
 
@@ -95,7 +89,6 @@ dbV1.count({}, (err, count) => {
     }
     
     if (count === 0) {
-        console.log("📦 Base de datos v1 vacía. Cargando datos iniciales...");
         const initialData = csvContent.slice(0, 15).map(item => ({
             year: item.year,
             country: item.country,
@@ -109,12 +102,8 @@ dbV1.count({}, (err, count) => {
         dbV1.insert(initialData, (err, newDocs) => {
             if (err) {
                 console.error("Error al insertar datos iniciales v1:", err);
-            } else {
-                console.log(`✅ Datos iniciales de cheaters-stats v1 cargados automáticamente: ${newDocs.length} registros`);
             }
         });
-    } else {
-        console.log(`📊 Base de datos v1 ya contiene ${count} registros. No se cargan datos iniciales.`);
     }
 });
 
@@ -350,7 +339,7 @@ function loadBackendFMGP(app) {
     });
 
     // ============================================
-    // API v2 - COMPLETA (LECTURA Y ESCRITURA) - SIN CAMPO JUEGO
+    // API v2 - COMPLETA (LECTURA Y ESCRITURA) - SIN CAMPO GAME
     // ============================================
     const routerV2 = express.Router();
     routerV2.use(removeIdMiddleware);
@@ -360,7 +349,7 @@ function loadBackendFMGP(app) {
         res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5");
     });
 
-    // Carga inicial v2 - SOLO DEVUELVE DATOS (ya no inserta, la carga es automática al iniciar)
+    // Carga inicial v2 - SOLO DEVUELVE DATOS
     routerV2.get("/loadInitialData", (req, res) => {
         dbV2.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
             if (err) return res.status(500).json({ error: "Error al recuperar datos" });
@@ -433,7 +422,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // POST v2 - Crear nuevo recurso (ESCRITURA) - SIN CAMPO JUEGO
+    // POST v2 - Crear nuevo recurso (ESCRITURA) - SIN GAME
     routerV2.post("/", (req, res) => {
         const newData = req.body;
 
@@ -517,7 +506,7 @@ function loadBackendFMGP(app) {
         res.status(405).json({ message: "Method Not Allowed: Cannot update collection" });
     });
 
-    // Listas v2 (más endpoints)
+    // Listas v2
     routerV2.get("/countries", (req, res) => {
         dbV2.find({}).exec((err, data) => {
             if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
@@ -582,9 +571,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // RECURSO EXACTO: país/año (identificador compuesto)
-    
-    // GET recurso exacto
+    // GET recurso exacto país/año
     routerV2.get("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -599,7 +586,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // PUT recurso exacto (reemplazo completo) - ESCRITURA
+    // PUT recurso exacto
     routerV2.put("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -607,7 +594,6 @@ function loadBackendFMGP(app) {
 
         if (!body) return res.status(400).json({ message: "Bad Request: No data provided" });
 
-        // Validar que los IDs coinciden
         if (body.country && body.country.toLowerCase() !== countryParam.toLowerCase()) {
             return res.status(400).json({ message: "Bad Request: Country in URL and body do not match" });
         }
@@ -630,13 +616,12 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // PATCH recurso exacto (actualización parcial) - ESCRITURA
+    // PATCH recurso exacto
     routerV2.patch("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
         const updates = req.body;
 
-        // No permitir cambiar los identificadores
         if (updates.country || updates.year) {
             return res.status(400).json({ 
                 message: "Bad Request: Cannot update identifiers (country, year) via PATCH" 
@@ -658,7 +643,7 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // DELETE recurso exacto - ESCRITURA
+    // DELETE recurso exacto
     routerV2.delete("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
@@ -677,7 +662,7 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // POST no permitido en recurso exacto (debe devolver 405)
+    // POST no permitido en recurso exacto
     routerV2.post("/country/:country/year/:year", (req, res) => {
         res.status(405).json({ 
             message: "Method Not Allowed: Cannot POST to a specific resource. Use POST to /api/v2/cheaters-stats to create new resources.",
@@ -690,8 +675,6 @@ function loadBackendFMGP(app) {
     // ============================================
     app.use('/api/v1/cheaters-stats', routerV1);
     app.use('/api/v2/cheaters-stats', routerV2);
-    
- 
 }
 
 export default loadBackendFMGP;

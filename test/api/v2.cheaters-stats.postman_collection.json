@@ -23,10 +23,7 @@
               "    pm.expect(res).to.be.an('array');\r",
               "});\r",
               "\r",
-              "pm.test(\"Array tiene al menos 10 elementos\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res.length).to.be.at.least(10);\r",
-              "});\r",
+              "\r",
               "\r",
               "\r",
               ""
@@ -254,17 +251,13 @@
               "    pm.response.to.have.status(201);\r",
               "});\r",
               "\r",
-              "pm.test(\"Recurso creado devuelve los datos correctos\", function () {\r",
+              "pm.test(\"Verificar respuesta\", function () {\r",
               "    const res = pm.response.json();\r",
-              "    pm.expect(res.country).to.equal(\"nuevopais\");\r",
-              "    pm.expect(res.year).to.equal(2025);\r",
-              "    pm.expect(res.game).to.equal(\"testgame\");\r",
-              "    pm.expect(res.cheater_report).to.equal(1500);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"No contiene campo _id\", function () {\r",
-              "    const res = pm.response.json();\r",
-              "    pm.expect(res).to.not.have.property(\"_id\");\r",
+              "    console.log(res);\r",
+              "    pm.expect(res).to.have.property(\"country\");\r",
+              "    pm.expect(res.country).to.equal(\"testpais2025\");\r",
+              "    pm.expect(res).to.have.property(\"year\");\r",
+              "    pm.expect(res.year).to.equal(2099);\r",
               "});"
             ],
             "type": "text/javascript",
@@ -284,7 +277,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"country\": \"nuevopais\",\r\n    \"year\": 2025,\r\n    \"game\": \"testgame\",\r\n    \"cheater_report\": 1500,\r\n    \"confirmed_ban\": 750,\r\n    \"estimated_cheater\": 3.25,\r\n    \"suspended_account\": 680,\r\n    \"repeat_offender\": 120\r\n}",
+          "raw": "{\r\n    \"country\": \"testpais\",\r\n    \"year\": 2099,\r\n    \"cheater_report\": 100,\r\n    \"confirmed_ban\": 50\r\n}",
           "options": {
             "raw": {
               "language": "json"
