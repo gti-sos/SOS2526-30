@@ -17,8 +17,18 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Install wait-on
+      run: npm install --save-dev wait-on
     - name: Run E2E tests
-      run: npm run test:e2e
+      run: |
+        # Iniciar servidor en segundo plano
+        npm run start &
+        
+        # Esperar a que el servidor esté listo
+        npx wait-on http://localhost:3000 --timeout 60000
+        
+        # Ejecutar los tests
+        npx playwright test
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
