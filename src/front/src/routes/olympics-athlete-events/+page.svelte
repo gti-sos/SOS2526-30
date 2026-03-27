@@ -1,5 +1,8 @@
 <script>
 // @ts-nocheck
+
+import { onMount } from 'svelte';   
+// @ts-nocheck
     // @ts-ignore
     let athletes = $state([]);
     let loading = $state(false);
@@ -23,10 +26,27 @@
     let searchError = $state(null);
     let searchResults = $state(null);
     
+    // Variables para filtros por campo
+    let filterValues = $state({
+        years: [],
+        teams: [],
+        sports: [],
+        events: [],
+        seasons: [],
+        medals: [],
+        sexes: [],
+        cities: []
+    });
+    
+    let activeFieldFilter = $state(null);
+    let activeFilterValue = $state(null);
+    
     // Campos de búsqueda
     let searchFilters = $state({
         name: '',
         year: '',
+        from: '',
+        to: '',
         team: '',
         sport: '',
         event: '',
@@ -114,14 +134,115 @@
         getAthletes(1);
     }
 
-    // Búsqueda avanzada por múltiples campos
+    // Cargar todos los valores únicos para cada campo
+    async function loadFilterValues() {
+        try {
+            const endpoints = {
+                years: '/api/v2/olympics-athlete-events/year',
+                teams: '/api/v2/olympics-athlete-events/team',
+                sports: '/api/v2/olympics-athlete-events/sport',
+                seasons: '/api/v2/olympics-athlete-events/season',
+                cities: '/api/v2/olympics-athlete-events/city'
+            };
+            
+            // También necesitamos eventos, medallas y sexos desde los datos
+            const [yearsRes, teamsRes, sportsRes, seasonsRes, citiesRes] = await Promise.all([
+                fetch(endpoints.years),
+                fetch(endpoints.teams),
+                fetch(endpoints.sports),
+                fetch(endpoints.seasons),
+                fetch(endpoints.cities)
+            ]);
+            
+            filterValues.years = await yearsRes.json();
+            filterValues.teams = await teamsRes.json();
+            filterValues.sports = await sportsRes.json();
+            filterValues.seasons = await seasonsRes.json();
+            filterValues.cities = await citiesRes.json();
+            
+            // Obtener valores únicos de eventos, medallas y sexos desde los datos actuales
+            await updateFilterValuesFromData();
+        } catch (e) {
+            console.error('Error loading filter values:', e);
+        }
+    }
+    
+    // Actualizar eventos, medallas y sexos desde los datos actuales
+    async function updateFilterValuesFromData() {
+        try {
+            const res = await fetch(`/api/v2/olympics-athlete-events?limit=1000&t=${Date.now()}`);
+            const data = await res.json();
+            const allData = data.data || [];
+            
+            // Extraer valores únicos
+            const events = [...new Set(allData.map(a => a.event).filter(Boolean))];
+            const medals = [...new Set(allData.map(a => a.medal).filter(Boolean))];
+            const sexes = [...new Set(allData.map(a => a.sex).filter(Boolean))];
+            
+            filterValues.events = events.sort();
+            filterValues.medals = medals.sort();
+            filterValues.sexes = sexes.sort();
+        } catch (e) {
+            console.error('Error updating filter values:', e);
+        }
+    }
+
+    // Aplicar filtro por campo seleccionado
+    async function applyFieldFilter(field, value) {
+        if (!value) {
+            // Si no hay valor, limpiar filtro
+            activeFieldFilter = null;
+            activeFilterValue = null;
+            getAthletes(1);
+            return;
+        }
+        
+        activeFieldFilter = field;
+        activeFilterValue = value;
+        
+        // Construir query con el filtro
+        const params = new URLSearchParams();
+        params.append(field, value);
+        
+        searching = true;
+        searchMode = true;
+        searchResults = null;
+        
+        try {
+            const res = await fetch(`/api/v2/olympics-athlete-events?${params.toString()}&t=${Date.now()}`);
+            const data = await res.json();
+            searchResults = data.data || (Array.isArray(data) ? data : [data]);
+            
+            if (searchResults.length === 0) {
+                searchError = `No se encontraron resultados para ${field}: ${value}`;
+            } else {
+                successMessage = `Mostrando ${searchResults.length} resultado(s) para ${field}: ${value}`;
+            }
+        } catch (e) {
+            searchError = 'Error al aplicar filtro.';
+        } finally {
+            searching = false;
+            clearMessages();
+        }
+    }
+    
+    // Limpiar filtro activo
+    function clearFieldFilter() {
+        activeFieldFilter = null;
+        activeFilterValue = null;
+        searchMode = false;
+        searchResults = null;
+        searchError = null;
+        getAthletes(1);
+    }
+
+    // Búsqueda avanzada
     async function advancedSearch() {
-        // Construir query string con todos los filtros no vacíos
         const params = new URLSearchParams();
         
         for (const [key, value] of Object.entries(searchFilters)) {
-            if (value && value.trim() !== '') {
-                params.append(key, value.trim());
+            if (value && value.toString().trim() !== '') {
+                params.append(key, value.toString().trim());
             }
         }
         
@@ -134,6 +255,8 @@
         searchError = null;
         searchResults = null;
         searchMode = true;
+        activeFieldFilter = null;
+        activeFilterValue = null;
         
         try {
             const res = await fetch(`/api/v2/olympics-athlete-events?${params.toString()}&t=${Date.now()}`);
@@ -141,6 +264,7 @@
             if (res.status === 404) {
                 searchError = 'No se encontraron resultados con los criterios especificados.';
                 searchResults = [];
+                searching = false;
                 return;
             }
             
@@ -149,15 +273,7 @@
             }
             
             const data = await res.json();
-            
-            // Verificar si la respuesta es paginada o directa
-            if (data.data) {
-                searchResults = data.data;
-            } else if (Array.isArray(data)) {
-                searchResults = data;
-            } else {
-                searchResults = [data];
-            }
+            searchResults = data.data || (Array.isArray(data) ? data : [data]);
             
             if (searchResults.length === 0) {
                 searchError = 'No se encontraron resultados con los criterios especificados.';
@@ -178,6 +294,8 @@
         searchFilters = {
             name: '',
             year: '',
+            from: '',
+            to: '',
             team: '',
             sport: '',
             event: '',
@@ -189,6 +307,8 @@
         searchResults = null;
         searchError = null;
         searchMode = false;
+        activeFieldFilter = null;
+        activeFilterValue = null;
         getAthletes(1);
     }
 
@@ -208,6 +328,7 @@
             }
             
             await getAthletes(1);
+            await loadFilterValues();
             successMessage = 'Se han cargado 15 atletas de ejemplo correctamente.';
         } catch (e) {
             // @ts-ignore
@@ -245,6 +366,7 @@
             if (!res.ok) throw new Error('Error al guardar');
             
             await getAthletes(1);
+            await loadFilterValues();
             showCreateForm = false;
             resetForm();
             successMessage = `El atleta "${formData.name}" ha sido añadido correctamente.`;
@@ -291,6 +413,7 @@
             if (!res.ok) throw new Error('Error al guardar los cambios');
             
             await getAthletes(1);
+            await loadFilterValues();
             editingAthlete = null;
             showCreateForm = false;
             resetForm();
@@ -318,6 +441,7 @@
             if (!res.ok) throw new Error('Error al eliminar');
             
             await getAthletes(1);
+            await loadFilterValues();
             showDeleteModal = false;
             deleteTarget = null;
             successMessage = `El atleta "${name}" (${year}) ha sido eliminado correctamente.`;
@@ -339,6 +463,7 @@
             if (!res.ok) throw new Error('Error al eliminar todos');
             
             await getAthletes(1);
+            await loadFilterValues();
             successMessage = 'Todos los atletas han sido eliminados correctamente.';
         } catch (e) {
             alert('No se pudieron eliminar todos los atletas.');
@@ -361,7 +486,14 @@
         showCreateForm = true;
     }
 
-    getAthletes(1);
+    onMount(async () => {
+        await getAthletes(1);
+        await loadFilterValues();
+        
+        if (athletes.length === 0) {
+            await loadSampleData();
+        }
+    });
 </script>
 
 <svelte:head>
@@ -414,6 +546,52 @@
     }
     .msg-success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
     .msg-error { background: #fee2e2; color: #b91c1c; border: 1px solid #dc2626; }
+
+    /* Estilos para filtros por campo */
+    .field-filters {
+        background: var(--blue-50);
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--blue-200);
+    }
+
+    .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .filter-group label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--blue-700);
+        margin-bottom: 0.2rem;
+    }
+
+    .filter-group select {
+        width: 100%;
+        padding: 0.4rem;
+        border: 1px solid var(--blue-200);
+        border-radius: 6px;
+        background: white;
+    }
+
+    .active-filter-badge {
+        display: inline-block;
+        background: var(--blue-600);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+    }
 
     .search-box {
         background: var(--blue-50);
@@ -566,16 +744,125 @@
     {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
     {#if error}<div class="msg-error">{error}</div>{/if}
 
+    <!-- Filtros por campo -->
+    <div class="field-filters">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <h3 style="margin: 0; color: var(--blue-700); font-size: 1rem;">🔍 Filtrar por campo</h3>
+            {#if activeFieldFilter}
+                <button onclick={clearFieldFilter} class="btn-gray" style="font-size: 0.8rem;">🗑️ Limpiar filtro</button>
+            {/if}
+        </div>
+        <!-- svelte-ignore a11y_label_has_associated_control -->
+        <div class="filters-row">
+            <div class="filter-group">
+        
+                <label>Año</label>
+                <select onchange={(e) => applyFieldFilter('year', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    {#each filterValues.years as year}
+                        <option value={year} selected={activeFieldFilter === 'year' && activeFilterValue == year}>{year}</option>
+                    {/each}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>País</label>
+                <select onchange={(e) => applyFieldFilter('team', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    {#each filterValues.teams as team}
+                        <option value={team} selected={activeFieldFilter === 'team' && activeFilterValue === team}>{team}</option>
+                    {/each}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Deporte</label>
+                <select onchange={(e) => applyFieldFilter('sport', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    {#each filterValues.sports as sport}
+                        <option value={sport} selected={activeFieldFilter === 'sport' && activeFilterValue === sport}>{sport}</option>
+                    {/each}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Evento</label>
+                <select onchange={(e) => applyFieldFilter('event', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    {#each filterValues.events as event}
+                        <option value={event} selected={activeFieldFilter === 'event' && activeFilterValue === event}>{event}</option>
+                    {/each}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Temporada</label>
+                <select onchange={(e) => applyFieldFilter('season', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    <option value="Summer" selected={activeFieldFilter === 'season' && activeFilterValue === 'Summer'}>Verano</option>
+                    <option value="Winter" selected={activeFieldFilter === 'season' && activeFilterValue === 'Winter'}>Invierno</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Medalla</label>
+                <select onchange={(e) => applyFieldFilter('medal', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    {#each filterValues.medals as medal}
+                        <option value={medal} selected={activeFieldFilter === 'medal' && activeFilterValue === medal}>
+                            {medal === 'Gold' ? '🥇 Oro' : medal === 'Silver' ? '🥈 Plata' : medal === 'Bronze' ? '🥉 Bronce' : medal}
+                        </option>
+                    {/each}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Sexo</label>
+                <select onchange={(e) => applyFieldFilter('sex', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    <option value="M" selected={activeFieldFilter === 'sex' && activeFilterValue === 'M'}>Masculino</option>
+                    <option value="F" selected={activeFieldFilter === 'sex' && activeFilterValue === 'F'}>Femenino</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Ciudad</label>
+                <select onchange={(e) => applyFieldFilter('city', e.target.value)}>
+                    <option value="">Nada seleccionado</option>
+                    {#each filterValues.cities as city}
+                        <option value={city} selected={activeFieldFilter === 'city' && activeFilterValue === city}>{city}</option>
+                    {/each}
+                </select>
+            </div>
+        </div>
+        
+        {#if activeFieldFilter}
+            <div style="margin-top: 0.8rem; font-size: 0.85rem;">
+                <span class="active-filter-badge">
+                    Filtro activo: {activeFieldFilter === 'team' ? 'País' : activeFieldFilter === 'sport' ? 'Deporte' : activeFieldFilter === 'season' ? 'Temporada' : activeFieldFilter === 'medal' ? 'Medalla' : activeFieldFilter === 'sex' ? 'Sexo' : activeFieldFilter} = {activeFilterValue}
+                </span>
+            </div>
+        {/if}
+    </div>
+
     <div class="search-box">
-        <h3 style="margin-top: 0; color: var(--blue-700);"> Búsqueda avanzada</h3>
+        <h3 style="margin-top: 0; color: var(--blue-700);">🔍 Búsqueda avanzada</h3>
         <div class="search-grid">
             <div>
                 <label for="searchName">Nombre</label>
                 <input id="searchName" type="text" bind:value={searchFilters.name} placeholder="Ej: A Dijiang">
             </div>
             <div>
-                <label for="searchYear">Año</label>
+                <label for="searchYear">Año exacto</label>
                 <input id="searchYear" type="number" bind:value={searchFilters.year} placeholder="Ej: 1992">
+            </div>
+            <div>
+                <label for="searchFrom">📅 Desde año</label>
+                <input id="searchFrom" type="number" bind:value={searchFilters.from} placeholder="Ej: 2000">
+            </div>
+            <div>
+                <label for="searchTo">📅 Hasta año</label>
+                <input id="searchTo" type="number" bind:value={searchFilters.to} placeholder="Ej: 2017">
             </div>
             <div>
                 <label for="searchTeam">País</label>
@@ -622,16 +909,16 @@
         </div>
         <div class="search-actions">
             <button onclick={advancedSearch} disabled={searching} class="btn-blue">
-                {searching ? 'Buscando...' : 'Buscar'}
+                {searching ? 'Buscando...' : '🔍 Buscar'}
             </button>
-            <button onclick={clearSearch} class="btn-gray">Limpiar búsqueda</button>
+            <button onclick={clearSearch} class="btn-gray">🗑️ Limpiar búsqueda</button>
         </div>
         
         {#if searchError}<div class="msg-error" style="margin-top: 1rem;">{searchError}</div>{/if}
         
         {#if searchResults !== null && searchResults.length > 0}
             <div style="margin-top: 1.5rem; border-top: 2px solid var(--blue-200); padding-top: 1rem;">
-                <h4 style="color: var(--blue-700);">Resultados de búsqueda ({searchResults.length}):</h4>
+                <h4 style="color: var(--blue-700);">📋 Resultados ({searchResults.length}):</h4>
                 {#each searchResults as athlete}
                     <div class="athlete-card" style="margin: 0.5rem 0; padding: 0.8rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -646,9 +933,9 @@
                                 </div>
                             </div>
                             <div style="display: flex; gap: 0.3rem;">
-                                <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Editar</button>
+                                <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">✏️ Editar</button>
                                 <button onclick={() => { deleteTarget = { name: athlete.name, year: athlete.year }; showDeleteModal = true; }} 
-                                        class="btn-red" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Borrar</button>
+                                        class="btn-red" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">🗑️ Borrar</button>
                             </div>
                         </div>
                     </div>
@@ -660,10 +947,7 @@
     <div class="btn-group">
         <button onclick={loadSampleData} disabled={loading} class="btn-green">Cargar datos ejemplo</button>
         <button onclick={() => { resetForm(); showCreateForm = true; }} class="btn-blue">Añadir nuevo atleta</button>
-        <button onclick={() => getAthletes(currentPage)} disabled={loading} class="btn-gray">
-            {loading ? 'Cargando...' : ' Actualizar lista'}
-        </button>
-        <button onclick={deleteAllAthletes} class="btn-red"> Eliminar todos</button>
+        <button onclick={deleteAllAthletes} class="btn-red">Eliminar todos</button>
     </div>
 
     {#if !searchMode && athletes.length > 0}
@@ -691,7 +975,7 @@
     {#if showCreateForm || editingAthlete}
         <div class="modal">
             <div class="modal-content">
-                <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? 'Editar atleta' : '➕ Nuevo atleta'}</h2>
+                <h2 style="color: var(--blue-700); margin-top: 0;">{editingAthlete ? '✏️ Editar atleta' : '➕ Nuevo atleta'}</h2>
                 <div class="grid-2">
                     <div><label for="formName">Nombre *</label><input id="formName" type="text" bind:value={formData.name} disabled={editingAthlete !== null}></div>
                     <div><label for="formSex">Sexo</label><select id="formSex" bind:value={formData.sex}><option value="M">M</option><option value="F">F</option></select></div>
@@ -746,9 +1030,9 @@
                             <p class="detail-item"><span class="detail-label">Deporte:</span> {athlete.sport}</p>
                             <p class="detail-item"><span class="detail-label">Evento:</span> {athlete.event}</p>
                             <p class="detail-item"><span class="detail-label">Medalla:</span> {
-                                athlete.medal === 'Gold' ? ' Oro' : 
-                                athlete.medal === 'Silver' ? ' Plata' : 
-                                athlete.medal === 'Bronze' ? 'Bronce' : 
+                                athlete.medal === 'Gold' ? '🥇 Oro' : 
+                                athlete.medal === 'Silver' ? '🥈 Plata' : 
+                                athlete.medal === 'Bronze' ? '🥉 Bronce' : 
                                 athlete.medal ?? 'Ninguna'
                             }</p>
                         </div>
@@ -756,7 +1040,7 @@
                     <div style="display: flex; gap: 0.3rem; margin-left: 1rem;">
                         <button onclick={() => startEditing(athlete)} class="btn-orange" style="padding: 0.3rem 0.8rem;">✏️ Editar</button>
                         <button onclick={() => { deleteTarget = { name: athlete.name, year: athlete.year }; showDeleteModal = true; }} 
-                                class="btn-red" style="padding: 0.3rem 0.8rem;">Borrar</button>
+                                class="btn-red" style="padding: 0.3rem 0.8rem;">🗑️ Borrar</button>
                     </div>
                 </div>
             </div>
@@ -772,18 +1056,18 @@
 
         <hr>
         <div class="footer-links">
-            <a href="/"> Inicio</a>
-            <a href="/about">Acerca de</a>
-            <a href="/api/v2/olympics-athlete-events/docs" target="_blank"> Docs v2</a>
+            <a href="/">🏠 Inicio</a>
+            <a href="/about">📖 Acerca de</a>
+            <a href="/api/v2/olympics-athlete-events/docs" target="_blank">📚 Docs v2</a>
         </div>
     {:else if !loading && !searchMode}
-        <p class="text-center text-muted" style="padding: 2rem;"> No hay atletas. Carga datos de ejemplo o añade uno nuevo.</p>
+        <p class="text-center text-muted" style="padding: 2rem;">📭 No hay atletas. Carga datos de ejemplo o añade uno nuevo.</p>
     {/if}
 
     {#if showDeleteModal && deleteTarget}
         <div class="modal">
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
-                <h3 style="color: #dc2626; margin-top: 0;"> Confirmar eliminación</h3>
+                <h3 style="color: #dc2626; margin-top: 0;">⚠️ Confirmar eliminación</h3>
                 <p>¿Estás seguro de que quieres eliminar a <strong>{deleteTarget.name}</strong> ({deleteTarget.year})?</p>
                 <p style="color: #666; font-size: 0.9rem;">Esta acción no se puede deshacer.</p>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
