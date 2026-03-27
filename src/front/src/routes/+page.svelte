@@ -35,6 +35,7 @@
     <title>SOS2526-30 - Panel de Control</title>
 </svelte:head>
 
+
 <div class="cards-grid">
     <section class="card">
         <h2>Miembros del Equipo</h2>
