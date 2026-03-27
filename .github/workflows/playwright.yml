@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: lts/*
+        node-version: '20'
     - name: Install dependencies
       run: npm ci
     - name: Build frontend (optional)
@@ -21,6 +21,9 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run E2E tests
       run: npm run test:e2e
+      env:
+          CI: true
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
