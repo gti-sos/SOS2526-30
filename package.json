@@ -1,54 +1,54 @@
 {
-    "name": "sos2526-30",
-    "version": "1.0.1",
-    "description": "- **Team**\r   - David Real Pérez (https://github.com/davreaper)\r   - Mario Ramos Tuñón (https://github.com/MarioRt8558)\r   - Gonzalo García Gómez (https://github.com/gonzaloogrcia)\r   - Francisco Manuel García Patino (https://github.com/PaGarPa)",
-    "keywords": [],
-    "homepage": "https://github.com/gti-sos/SOS2526-30#readme",
-    "bugs": {
-        "url": "https://github.com/gti-sos/SOS2526-30/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/gti-sos/SOS2526-30.git"
-    },
-    "license": "ISC",
-    "author": "",
-    "type": "module",
-    "main": "index.js",
-    "dependencies": {
-        "@seald-io/nedb": "^4.1.2",
-        "@sveltejs/adapter-node": "^5.5.4",
-        "cool-ascii-faces": "^1.3.4",
-        "cors": "^2.8.6",
-        "csv-parse": "^6.1.0",
-        "csvtojson": "^2.0.14",
-        "express": "^5.2.1",
-        "nedb": "^1.8.0",
-        "nedb-promises": "^6.2.3",
-        "nodemon": "^3.1.14",
-        "nvm": "^0.0.4",
-        "path": "^0.12.7",
-        "request": "^2.88.2"
-    },
-    "devDependencies": {
-        "newman": "^6.2.2",
-        "start-server-and-test": "^2.1.5"
-    },
-    "scripts": {
-        
-        
-        "start": "node index.js",
-        "dev-front": "cd src/front && npm run dev -- --open",
-        "build": "cd src/front && npm install && npm run build",
-        "test-DRP": "newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
-        "test-MRT": "newman run test/api/esportsearnings-stats-v2.postman_collection.json -e test/api/local.esportsearnings-stats_environment.json",
-        "test-FMGP": "newman run test/api/v2.cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
-        "test-GGG": "newman run test/api/olympics-athlete-events-collection-v2.json -e test/api/olympics-athlete-events-local.json",
-        "test-esportsgrowth-stats": "start-server-and-test start http://localhost:3000 test-DRP",
-        "test-esportsearnings-stats": "start-server-and-test start http://localhost:3000 test-MRT",
-        "test-cheaters-stats": "start-server-and-test start http://localhost:3000 test-FMGP",
-        "test-olympics-athlete-events": "start-server-and-test start http://localhost:3000 test-GGG",
-        "test-all": "npm run test-DRP && npm run test-MRT && npm run test-FMGP && npm run test-GGG",
-        "test": "npm run build && start-server-and-test start http://localhost:3000 test-all"
-    }
+  "name": "sos2526-30",
+  "version": "1.0.1",
+  "description": "- **Team**\r   - David Real Pérez (https://github.com/davreaper)\r   - Mario Ramos Tuñón (https://github.com/MarioRt8558)\r   - Gonzalo García Gómez (https://github.com/gonzaloogrcia)\r   - Francisco Manuel García Patino (https://github.com/PaGarPa)",
+  "keywords": [],
+  "homepage": "https://github.com/gti-sos/SOS2526-30#readme",
+  "bugs": {
+    "url": "https://github.com/gti-sos/SOS2526-30/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gti-sos/SOS2526-30.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@seald-io/nedb": "^4.1.2",
+    "@sveltejs/adapter-node": "^5.5.4",
+    "cool-ascii-faces": "^1.3.4",
+    "cors": "^2.8.6",
+    "csv-parse": "^6.1.0",
+    "csvtojson": "^2.0.14",
+    "express": "^5.2.1",
+    "nedb": "^1.8.0",
+    "nedb-promises": "^6.2.3",
+    "nodemon": "^3.1.14",
+    "nvm": "^0.0.4",
+    "path": "^0.12.7",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0",
+    "newman": "^6.2.2",
+    "start-server-and-test": "^2.1.5"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev-front": "cd src/front && npm run dev -- --open",
+    "build": "cd src/front && npm install && npm run build",
+    "test-DRP": "newman run test/api/esportsgrowth-stats.json -e test/api/local.esportsgrowth-stats_environment.json",
+    "test-MRT": "newman run test/api/esportsearnings-stats-v2.postman_collection.json -e test/api/local.esportsearnings-stats_environment.json",
+    "test-FMGP": "newman run test/api/v2.cheaters-stats.postman_collection.json -e test/api/local.cheaters-stats_environment.json",
+    "test-GGG": "newman run test/api/olympics-athlete-events-collection-v2.json -e test/api/olympics-athlete-events-local.json",
+    "test-esportsgrowth-stats": "start-server-and-test start http://localhost:3000 test-DRP",
+    "test-esportsearnings-stats": "start-server-and-test start http://localhost:3000 test-MRT",
+    "test-cheaters-stats": "start-server-and-test start http://localhost:3000 test-FMGP",
+    "test-olympics-athlete-events": "start-server-and-test start http://localhost:3000 test-GGG",
+    "test-all": "npm run test-DRP && npm run test-MRT && npm run test-FMGP && npm run test-GGG",
+    "test": "npm run build && start-server-and-test start http://localhost:3000 test-all"
+  }
 }

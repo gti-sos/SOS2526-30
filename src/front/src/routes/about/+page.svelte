@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-    <title>SOS2526-30 - Sobre Nosotros</title>
+    <title>SOS2526-30 Sobre Nosotros</title>
 </svelte:head>
 
 <div class="container">
