@@ -571,20 +571,49 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // GET recurso exacto país/año
-    routerV2.get("/country/:country/year/:year", (req, res) => {
-        const countryParam = req.params.country;
-        const yearParam = parseInt(req.params.year);
+       // ============================================
+    // API v2 - COMPLETA (LECTURA Y ESCRITURA) - SIN CAMPO GAME
+    // ============================================
 
-        dbV2.findOne({ 
-            country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
-            year: yearParam
-        }, (err, recurso) => {
-            if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
-            if (!recurso) return res.status(404).json({ message: "Resource not found" });
-            res.status(200).json(recurso);
+    routerV2.use(removeIdMiddleware);
+
+    // Documentación v2
+    routerV2.get("/docs", (req, res) => {
+        res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5");
+    });
+
+    // Carga inicial v2 - INSERTA SI LA BD ESTÁ VACÍA
+    routerV2.get("/loadInitialData", (req, res) => {
+        dbV2.count({}, (err, count) => {
+            if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
+            
+            if (count === 0) {
+                // Insertar datos iniciales si no hay datos
+                const initialData = csvContent.slice(0, 15).map(item => ({
+                    year: item.year,
+                    country: item.country,
+                    cheater_report: item.cheater_reports,
+                    confirmed_ban: item.confirmed_bans,
+                    estimated_cheater: item.estimated_cheater_percentage,
+                    suspended_account: item.suspended_accounts,
+                    repeat_offender: item.repeat_offenders
+                }));
+                
+                dbV2.insert(initialData, (err, newDocs) => {
+                    if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
+                    res.status(200).json(newDocs);
+                });
+            } else {
+                // Si ya hay datos, devolverlos
+                dbV2.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
+                    if (err) return res.status(500).json({ error: "Error al recuperar datos" });
+                    res.status(200).json(data);
+                });
+            }
         });
     });
+
+
 
     // PUT recurso exacto
     routerV2.put("/country/:country/year/:year", (req, res) => {
