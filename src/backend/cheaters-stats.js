@@ -28,7 +28,6 @@ dbV1.ensureIndex({ fieldName: 'country' });
 dbV1.ensureIndex({ fieldName: 'year' });
 dbV2.ensureIndex({ fieldName: 'country' });
 dbV2.ensureIndex({ fieldName: 'year' });
-dbV2.ensureIndex({ fieldName: 'game' }); // Nuevo campo en v2
 
 // Cargar datos del CSV
 const cheaters_csv = path.join(__dirname, '..', '..', 'data', 'video_game_cheaters_dataset_en.csv');
@@ -39,7 +38,6 @@ try {
     csvContent = parse(fileContent, {
         columns: true,
         cast: (value, context) => {
-            // Usar los nombres correctos del CSV
             if (context.column === 'year') return Number(value);
             if (context.column === 'cheater_reports') return Number(value);
             if (context.column === 'confirmed_bans') return Number(value);
@@ -49,10 +47,76 @@ try {
             return value;
         }
     });
-    
+    console.log(`✅ CSV cargado correctamente: ${csvContent.length} registros`);
 } catch (err) {
     console.error("Error leyendo CSV:", err.message);
 }
+
+// ============================================
+// CARGA AUTOMÁTICA DE DATOS INICIALES v2
+// ============================================
+dbV2.count({}, (err, count) => {
+    if (err) {
+        console.error("Error al verificar base de datos v2:", err);
+        return;
+    }
+    
+    if (count === 0) {
+        console.log("📦 Base de datos v2 vacía. Cargando datos iniciales...");
+        const initialData = csvContent.slice(0, 15).map(item => ({
+            year: item.year,
+            country: item.country,
+            cheater_report: item.cheater_reports,
+            confirmed_ban: item.confirmed_bans,
+            estimated_cheater: item.estimated_cheater_percentage,
+            suspended_account: item.suspended_accounts,
+            repeat_offender: item.repeat_offenders
+        }));
+        
+        dbV2.insert(initialData, (err, newDocs) => {
+            if (err) {
+                console.error("Error al insertar datos iniciales v2:", err);
+            } else {
+                console.log(`✅ Datos iniciales de cheaters-stats v2 cargados automáticamente: ${newDocs.length} registros`);
+            }
+        });
+    } else {
+        console.log(`📊 Base de datos v2 ya contiene ${count} registros. No se cargan datos iniciales.`);
+    }
+});
+
+// ============================================
+// CARGA AUTOMÁTICA DE DATOS INICIALES v1
+// ============================================
+dbV1.count({}, (err, count) => {
+    if (err) {
+        console.error("Error al verificar base de datos v1:", err);
+        return;
+    }
+    
+    if (count === 0) {
+        console.log("📦 Base de datos v1 vacía. Cargando datos iniciales...");
+        const initialData = csvContent.slice(0, 15).map(item => ({
+            year: item.year,
+            country: item.country,
+            cheater_reports: item.cheater_reports,
+            confirmed_bans: item.confirmed_bans,
+            estimated_cheater_percentage: item.estimated_cheater_percentage,
+            suspended_accounts: item.suspended_accounts,
+            repeat_offenders: item.repeat_offenders
+        }));
+        
+        dbV1.insert(initialData, (err, newDocs) => {
+            if (err) {
+                console.error("Error al insertar datos iniciales v1:", err);
+            } else {
+                console.log(`✅ Datos iniciales de cheaters-stats v1 cargados automáticamente: ${newDocs.length} registros`);
+            }
+        });
+    } else {
+        console.log(`📊 Base de datos v1 ya contiene ${count} registros. No se cargan datos iniciales.`);
+    }
+});
 
 // ============================================
 // MIDDLEWARE COMÚN: Eliminar _id de respuestas
@@ -90,40 +154,12 @@ function loadBackendFMGP(app) {
     });
 
     // ============================================
-    // Carga inicial v1 - INSERTA SOLO SI LA BD ESTÁ VACÍA
+    // Carga inicial v1 - SOLO DEVUELVE DATOS (ya no inserta)
     // ============================================
     routerV1.get("/loadInitialData", (req, res) => {
-        dbV1.count({}, (err, count) => {
-            if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
-            
-            if (count === 0) {
-                // Mapear campos del CSV a los nombres que usa la API v1
-                const initialData = csvContent.slice(0, 15).map(item => ({
-                    year: item.year,
-                    country: item.country,
-                    cheater_reports: item.cheater_reports,
-                    confirmed_bans: item.confirmed_bans,
-                    estimated_cheater_percentage: item.estimated_cheater_percentage,
-                    suspended_accounts: item.suspended_accounts,
-                    repeat_offenders: item.repeat_offenders
-                }));
-                
-                dbV1.insert(initialData, (err, newDocs) => {
-                    if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
-                    console.log(`✅ Datos iniciales de cheaters-stats v1 cargados: ${newDocs.length} registros`);
-                    
-                    dbV1.find({}).sort({ country: 1, year: 1 }).exec((err, data) => {
-                        if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                        res.status(200).json(data);
-                    });
-                });
-            } else {
-                // Si ya hay datos, solo los devuelve
-                dbV1.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
-                    if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                    res.status(200).json(data);
-                });
-            }
+        dbV1.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
+            if (err) return res.status(500).json({ error: "Error al recuperar datos" });
+            res.status(200).json(data);
         });
     });
 
@@ -202,7 +238,7 @@ function loadBackendFMGP(app) {
     // PUT no permitido en v1 (colección)
     routerV1.put("/", (req, res) => {
         res.status(405).json({ 
-            message: "Method Not Allowed: v1 is read-only. Use PUT to /api/v2/cheaters-stats/country/:country/year/:year/game/:game to update resources",
+            message: "Method Not Allowed: v1 is read-only. Use PUT to /api/v2/cheaters-stats/country/:country/year/:year to update resources",
             hint: "This API version is immutable. Please use v2 for write operations."
         });
     });
@@ -210,7 +246,7 @@ function loadBackendFMGP(app) {
     // PUT no permitido en v1 (recurso exacto)
     routerV1.put("/:country/:year", (req, res) => {
         res.status(405).json({ 
-            message: "Method Not Allowed: v1 is read-only. Use PUT to /api/v2/cheaters-stats/country/:country/year/:year/game/:game to update resources",
+            message: "Method Not Allowed: v1 is read-only. Use PUT to /api/v2/cheaters-stats/country/:country/year/:year to update resources",
             hint: "This API version is immutable. Please use v2 for write operations."
         });
     });
@@ -226,7 +262,7 @@ function loadBackendFMGP(app) {
     // DELETE no permitido en v1 (recurso exacto)
     routerV1.delete("/:country/:year", (req, res) => {
         res.status(405).json({ 
-            message: "Method Not Allowed: v1 is read-only. Use DELETE to /api/v2/cheaters-stats/country/:country/year/:year/game/:game to delete specific resources",
+            message: "Method Not Allowed: v1 is read-only. Use DELETE to /api/v2/cheaters-stats/country/:country/year/:year to delete specific resources",
             hint: "This API version is immutable. Please use v2 for write operations."
         });
     });
@@ -314,7 +350,7 @@ function loadBackendFMGP(app) {
     });
 
     // ============================================
-    // API v2 - COMPLETA (LECTURA Y ESCRITURA)
+    // API v2 - COMPLETA (LECTURA Y ESCRITURA) - SIN CAMPO JUEGO
     // ============================================
     const routerV2 = express.Router();
     routerV2.use(removeIdMiddleware);
@@ -324,46 +360,18 @@ function loadBackendFMGP(app) {
         res.redirect("https://documenter.getpostman.com/view/52706289/2sBXihqYD5");
     });
 
-    // Carga inicial v2 (solo si la BD está vacía) - CORREGIDA CON MAPEO DE CAMPOS
+    // Carga inicial v2 - SOLO DEVUELVE DATOS (ya no inserta, la carga es automática al iniciar)
     routerV2.get("/loadInitialData", (req, res) => {
-        dbV2.count({}, (err, count) => {
-            if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
-            
-            if (count === 0) {
-                // Mapear campos del CSV a los nombres que usa la API v2
-                const initialData = csvContent.slice(0, 15).map(item => ({
-                    year: item.year,
-                    country: item.country,
-                    game: item.game || "Unknown",
-                    cheater_report: item.cheater_reports,
-                    confirmed_ban: item.confirmed_bans,
-                    estimated_cheater: item.estimated_cheater_percentage,
-                    suspended_account: item.suspended_accounts,
-                    repeat_offender: item.repeat_offenders
-                }));
-                
-                dbV2.insert(initialData, (err, newDocs) => {
-                    if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
-                    console.log(`✅ Datos iniciales de cheaters-stats v2 cargados: ${newDocs.length} registros`);
-                    
-                    dbV2.find({}).sort({ country: 1, year: 1 }).exec((err, data) => {
-                        if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                        res.status(200).json(data);
-                    });
-                });
-            } else {
-                dbV2.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
-                    if (err) return res.status(500).json({ error: "Error al recuperar datos" });
-                    res.status(200).json(data);
-                });
-            }
+        dbV2.find({}).sort({ country: 1, year: 1 }).limit(15).exec((err, data) => {
+            if (err) return res.status(500).json({ error: "Error al recuperar datos" });
+            res.status(200).json(data);
         });
     });
 
     // GET v2 - Búsqueda por TODOS los campos + paginación mejorada
     routerV2.get("/", (req, res) => {
         const { 
-            country, year, game, cheater_report, confirmed_ban, 
+            country, year, cheater_report, confirmed_ban, 
             estimated_cheater, suspended_account, repeat_offender,
             from, to,
             page = 1, limit = 20,
@@ -374,14 +382,11 @@ function loadBackendFMGP(app) {
         
         // Búsqueda por texto (case insensitive)
         if (country) query.country = { $regex: new RegExp(country, 'i') };
-        if (game) query.game = { $regex: new RegExp(game, 'i') };
         
         // Búsqueda por año: PRIORIZAR año exacto sobre rango
         if (year) {
-            // Si hay año exacto, se usa SOLO ese (ignora from/to)
             query.year = parseInt(year);
         } else if (from || to) {
-            // Solo si NO hay año exacto, se usa el rango
             query.year = {};
             if (from) query.year.$gte = parseInt(from);
             if (to) query.year.$lte = parseInt(to);
@@ -428,7 +433,7 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // POST v2 - Crear nuevo recurso (ESCRITURA)
+    // POST v2 - Crear nuevo recurso (ESCRITURA) - SIN CAMPO JUEGO
     routerV2.post("/", (req, res) => {
         const newData = req.body;
 
@@ -438,7 +443,7 @@ function loadBackendFMGP(app) {
         }
 
         // 2. Validar campos requeridos
-        const requiredFields = ['country', 'year', 'game', 'cheater_report', 'confirmed_ban'];
+        const requiredFields = ['country', 'year', 'cheater_report', 'confirmed_ban'];
         const missingFields = requiredFields.filter(field => !newData.hasOwnProperty(field));
         
         if (missingFields.length > 0) {
@@ -456,13 +461,10 @@ function loadBackendFMGP(app) {
         if (typeof newData.year !== 'number') {
             return res.status(400).json({ message: "Bad Request: 'year' must be a number" });
         }
-        if (typeof newData.game !== 'string') {
-            return res.status(400).json({ message: "Bad Request: 'game' must be a string" });
-        }
 
         // 4. Validar que no tenga campos extra
         const allowedFields = [
-            'country', 'year', 'game', 'cheater_report', 'confirmed_ban', 
+            'country', 'year', 'cheater_report', 'confirmed_ban', 
             'estimated_cheater', 'suspended_account', 'repeat_offender'
         ];
         const extraFields = Object.keys(newData).filter(key => !allowedFields.includes(key));
@@ -474,17 +476,16 @@ function loadBackendFMGP(app) {
             });
         }
 
-        // 5. Verificar si ya existe (país + año + juego como identificador compuesto)
+        // 5. Verificar si ya existe (país + año como identificador compuesto)
         dbV2.findOne({ 
             country: { $regex: new RegExp(`^${newData.country}$`, 'i') }, 
-            year: newData.year,
-            game: { $regex: new RegExp(`^${newData.game}$`, 'i') }
+            year: newData.year
         }, (err, existe) => {
             if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
             
             if (existe) {
                 return res.status(409).json({ 
-                    message: "Resource already exists for this country, year and game" 
+                    message: "Resource already exists for this country and year" 
                 });
             }
 
@@ -533,22 +534,14 @@ function loadBackendFMGP(app) {
         });
     });
 
-    routerV2.get("/games", (req, res) => {
-        dbV2.find({}).exec((err, data) => {
-            if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
-            const juegos = [...new Set(data.map(d => d.game).filter(Boolean))];
-            res.status(200).json(juegos.sort());
-        });
-    });
-
     // ============================================
-    // RUTAS CON IDENTIFICADOR COMPUESTO v2
+    // RUTAS CON IDENTIFICADOR COMPUESTO v2 - país/año
     // ============================================
     
     // Por país (con filtros)
     routerV2.get("/country/:country", (req, res) => {
         const countryParam = req.params.country;
-        const { from, to, game, page = 1, limit = 20 } = req.query;
+        const { from, to, page = 1, limit = 20 } = req.query;
         
         let query = { country: { $regex: new RegExp(`^${countryParam}$`, 'i') } };
         
@@ -556,10 +549,6 @@ function loadBackendFMGP(app) {
             query.year = {};
             if (from) query.year.$gte = parseInt(from);
             if (to) query.year.$lte = parseInt(to);
-        }
-        
-        if (game) {
-            query.game = { $regex: new RegExp(game, 'i') };
         }
 
         const pageNum = Math.max(1, parseInt(page) || 1);
@@ -593,50 +582,16 @@ function loadBackendFMGP(app) {
         });
     });
 
-    // Por país y año (puede devolver múltiples juegos)
+    // RECURSO EXACTO: país/año (identificador compuesto)
+    
+    // GET recurso exacto
     routerV2.get("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
-        const { game } = req.query;
-
-        let query = { 
-            country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
-            year: yearParam 
-        };
-        
-        if (game) {
-            query.game = { $regex: new RegExp(game, 'i') };
-        }
-
-        dbV2.find(query).sort({ game: 1 }).exec((err, data) => {
-            if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
-            if (data.length === 0) {
-                return res.status(404).json({ message: "No resources found for this country and year" });
-            }
-            
-            // Si es un solo juego y no hay filtro, devolver objeto
-            if (data.length === 1 && !game) {
-                res.status(200).json(data[0]);
-            } else {
-                res.status(200).json(data);
-            }
-        });
-    });
-
-    // ============================================
-    // RECURSO EXACTO: país/año/juego (identificador compuesto)
-    // ============================================
-    
-    // GET recurso exacto
-    routerV2.get("/country/:country/year/:year/game/:game", (req, res) => {
-        const countryParam = req.params.country;
-        const yearParam = parseInt(req.params.year);
-        const gameParam = req.params.game;
 
         dbV2.findOne({ 
             country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
-            year: yearParam,
-            game: { $regex: new RegExp(`^${gameParam}$`, 'i') }
+            year: yearParam
         }, (err, recurso) => {
             if (err) return res.status(500).json({ error: "Error al acceder a la base de datos" });
             if (!recurso) return res.status(404).json({ message: "Resource not found" });
@@ -645,10 +600,9 @@ function loadBackendFMGP(app) {
     });
 
     // PUT recurso exacto (reemplazo completo) - ESCRITURA
-    routerV2.put("/country/:country/year/:year/game/:game", (req, res) => {
+    routerV2.put("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
-        const gameParam = req.params.game;
         const body = req.body;
 
         if (!body) return res.status(400).json({ message: "Bad Request: No data provided" });
@@ -660,15 +614,11 @@ function loadBackendFMGP(app) {
         if (body.year && parseInt(body.year) !== yearParam) {
             return res.status(400).json({ message: "Bad Request: Year in URL and body do not match" });
         }
-        if (body.game && body.game.toLowerCase() !== gameParam.toLowerCase()) {
-            return res.status(400).json({ message: "Bad Request: Game in URL and body do not match" });
-        }
 
         dbV2.update(
             { 
                 country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
-                year: yearParam,
-                game: { $regex: new RegExp(`^${gameParam}$`, 'i') }
+                year: yearParam
             },
             { $set: body },
             { returnUpdatedDocs: true },
@@ -681,24 +631,22 @@ function loadBackendFMGP(app) {
     });
 
     // PATCH recurso exacto (actualización parcial) - ESCRITURA
-    routerV2.patch("/country/:country/year/:year/game/:game", (req, res) => {
+    routerV2.patch("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
-        const gameParam = req.params.game;
         const updates = req.body;
 
         // No permitir cambiar los identificadores
-        if (updates.country || updates.year || updates.game) {
+        if (updates.country || updates.year) {
             return res.status(400).json({ 
-                message: "Bad Request: Cannot update identifiers (country, year, game) via PATCH" 
+                message: "Bad Request: Cannot update identifiers (country, year) via PATCH" 
             });
         }
 
         dbV2.update(
             { 
                 country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
-                year: yearParam,
-                game: { $regex: new RegExp(`^${gameParam}$`, 'i') }
+                year: yearParam
             },
             { $set: updates },
             { returnUpdatedDocs: true },
@@ -711,16 +659,14 @@ function loadBackendFMGP(app) {
     });
 
     // DELETE recurso exacto - ESCRITURA
-    routerV2.delete("/country/:country/year/:year/game/:game", (req, res) => {
+    routerV2.delete("/country/:country/year/:year", (req, res) => {
         const countryParam = req.params.country;
         const yearParam = parseInt(req.params.year);
-        const gameParam = req.params.game;
 
         dbV2.remove(
             { 
                 country: { $regex: new RegExp(`^${countryParam}$`, 'i') }, 
-                year: yearParam,
-                game: { $regex: new RegExp(`^${gameParam}$`, 'i') }
+                year: yearParam
             },
             {},
             (err, numRemoved) => {
@@ -731,10 +677,8 @@ function loadBackendFMGP(app) {
         );
     });
 
-    // ============================================
     // POST no permitido en recurso exacto (debe devolver 405)
-    // ============================================
-    routerV2.post("/country/:country/year/:year/game/:game", (req, res) => {
+    routerV2.post("/country/:country/year/:year", (req, res) => {
         res.status(405).json({ 
             message: "Method Not Allowed: Cannot POST to a specific resource. Use POST to /api/v2/cheaters-stats to create new resources.",
             hint: "To create a new resource, send POST request to /api/v2/cheaters-stats"
@@ -747,7 +691,7 @@ function loadBackendFMGP(app) {
     app.use('/api/v1/cheaters-stats', routerV1);
     app.use('/api/v2/cheaters-stats', routerV2);
     
-
+ 
 }
 
 export default loadBackendFMGP;
