@@ -49,6 +49,7 @@
     "test-cheaters-stats": "start-server-and-test start http://localhost:3000 test-FMGP",
     "test-olympics-athlete-events": "start-server-and-test start http://localhost:3000 test-GGG",
     "test-all": "npm run test-DRP && npm run test-MRT && npm run test-FMGP && npm run test-GGG",
-    "test": "npm run build && start-server-and-test start http://localhost:3000 test-all"
+    "test": "npm run build && start-server-and-test start http://localhost:3000 test-all",
+    "test:e2e": "start-server-and-test start http://localhost:3000 'npx playwright test'"
   }
 }
