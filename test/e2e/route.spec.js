@@ -1,7 +1,7 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
 
-let app = 'http://localhost:3000';
+let app = 'sos2526-30.onrender.com';
 
 test('has title', async ({ page }) => {
   await page.goto(app);
