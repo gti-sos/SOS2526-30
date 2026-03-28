@@ -34,11 +34,13 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run build && npm start', // Compila el front y levanta el servidor
-    url: 'http://localhost:3000', // El puerto de tu backend
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // Le damos tiempo extra para compilar
-  },
+  /* * Como tu script de test (start-server-and-test) ya levanta el servidor 
+   * en el puerto 3000 antes de ejecutar playwright, dejamos esto comentado 
+   * para que no haya conflictos de puerto.
+   */
+  // webServer: {
+  //   command: 'npm start',
+  //   url: 'http://localhost:3000',
+  //   reuseExistingServer: true,
+  // },
 });
