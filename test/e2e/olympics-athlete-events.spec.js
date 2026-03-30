@@ -61,19 +61,25 @@ test('borrar un recurso concreto', async ({ page }) => {
   await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
   await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
   
-  const primerAtleta = page.locator('.athlete-card').first();
+  // Esperar a que aparezca al menos un atleta
+  await expect(page.locator('.athlete-card').first()).toBeVisible({ timeout: 10000 });
   
-  // Hacer clic en el botón "Borrar"
+  // Guardamos el nombre del primer atleta usando el texto del h3
+  const primerAtleta = page.locator('.athlete-card').first();
+  const nombreAtleta = await primerAtleta.locator('h3').textContent();
+  
+  // Le damos a Borrar en su tarjeta
   await primerAtleta.getByRole('button', { name: 'Borrar' }).click();
   
-  // Esperar a que aparezca el modal de confirmación
-  await expect(page.locator('.modal')).toBeVisible();
-  
-  // Hacer clic en "Sí, eliminar"
+  // Confirmamos en el modal
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   
   // Esperar a que se procese la eliminación
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1000);
+  
+  // Verificamos que el atleta ya no existe en la lista
+  // @ts-ignore
+  await expect(page.locator('.athlete-card', { hasText: nombreAtleta })).toHaveCount(0);
 });
 
 
@@ -82,28 +88,25 @@ test('editar un recurso concreto', async ({ page }) => {
   await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
   await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
   
+  // Guardar el nombre original del primer atleta
   const primerAtleta = page.locator('.athlete-card').first();
   const nombreOriginal = await primerAtleta.locator('h3').textContent();
   
-  // Hacer clic en el botón "Editar"
+  // Editar
   await primerAtleta.getByRole('button', { name: 'Editar' }).click();
-  
-  // Esperar a que aparezca el modal de edición
   await expect(page.locator('.modal')).toBeVisible();
-  
-  // Cambiar algún campo (ejemplo: modificar el deporte)
+
   await page.locator('#formSport').fill('Deporte Editado');
   await page.locator('#formEvent').fill('Evento Editado');
-  
-  // Guardar cambios
   await page.getByRole('button', { name: 'Guardar cambios' }).click();
-  
-  // Esperar a que se cierre el modal
   await page.waitForTimeout(1000);
   await expect(page.locator('.modal')).not.toBeVisible();
-  
-  // Verificar mensaje de éxito
   await expect(page.locator('.msg-success')).toBeVisible();
+  // @ts-ignore
+  const atletaEditado = page.locator('.athlete-card', { hasText: nombreOriginal });
+  await expect(atletaEditado).toBeVisible();
+  await expect(atletaEditado).toContainText('Deporte Editado');
+  await expect(atletaEditado).toContainText('Evento Editado');
 });
 
 test('buscar recursos por rango de años', async ({ page }) => {
