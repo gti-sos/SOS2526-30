@@ -1,7 +1,7 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
 
-let app = 'http://localhost:3000/';
+let app = 'http://localhost:3000';
 
 test('has title', async ({ page }) => {
   await page.goto(app);
@@ -14,125 +14,131 @@ test('prueba link', async ({ page }) => {
   await expect(page).toHaveTitle(/SOS2526-30 Sobre Nosotros/);
 });
 
-test('crear nuevo atleta en Olympics', async ({ page }) => {
-  await page.goto(`${app}olympics-athlete-events`);
-  await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
-  await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
-  await page.getByRole('button', { name: 'Añadir nuevo atleta' }).click();
-  await expect(page.locator('.modal')).toBeVisible();
-  await page.locator('#formName').fill('Prueba');
-  await page.locator('#formTeam').fill('Prueba');
-  await page.locator('#formYearEdit').fill('1');
-  await page.locator('#formSport').fill('P');
-  await page.locator('#formEvent').fill('P');
-  await page.getByRole('button', { name: 'Guardar' }).click();
-  await page.waitForTimeout(1000);
-  await expect(page.locator('.modal')).not.toBeVisible({ timeout: 10000 });
-  await expect(page.locator('.msg-success')).toBeVisible();
-  await expect(page.locator('.msg-success')).toContainText('ha sido añadido correctamente');
-  const nuevoAtleta = page.locator('.athlete-card', { hasText: 'Prueba' });
-  await expect(nuevoAtleta).toBeVisible();
-});
+test.describe.serial('Pruebas E2E - Olympics Athlete Events', () => {
 
-test('listar todos los recursos', async ({ page }) => {
-  await page.goto(`${app}olympics-athlete-events`);
-  await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
-  const atletas = page.locator('.athlete-card');
-  const cantidad = await atletas.count();
-  expect(cantidad).toBeGreaterThan(0);
-  await expect(atletas.first()).toBeVisible();
-});
-
-test('borrar todos los recursos', async ({ page }) => {
-  await page.goto(`${app}olympics-athlete-events`);
-  await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
-  await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
-  page.on('dialog', async dialog => {
-    expect(dialog.message()).toContain('¿Estás seguro');
-    await dialog.accept();
+  test('i. Crear un recurso', async ({ page }) => {
+    await page.goto(`${app}/olympics-athlete-events`);
+    
+    // Aceptamos el confirm (pop-up) si existe
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
+    
+    // Verificamos que se cargaron datos
+    await expect(page.locator('.athlete-card').first()).toBeVisible();
   });
-  await page.getByRole('button', { name: 'Eliminar todos' }).click();
-  await expect(page.locator('.msg-success')).toBeVisible();
-  await expect(page.locator('.msg-success')).toContainText('eliminados correctamente');
-});
 
-test('borrar un recurso concreto', async ({ page }) => {
-  await page.goto(`${app}olympics-athlete-events`);
-  await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
-  await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
+  test('ii. Listar todos los recursos (y cargar datos iniciales)', async ({ page }) => {
+    await page.goto(`${app}/olympics-athlete-events`);
+    
+    // Verificamos que hay atletas en la lista
+    await expect(page.locator('.athlete-card').first()).toBeVisible();
+    
+    const cantidad = await page.locator('.athlete-card').count();
+    expect(cantidad).toBeGreaterThan(0);
+  });
+
+  test('iii. Crear un nuevo atleta', async ({ page }) => {
+    await page.goto(`${app}/olympics-athlete-events`);
+    
+    // Abrimos el modal de crear
+    await page.getByRole('button', { name: 'Añadir nuevo atleta' }).click();
+    
+    // Rellenamos los campos obligatorios
+    await page.locator('#formName').fill('externo55');
+    await page.locator('#formTeam').fill('Testland');
+    await page.locator('#formYearEdit').fill('2099');
+    await page.locator('#formSport').fill('Test Sport');
+    await page.locator('#formEvent').fill('Test Event');
+    
+    // Guardamos
+    await page.getByRole('button', { name: 'Guardar' }).click();
+    
+    // Verificamos mensaje de éxito
+    await expect(page.locator('.msg-success')).toContainText('ha sido añadido correctamente');
+  });
+
+  test('iv. Buscar recursos utilizando la API', async ({ page }) => {
+    await page.goto(`${app}/olympics-athlete-events`);
+    
+    // Buscamos el recurso que acabamos de crear
+    await page.locator('#searchName').fill('externo55');
+    await page.getByRole('button', { name: 'Buscar' }).click();
+    
+    // Verificamos que aparece nuestro atleta
+    await expect(page.locator('.athlete-card')).toHaveCount(1);
+    await expect(page.locator('.athlete-card').first()).toContainText('externo55');
+  });
+
+  test('v. Editar recursos en una vista separada dinámica', async ({ page }) => {
+    await page.goto(`${app}/olympics-athlete-events`);
+    
+    // Buscamos nuestro atleta
+    await page.locator('#searchName').fill('externo55');
+    await page.getByRole('button', { name: 'Buscar' }).click();
+    
+    // Hacemos clic en el botón Editar
+    await page.getByRole('button', { name: 'Editar' }).first().click();
+    
+    // Comprobamos que aparece el modal de edición
+    await expect(page.locator('.modal')).toBeVisible();
+    
+    // Modificamos un campo
+    await page.locator('#formSport').fill('Deporte Editado');
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+    
+    // Esperamos a que se cierre el modal
+    await expect(page.locator('.modal')).not.toBeVisible();
+    
+    // Verificamos mensaje de éxito
+    await expect(page.locator('.msg-success')).toContainText('guardados correctamente');
+    
+    // Verificamos que el cambio se refleja
+    await page.locator('#searchName').fill('externo55');
+    await page.getByRole('button', { name: 'Buscar' }).click();
+    await expect(page.locator('.athlete-card').first()).toContainText('Deporte Editado');
+  });
+
+test('vi. Borrar un recurso concreto', async ({ page }) => {
+  await page.goto(`${app}/olympics-athlete-events`);
   
-  // Esperar a que aparezca al menos un atleta
-  await expect(page.locator('.athlete-card').first()).toBeVisible({ timeout: 10000 });
+  // Limpiar búsqueda previa
+  await page.getByRole('button', { name: 'Limpiar búsqueda' }).click();
   
-  // Guardamos el nombre del primer atleta usando el texto del h3
-  const primerAtleta = page.locator('.athlete-card').first();
-  const nombreAtleta = await primerAtleta.locator('h3').textContent();
+  // Buscamos nuestro recurso
+  await page.locator('#searchName').fill('externo55');
+  await page.getByRole('button', { name: 'Buscar' }).click();
+  await page.waitForTimeout(1000);
   
-  // Le damos a Borrar en su tarjeta
-  await primerAtleta.getByRole('button', { name: 'Borrar' }).click();
-  
-  // Confirmamos en el modal
+  // Verificamos que hay 1 resultado
+  const count = await page.locator('.athlete-card').count();
+  expect(count).toBe(1);
+
+  // Le damos a Borrar
+  await page.getByRole('button', { name: 'Borrar' }).first().click();
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   
-  // Esperar a que se procese la eliminación
-  await page.waitForTimeout(1000);
+  // Esperar a que se procese
+  await page.waitForTimeout(2000);
   
-  // Verificamos que el atleta ya no existe en la lista
-  // @ts-ignore
-  await expect(page.locator('.athlete-card', { hasText: nombreAtleta })).toHaveCount(0);
-});
-
-
-test('editar un recurso concreto', async ({ page }) => {
-  await page.goto(`${app}olympics-athlete-events`);
-  await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
-  await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
-  
-  // Guardar el nombre original del primer atleta
-  const primerAtleta = page.locator('.athlete-card').first();
-  const nombreOriginal = await primerAtleta.locator('h3').textContent();
-  
-  // Editar
-  await primerAtleta.getByRole('button', { name: 'Editar' }).click();
-  await expect(page.locator('.modal')).toBeVisible();
-
-  await page.locator('#formSport').fill('Deporte Editado');
-  await page.locator('#formEvent').fill('Evento Editado');
-  await page.getByRole('button', { name: 'Guardar cambios' }).click();
-  await page.waitForTimeout(1000);
-  await expect(page.locator('.modal')).not.toBeVisible();
-  await expect(page.locator('.msg-success')).toBeVisible();
-  // @ts-ignore
-  const atletaEditado = page.locator('.athlete-card', { hasText: nombreOriginal });
-  await expect(atletaEditado).toBeVisible();
-  await expect(atletaEditado).toContainText('Deporte Editado');
-  await expect(atletaEditado).toContainText('Evento Editado');
-});
-
-test('buscar recursos por rango de años', async ({ page }) => {
-  await page.goto(`${app}olympics-athlete-events`);
-  await page.getByRole('button', { name: 'Cargar datos ejemplo' }).click();
-  await expect(page.locator('#itemsPerPageTop')).toBeVisible({ timeout: 10000 });
-  
-  // Buscar por rango de años (from=1990&to=2000)
-  await page.locator('#searchFrom').fill('1990');
-  await page.locator('#searchTo').fill('2000');
-  
-  // Hacer clic en buscar
+  // Volvemos a buscar el mismo atleta
+  await page.locator('#searchName').fill('externo55');
   await page.getByRole('button', { name: 'Buscar' }).click();
+  await page.waitForTimeout(1000);
   
-  // Esperar resultados
-  await expect(page.locator('.msg-success')).toBeVisible({ timeout: 5000 });
+  // Verificamos que ya no aparece en los resultados de búsqueda
+  const afterCount = await page.locator('.athlete-card').count();
+  expect(afterCount).toBe(0);
+});
 
-  
-  // Verificar que los resultados están dentro del rango de años
-  const resultados = page.locator('.athlete-card');
-  const cantidad = await resultados.count();
-  
-  if (cantidad > 0) {
+  test('vii. Borrar todos los recursos', async ({ page }) => {
+    await page.goto(`${app}/olympics-athlete-events`);
+    
+    // Aceptamos la alerta de confirmación
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Eliminar todos' }).click();
+    
+    // Verificamos que aparece el mensaje de que no hay atletas
+    await expect(page.getByText('No hay atletas. Carga datos de ejemplo o añade uno nuevo.')).toBeVisible();
+  });
 
-    const primerResultado = resultados.first();
-    const texto = await primerResultado.textContent();
-    expect(texto).toMatch(/199[0-9]|2000/);
-  }
 });
