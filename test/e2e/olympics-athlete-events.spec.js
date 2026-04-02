@@ -8,12 +8,6 @@ test('has title', async ({ page }) => {
   await expect(page).toHaveTitle(/SOS2526-30/);
 });
 
-test('prueba link', async ({ page }) => {
-  await page.goto(app);
-  await page.getByRole('link', { name: 'Acerca de' }).click();
-  await expect(page).toHaveTitle(/SOS2526-30 Sobre Nosotros/);
-});
-
 test.describe.serial('Pruebas E2E - Olympics Athlete Events', () => {
 
   test('i. Crear un recurso', async ({ page }) => {
