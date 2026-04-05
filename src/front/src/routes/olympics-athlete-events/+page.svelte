@@ -26,20 +26,10 @@ import { onMount } from 'svelte';
     let searchError = $state(null);
     let searchResults = $state(null);
     
-    // Variables para filtros por campo
-    let filterValues = $state({
-        years: [],
-        teams: [],
-        sports: [],
-        events: [],
-        seasons: [],
-        medals: [],
-        sexes: [],
-        cities: []
-    });
-    
-    let activeFieldFilter = $state(null);
-    let activeFilterValue = $state(null);
+    // Variables para valores únicos
+    let campoSeleccionado = $state(null);
+    let valoresUnicos = $state([]);
+    let mostrarValoresUnicos = $state(false);
     
     // Campos de búsqueda
     let searchFilters = $state({
@@ -134,75 +124,31 @@ import { onMount } from 'svelte';
         getAthletes(1);
     }
 
-    // Cargar todos los valores únicos para cada campo
-    async function loadFilterValues() {
+    // Cargar valores únicos de un campo específico
+    async function cargarValoresUnicos(campo) {
+        campoSeleccionado = campo;
+        mostrarValoresUnicos = true;
         try {
-            const endpoints = {
-                years: '/api/v2/olympics-athlete-events/year',
-                teams: '/api/v2/olympics-athlete-events/team',
-                sports: '/api/v2/olympics-athlete-events/sport',
-                seasons: '/api/v2/olympics-athlete-events/season',
-                cities: '/api/v2/olympics-athlete-events/city'
-            };
-            
-            // También necesitamos eventos, medallas y sexos desde los datos
-            const [yearsRes, teamsRes, sportsRes, seasonsRes, citiesRes] = await Promise.all([
-                fetch(endpoints.years),
-                fetch(endpoints.teams),
-                fetch(endpoints.sports),
-                fetch(endpoints.seasons),
-                fetch(endpoints.cities)
-            ]);
-            
-            filterValues.years = await yearsRes.json();
-            filterValues.teams = await teamsRes.json();
-            filterValues.sports = await sportsRes.json();
-            filterValues.seasons = await seasonsRes.json();
-            filterValues.cities = await citiesRes.json();
-            
-            // Obtener valores únicos de eventos, medallas y sexos desde los datos actuales
-            await updateFilterValuesFromData();
+            const res = await fetch(`/api/v2/olympics-athlete-events/${campo}`);
+            if (res.ok) {
+                valoresUnicos = await res.json();
+                successMessage = `Valores únicos de ${campo} cargados (${valoresUnicos.length})`;
+            } else {
+                error = "Error al obtener valores únicos";
+            }
         } catch (e) {
-            console.error('Error loading filter values:', e);
+            error = "Error de conexión";
         }
-    }
-    
-    // Actualizar eventos, medallas y sexos desde los datos actuales
-    async function updateFilterValuesFromData() {
-        try {
-            const res = await fetch(`/api/v2/olympics-athlete-events?limit=1000&t=${Date.now()}`);
-            const data = await res.json();
-            const allData = data.data || [];
-            
-            // Extraer valores únicos
-            const events = [...new Set(allData.map(a => a.event).filter(Boolean))];
-            const medals = [...new Set(allData.map(a => a.medal).filter(Boolean))];
-            const sexes = [...new Set(allData.map(a => a.sex).filter(Boolean))];
-            
-            filterValues.events = events.sort();
-            filterValues.medals = medals.sort();
-            filterValues.sexes = sexes.sort();
-        } catch (e) {
-            console.error('Error updating filter values:', e);
-        }
+        clearMessages();
     }
 
-    // Aplicar filtro por campo seleccionado
-    async function applyFieldFilter(field, value) {
-        if (!value) {
-            // Si no hay valor, limpiar filtro
-            activeFieldFilter = null;
-            activeFilterValue = null;
-            getAthletes(1);
-            return;
-        }
-        
-        activeFieldFilter = field;
-        activeFilterValue = value;
+    // Aplicar un valor único como filtro
+    async function aplicarValorUnico(valor) {
+        mostrarValoresUnicos = false;
         
         // Construir query con el filtro
         const params = new URLSearchParams();
-        params.append(field, value);
+        params.append(campoSeleccionado, valor);
         
         searching = true;
         searchMode = true;
@@ -214,9 +160,9 @@ import { onMount } from 'svelte';
             searchResults = data.data || (Array.isArray(data) ? data : [data]);
             
             if (searchResults.length === 0) {
-                searchError = `No se encontraron resultados para ${field}: ${value}`;
+                searchError = `No se encontraron resultados para ${campoSeleccionado}: ${valor}`;
             } else {
-                successMessage = `Mostrando ${searchResults.length} resultado(s) para ${field}: ${value}`;
+                successMessage = `Mostrando ${searchResults.length} resultado(s) para ${campoSeleccionado}: ${valor}`;
             }
         } catch (e) {
             searchError = 'Error al aplicar filtro.';
@@ -225,15 +171,12 @@ import { onMount } from 'svelte';
             clearMessages();
         }
     }
-    
-    // Limpiar filtro activo
-    function clearFieldFilter() {
-        activeFieldFilter = null;
-        activeFilterValue = null;
-        searchMode = false;
-        searchResults = null;
-        searchError = null;
-        getAthletes(1);
+
+    // Cerrar la vista de valores únicos
+    function cerrarValoresUnicos() {
+        mostrarValoresUnicos = false;
+        campoSeleccionado = null;
+        valoresUnicos = [];
     }
 
     // Búsqueda avanzada
@@ -255,8 +198,6 @@ import { onMount } from 'svelte';
         searchError = null;
         searchResults = null;
         searchMode = true;
-        activeFieldFilter = null;
-        activeFilterValue = null;
         
         try {
             const res = await fetch(`/api/v2/olympics-athlete-events?${params.toString()}&t=${Date.now()}`);
@@ -307,8 +248,6 @@ import { onMount } from 'svelte';
         searchResults = null;
         searchError = null;
         searchMode = false;
-        activeFieldFilter = null;
-        activeFilterValue = null;
         getAthletes(1);
     }
 
@@ -328,7 +267,6 @@ import { onMount } from 'svelte';
             }
             
             await getAthletes(1);
-            await loadFilterValues();
             successMessage = 'Se han cargado 15 atletas de ejemplo correctamente.';
         } catch (e) {
             // @ts-ignore
@@ -366,7 +304,6 @@ import { onMount } from 'svelte';
             if (!res.ok) throw new Error('Error al guardar');
             
             await getAthletes(1);
-            await loadFilterValues();
             showCreateForm = false;
             resetForm();
             successMessage = `El atleta "${formData.name}" ha sido añadido correctamente.`;
@@ -413,7 +350,6 @@ import { onMount } from 'svelte';
             if (!res.ok) throw new Error('Error al guardar los cambios');
             
             await getAthletes(1);
-            await loadFilterValues();
             editingAthlete = null;
             showCreateForm = false;
             resetForm();
@@ -441,7 +377,6 @@ import { onMount } from 'svelte';
             if (!res.ok) throw new Error('Error al eliminar');
             
             await getAthletes(1);
-            await loadFilterValues();
             showDeleteModal = false;
             deleteTarget = null;
             successMessage = `El atleta "${name}" (${year}) ha sido eliminado correctamente.`;
@@ -463,7 +398,6 @@ import { onMount } from 'svelte';
             if (!res.ok) throw new Error('Error al eliminar todos');
             
             await getAthletes(1);
-            await loadFilterValues();
             successMessage = 'Todos los atletas han sido eliminados correctamente.';
         } catch (e) {
             alert('No se pudieron eliminar todos los atletas.');
@@ -488,7 +422,6 @@ import { onMount } from 'svelte';
 
     onMount(async () => {
         await getAthletes(1);
-        await loadFilterValues();
         
         if (athletes.length === 0) {
             await loadSampleData();
@@ -547,50 +480,12 @@ import { onMount } from 'svelte';
     .msg-success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
     .msg-error { background: #fee2e2; color: #b91c1c; border: 1px solid #dc2626; }
 
-    /* Estilos para filtros por campo */
-    .field-filters {
+    .unique-values-buttons {
         background: var(--blue-50);
         padding: 1rem 1.5rem;
         border-radius: 12px;
         margin-bottom: 2rem;
         border: 1px solid var(--blue-200);
-    }
-
-    .filters-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: flex-end;
-    }
-
-    .filter-group {
-        flex: 1;
-        min-width: 150px;
-    }
-
-    .filter-group label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--blue-700);
-        margin-bottom: 0.2rem;
-    }
-
-    .filter-group select {
-        width: 100%;
-        padding: 0.4rem;
-        border: 1px solid var(--blue-200);
-        border-radius: 6px;
-        background: white;
-    }
-
-    .active-filter-badge {
-        display: inline-block;
-        background: var(--blue-600);
-        color: white;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-left: 0.5rem;
     }
 
     .search-box {
@@ -744,105 +639,19 @@ import { onMount } from 'svelte';
     {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
     {#if error}<div class="msg-error">{error}</div>{/if}
 
-    <!-- Filtros por campo -->
-    <div class="field-filters">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-            <h3 style="margin: 0; color: var(--blue-700); font-size: 1rem;">🔍 Filtrar por campo</h3>
-            {#if activeFieldFilter}
-                <button onclick={clearFieldFilter} class="btn-gray" style="font-size: 0.8rem;">🗑️ Limpiar filtro</button>
-            {/if}
+    <!-- Sección de valores únicos -->
+    <div class="unique-values-buttons">
+        <h3 style="margin: 0 0 1rem 0; color: var(--blue-700);">📋 Ver valores únicos por campo</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <button onclick={() => cargarValoresUnicos('year')} class="btn-gray">Años</button>
+            <button onclick={() => cargarValoresUnicos('team')} class="btn-gray">Países</button>
+            <button onclick={() => cargarValoresUnicos('sport')} class="btn-gray">Deportes</button>
+            <button onclick={() => cargarValoresUnicos('event')} class="btn-gray">Eventos</button>
+            <button onclick={() => cargarValoresUnicos('season')} class="btn-gray">Temporadas</button>
+            <button onclick={() => cargarValoresUnicos('medal')} class="btn-gray">Medallas</button>
+            <button onclick={() => cargarValoresUnicos('sex')} class="btn-gray">Sexos</button>
+            <button onclick={() => cargarValoresUnicos('city')} class="btn-gray">Ciudades</button>
         </div>
-        <!-- svelte-ignore a11y_label_has_associated_control -->
-        <div class="filters-row">
-            <div class="filter-group">
-        
-                <label>Año</label>
-                <select onchange={(e) => applyFieldFilter('year', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    {#each filterValues.years as year}
-                        <option value={year} selected={activeFieldFilter === 'year' && activeFilterValue == year}>{year}</option>
-                    {/each}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>País</label>
-                <select onchange={(e) => applyFieldFilter('team', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    {#each filterValues.teams as team}
-                        <option value={team} selected={activeFieldFilter === 'team' && activeFilterValue === team}>{team}</option>
-                    {/each}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>Deporte</label>
-                <select onchange={(e) => applyFieldFilter('sport', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    {#each filterValues.sports as sport}
-                        <option value={sport} selected={activeFieldFilter === 'sport' && activeFilterValue === sport}>{sport}</option>
-                    {/each}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>Evento</label>
-                <select onchange={(e) => applyFieldFilter('event', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    {#each filterValues.events as event}
-                        <option value={event} selected={activeFieldFilter === 'event' && activeFilterValue === event}>{event}</option>
-                    {/each}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>Temporada</label>
-                <select onchange={(e) => applyFieldFilter('season', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    <option value="Summer" selected={activeFieldFilter === 'season' && activeFilterValue === 'Summer'}>Verano</option>
-                    <option value="Winter" selected={activeFieldFilter === 'season' && activeFilterValue === 'Winter'}>Invierno</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>Medalla</label>
-                <select onchange={(e) => applyFieldFilter('medal', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    {#each filterValues.medals as medal}
-                        <option value={medal} selected={activeFieldFilter === 'medal' && activeFilterValue === medal}>
-                            {medal === 'Gold' ? '🥇 Oro' : medal === 'Silver' ? '🥈 Plata' : medal === 'Bronze' ? '🥉 Bronce' : medal}
-                        </option>
-                    {/each}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>Sexo</label>
-                <select onchange={(e) => applyFieldFilter('sex', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    <option value="M" selected={activeFieldFilter === 'sex' && activeFilterValue === 'M'}>Masculino</option>
-                    <option value="F" selected={activeFieldFilter === 'sex' && activeFilterValue === 'F'}>Femenino</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label>Ciudad</label>
-                <select onchange={(e) => applyFieldFilter('city', e.target.value)}>
-                    <option value="">Nada seleccionado</option>
-                    {#each filterValues.cities as city}
-                        <option value={city} selected={activeFieldFilter === 'city' && activeFilterValue === city}>{city}</option>
-                    {/each}
-                </select>
-            </div>
-        </div>
-        
-        {#if activeFieldFilter}
-            <div style="margin-top: 0.8rem; font-size: 0.85rem;">
-                <span class="active-filter-badge">
-                    Filtro activo: {activeFieldFilter === 'team' ? 'País' : activeFieldFilter === 'sport' ? 'Deporte' : activeFieldFilter === 'season' ? 'Temporada' : activeFieldFilter === 'medal' ? 'Medalla' : activeFieldFilter === 'sex' ? 'Sexo' : activeFieldFilter} = {activeFilterValue}
-                </span>
-            </div>
-        {/if}
     </div>
 
     <div class="search-box">
@@ -1073,6 +882,34 @@ import { onMount } from 'svelte';
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
                     <button onclick={() => { showDeleteModal = false; deleteTarget = null; }} class="btn-gray">Cancelar</button>
                     <button onclick={() => deleteAthlete(deleteTarget.name, deleteTarget.year)} class="btn-red">Sí, eliminar</button>
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    <!-- Modal para mostrar valores únicos -->
+    {#if mostrarValoresUnicos}
+        <div class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="color: var(--blue-700); margin: 0;">Valores únicos: {campoSeleccionado}</h3>
+                    <button onclick={cerrarValoresUnicos} class="btn-gray" style="padding: 0.2rem 0.5rem;">✗ Cerrar</button>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    {#if valoresUnicos.length > 0}
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            {#each valoresUnicos as valor}
+                                <button 
+                                    onclick={() => aplicarValorUnico(valor)} 
+                                    class="btn-blue" 
+                                    style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                    {valor}
+                                </button>
+                            {/each}
+                        </div>
+                    {:else}
+                        <p class="text-muted">No hay valores disponibles</p>
+                    {/if}
                 </div>
             </div>
         </div>

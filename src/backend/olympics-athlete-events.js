@@ -250,7 +250,7 @@ const routerV2 = express.Router();
 
 // Documentación v2
 routerV2.get("/docs", (req, res) => {
-    res.redirect("https://documenter.getpostman.com/view/52768258/2sBXihqYD4");
+    res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiqE95A");
 });
 
 // Carga inicial v2
