@@ -655,7 +655,7 @@ import { onMount } from 'svelte';
     </div>
 
     <div class="search-box">
-        <h3 style="margin-top: 0; color: var(--blue-700);">🔍 Búsqueda avanzada</h3>
+        <h3 style="margin-top: 0; color: var(--blue-700);">Búsqueda avanzada</h3>
         <div class="search-grid">
             <div>
                 <label for="searchName">Nombre</label>
