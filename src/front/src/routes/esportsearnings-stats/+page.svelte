@@ -201,16 +201,16 @@
     <div class="search-box">
         <h3 style="margin-top:0; color:var(--p-700);">Búsqueda Avanzada</h3>
         <div class="search-grid">
-            <div><label>Juego</label><input type="text" bind:value={searchGame} placeholder="Ej: Dota 2"></div>
-            <div><label>Género</label><input type="text" bind:value={searchGenre} placeholder="Ej: MOBA"></div>
-            <div><label>País</label><input type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
-            <div><label>Año (Exacto)</label><input type="number" bind:value={searchYear}></div>
-            <div><label>Desde Año</label><input type="number" bind:value={searchFrom}></div>
-            <div><label>Hasta Año</label><input type="number" bind:value={searchTo}></div>
-            <div><label>Dinero Total</label><input type="number" step="0.01" bind:value={searchMoney}></div>
-            <div><label>Ganancias País</label><input type="number" step="0.01" bind:value={searchTopEarnings}></div>
-            <div><label>Nº Torneos</label><input type="number" bind:value={searchTournaments}></div>
-            <div><label>Nº Jugadores</label><input type="number" bind:value={searchPlayers}></div>
+            <div><label for="s_game">Juego</label><input id="s_game" type="text" bind:value={searchGame} placeholder="Ej: Dota 2"></div>
+            <div><label for="s_genre">Género</label><input id="s_genre" type="text" bind:value={searchGenre} placeholder="Ej: MOBA"></div>
+            <div><label for="s_country">País</label><input id="s_country" type="text" bind:value={searchCountry} placeholder="Ej: Spain"></div>
+            <div><label for="s_year">Año (Exacto)</label><input id="s_year" type="number" bind:value={searchYear}></div>
+            <div><label for="s_from">Desde Año</label><input id="s_from" type="number" bind:value={searchFrom}></div>
+            <div><label for="s_to">Hasta Año</label><input id="s_to" type="number" bind:value={searchTo}></div>
+            <div><label for="s_money">Dinero Total</label><input id="s_money" type="number" step="0.01" bind:value={searchMoney}></div>
+            <div><label for="s_top">Ganancias País</label><input id="s_top" type="number" step="0.01" bind:value={searchTopEarnings}></div>
+            <div><label for="s_tournaments">Nº Torneos</label><input id="s_tournaments" type="number" bind:value={searchTournaments}></div>
+            <div><label for="s_players">Nº Jugadores</label><input id="s_players" type="number" bind:value={searchPlayers}></div>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
             <button class="btn-gray" onclick={clearSearch}>Limpiar Filtros</button>
@@ -233,8 +233,8 @@
                 <button class="btn-gray" disabled={currentPage === totalPages} onclick={() => currentPage++}>Siguiente</button>
             </div>
             <div>
-                <label style="display:inline; margin-right:0.5rem;">Mostrar:</label>
-                <select bind:value={itemsPerPage} onchange={() => currentPage = 1}>
+                <label for="s_items" style="display:inline; margin-right:0.5rem;">Mostrar:</label>
+                <select id="s_items" bind:value={itemsPerPage} onchange={() => currentPage = 1}>
                     <option value={5}>5</option>
                     <option value={10}>10</option>
                     <option value={50}>50</option>
@@ -272,14 +272,14 @@
             <div class="modal-content">
                 <h2 style="margin-top:0;">Nuevo Registro</h2>
                 <div class="search-grid">
-                    <div><label>Juego *</label><input type="text" bind:value={formData.game_name}></div>
-                    <div><label>Año *</label><input type="number" bind:value={formData.year}></div>
-                    <div><label>País *</label><input type="text" bind:value={formData.country}></div>
-                    <div><label>Género</label><input type="text" bind:value={formData.genre}></div>
-                    <div><label>Dinero Total ($)</label><input type="number" step="0.01" bind:value={formData.total_money}></div>
-                    <div><label>Torneos</label><input type="number" bind:value={formData.tournament_no}></div>
-                    <div><label>Jugadores</label><input type="number" bind:value={formData.player_no}></div>
-                    <div><label>Ganancias País ($)</label><input type="number" step="0.01" bind:value={formData.top_country_earnings}></div>
+                    <div><label for="c_game">Juego *</label><input id="c_game" type="text" bind:value={formData.game_name}></div>
+                    <div><label for="c_year">Año *</label><input id="c_year" type="number" bind:value={formData.year}></div>
+                    <div><label for="c_country">País *</label><input id="c_country" type="text" bind:value={formData.country}></div>
+                    <div><label for="c_genre">Género</label><input id="c_genre" type="text" bind:value={formData.genre}></div>
+                    <div><label for="c_money">Dinero Total ($)</label><input id="c_money" type="number" step="0.01" bind:value={formData.total_money}></div>
+                    <div><label for="c_tournaments">Torneos</label><input id="c_tournaments" type="number" bind:value={formData.tournament_no}></div>
+                    <div><label for="c_players">Jugadores</label><input id="c_players" type="number" bind:value={formData.player_no}></div>
+                    <div><label for="c_top">Ganancias País ($)</label><input id="c_top" type="number" step="0.01" bind:value={formData.top_country_earnings}></div>
                 </div>
                 <div style="margin-top: 1.5rem; text-align: right;">
                     <button class="btn-gray" onclick={() => { showCreateForm = false; resetForm(); }}>Cancelar</button>
