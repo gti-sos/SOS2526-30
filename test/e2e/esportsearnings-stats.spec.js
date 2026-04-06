@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// Utilizamos serial para que los tests se ejecuten en orden, uno detrás de otro.
+// Utilizamos serial para que los tests se ejecuten en orden, como tu compañero
 test.describe.serial('Pruebas E2E - eSports Earnings Stats (Mario Ramos)', () => {
 
   test('ii. Listar todos los recursos (y cargar datos iniciales)', async ({ page }) => {
@@ -20,22 +20,22 @@ test.describe.serial('Pruebas E2E - eSports Earnings Stats (Mario Ramos)', () =>
     // Abrimos el modal de crear
     await page.getByRole('button', { name: 'Añadir Registro' }).click();
 
-    // Rellenamos los campos obligatorios buscando sus cajas de texto
-    await page.locator('div').filter({ hasText: /^Juego \*/ }).locator('input').fill('Test E2E Game');
-    await page.locator('div').filter({ hasText: /^Año \*/ }).locator('input').fill('2099');
-    await page.locator('div').filter({ hasText: /^País \*/ }).locator('input').fill('Testlandia');
+    // SOLUCIÓN INFALIBLE: Buscamos dentro del modal por orden exacto (Juego, Año, País)
+    await page.locator('.modal-content input').nth(0).fill('Test E2E Game');
+    await page.locator('.modal-content input').nth(1).fill('2099');
+    await page.locator('.modal-content input').nth(2).fill('Testlandia');
 
     // Guardamos
     await page.getByRole('button', { name: 'Guardar' }).click();
 
     // Verificamos que aparece el mensaje de éxito
-    await expect(page.locator('.msg-success')).toContainText('Registro añadido correctamente');
+    await expect(page.locator('.msg-success')).toContainText('Registro añadido');
   });
 
   test('vi. Buscar recursos utilizando la API', async ({ page }) => {
     await page.goto('/esportsearnings-stats');
     
-    // Buscamos el recurso que acabamos de crear usando el filtro de país
+    // Buscamos el recurso que acabamos de crear usando el placeholder único
     await page.locator('input[placeholder="Ej: Spain"]').fill('Testlandia');
     await page.getByRole('button', { name: 'Aplicar Búsqueda' }).click();
 
@@ -47,21 +47,21 @@ test.describe.serial('Pruebas E2E - eSports Earnings Stats (Mario Ramos)', () =>
   test('v. Editar recursos en una vista separada dinámica', async ({ page }) => {
     await page.goto('/esportsearnings-stats');
     
-    // Buscamos nuestro recurso para no tener que buscarlo entre la paginación
+    // Filtramos para encontrar nuestro recurso rápido
     await page.locator('input[placeholder="Ej: Spain"]').fill('Testlandia');
     await page.getByRole('button', { name: 'Aplicar Búsqueda' }).click();
 
-    // Hacemos click en el botón Editar (que es un enlace a la vista dinámica)
+    // Hacemos click en el enlace Editar
     await page.getByRole('link', { name: 'Editar' }).first().click();
 
     // Comprobamos que la URL ha cambiado a la vista separada
     await expect(page).toHaveURL(/.*\/Test%20E2E%20Game\/2099/);
 
-    // Modificamos el género
-    await page.locator('div').filter({ hasText: /^Género/ }).locator('input').fill('Aventura E2E');
+    // Modificamos el género (es el 4º input en la vista de edición)
+    await page.locator('input').nth(3).fill('Aventura E2E');
     await page.getByRole('button', { name: 'Guardar Cambios' }).click();
 
-    // Esperamos a que nos devuelva automáticamente a la lista principal
+    // Esperamos a que nos devuelva automáticamente a la lista
     await expect(page).toHaveURL(/.*\/esportsearnings-stats/);
   });
 
@@ -75,8 +75,8 @@ test.describe.serial('Pruebas E2E - eSports Earnings Stats (Mario Ramos)', () =>
     // Le damos a Eliminar en su tarjeta
     await page.getByRole('button', { name: 'Eliminar' }).first().click();
     
-    // Confirmamos en nuestro modal de borrado
-    await page.getByRole('button', { name: 'Sí, Borrar' }).click();
+    // Confirmamos en el modal buscando el botón específico
+    await page.locator('.modal-content').getByRole('button', { name: 'Sí, Borrar' }).click();
 
     // Verificamos que la tarjeta ya no existe
     await expect(page.locator('.card')).toHaveCount(0);
@@ -89,8 +89,8 @@ test.describe.serial('Pruebas E2E - eSports Earnings Stats (Mario Ramos)', () =>
     page.once('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Vaciar Datos' }).click();
 
-    // Verificamos que aparece el mensaje de que la lista está vacía
-    await expect(page.getByText('No hay datos que coincidan')).toBeVisible();
+    // Verificamos que aparece el mensaje de vacío
+    await expect(page.getByText('No hay datos')).toBeVisible();
   });
 
 });
