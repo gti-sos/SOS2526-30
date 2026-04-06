@@ -125,13 +125,32 @@ import { onMount } from 'svelte';
     }
 
     // Cargar valores únicos de un campo específico
-    async function cargarValoresUnicos(campo) {
-        campoSeleccionado = campo;
-        mostrarValoresUnicos = true;
+    // Cargar valores únicos de un campo específico
+async function cargarValoresUnicos(campo) {
+    campoSeleccionado = campo;
+    mostrarValoresUnicos = true;
+    
+    // Para medal y sex, obtener desde los datos actuales
+    if (campo === 'medal' || campo === 'sex') {
         try {
-            const res = await fetch(`/api/v2/olympics-athlete-events/${campo}`);
+            // Obtener todos los datos (sin paginación)
+            const res = await fetch(`/api/v2/olympics-athlete-events?limit=1000&t=${Date.now()}`);
             if (res.ok) {
-                valoresUnicos = await res.json();
+                const data = await res.json();
+                const allData = data.data || [];
+                
+                // Extraer valores únicos
+                let valores = [...new Set(allData.map(item => item[campo]).filter(v => v && v !== ''))];
+                
+                // Ordenar
+                if (campo === 'medal') {
+                    const orden = ['Gold', 'Silver', 'Bronze', 'NA'];
+                    valores = valores.sort((a, b) => orden.indexOf(a) - orden.indexOf(b));
+                } else {
+                    valores = valores.sort();
+                }
+                
+                valoresUnicos = valores;
                 successMessage = `Valores únicos de ${campo} cargados (${valoresUnicos.length})`;
             } else {
                 error = "Error al obtener valores únicos";
@@ -140,7 +159,23 @@ import { onMount } from 'svelte';
             error = "Error de conexión";
         }
         clearMessages();
+        return;
     }
+    
+    // Para los demás campos, usar el endpoint de la API
+    try {
+        const res = await fetch(`/api/v2/olympics-athlete-events/${campo}`);
+        if (res.ok) {
+            valoresUnicos = await res.json();
+            successMessage = `Valores únicos de ${campo} cargados (${valoresUnicos.length})`;
+        } else {
+            error = "Error al obtener valores únicos";
+        }
+    } catch (e) {
+        error = "Error de conexión";
+    }
+    clearMessages();
+}
 
     // Aplicar un valor único como filtro
     async function aplicarValorUnico(valor) {
