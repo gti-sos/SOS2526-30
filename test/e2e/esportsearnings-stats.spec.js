@@ -22,10 +22,9 @@ test.describe.serial('Pruebas E2E - eSports Earnings Stats', () => {
     await page.getByRole('button', { name: 'Añadir Estadística' }).click();
 
     // Rellenamos los campos obligatorios
-    // NOTA: Revisa que estos IDs (#formCountry, #formYear) sean los mismos que tienes en tu HTML de earnings
     await page.locator('#formCountry').fill('Testland');
     await page.locator('#formYear').fill('2099');
-    await page.locator('#formEarnings').fill('50.5'); // Cambiado a formEarnings como ejemplo
+    await page.locator('#formEarnings').fill('50.5'); 
 
     // Guardamos
     await page.getByRole('button', { name: 'Guardar Registro' }).click();
@@ -56,4 +55,43 @@ test.describe.serial('Pruebas E2E - eSports Earnings Stats', () => {
     // Hacemos click en el botón Editar (que ahora es un enlace a la vista dinámica)
     await page.getByRole('link', { name: 'Editar' }).first().click();
 
-    // Comprobamos que la
+    // Comprobamos que la URL ha cambiado a la vista separada
+    await expect(page).toHaveURL(/.*\/Testland\/2099/);
+
+    // Modificamos un campo
+    await page.locator('#f_earnings').fill('99.9');
+    await page.getByRole('button', { name: 'Guardar Cambios' }).click();
+
+    // Esperamos a que nos devuelva automáticamente a la lista
+    await expect(page).toHaveURL(/.*\/esportsearnings-stats/);
+  });
+
+  test('iv. Borrar un recurso concreto', async ({ page }) => {
+    await page.goto('/esportsearnings-stats');
+    
+    // Buscamos nuestro recurso
+    await page.locator('#s_country').fill('Testland');
+    await page.getByRole('button', { name: 'Buscar' }).click();
+
+    // Le damos a Eliminar en su tarjeta
+    await page.getByRole('button', { name: 'Eliminar' }).first().click();
+    
+    // Confirmamos en nuestro modal rojo de borrado
+    await page.getByRole('button', { name: 'Sí, Borrar Dato' }).click();
+
+    // Verificamos que la tarjeta ya no existe (saldrá el mensaje de no hay datos)
+    await expect(page.locator('.card')).toHaveCount(0);
+  });
+
+  test('iii. Borrar todos los recursos', async ({ page }) => {
+    await page.goto('/esportsearnings-stats');
+
+    // Aceptamos la alerta de peligro del navegador
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Vaciar Base de Datos' }).click();
+
+    // Verificamos que aparece el mensaje de que está vacío
+    await expect(page.getByText('No hay datos para mostrar en este momento.')).toBeVisible();
+  });
+
+});
