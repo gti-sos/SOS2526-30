@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
     
-    // Obtenemos los parámetros dinámicos de la URL (Lo que pide la rúbrica)
+    // Obtenemos los parámetros dinámicos de la URL
     let game_name = $page.params.game_name;
     let year = $page.params.year;
 
@@ -21,7 +21,7 @@
     let error = $state(null);
     let successMessage = $state(null);
 
-    // Al entrar en la vista, cargamos los datos específicos de este juego y año (V2)
+    // Al entrar, cargamos los datos
     onMount(async () => {
         try {
             const res = await fetch(`/api/v2/esportsearnings-stats/${game_name}/${year}`);
@@ -36,7 +36,7 @@
         }
     });
 
-    // Guardar los cambios mediante PUT (V2)
+    // Guardar los cambios
     async function updateResource() {
         try {
             const dataToSend = {
@@ -58,7 +58,7 @@
 
             if (!res.ok) throw new Error('Error al actualizar');
             successMessage = '¡Registro actualizado con éxito!';
-            setTimeout(() => { window.location.href = '/esportsearnings-stats'; }, 1500); // Volver a la tabla
+            setTimeout(() => { window.location.href = '/esportsearnings-stats'; }, 1500);
         } catch (e) {
             alert('No se pudieron guardar los cambios.');
         }
@@ -93,15 +93,14 @@
         {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
 
         <div class="grid">
-            <div><label>Juego</label><input type="text" value={formData.game_name} disabled></div>
-            <div><label>Año</label><input type="number" value={formData.year} disabled></div>
-            
-            <div><label>País</label><input type="text" bind:value={formData.country}></div>
-            <div><label>Género</label><input type="text" bind:value={formData.genre}></div>
-            <div><label>Dinero Total ($)</label><input type="number" step="0.01" bind:value={formData.total_money}></div>
-            <div><label>Torneos</label><input type="number" bind:value={formData.tournament_no}></div>
-            <div><label>Jugadores</label><input type="number" bind:value={formData.player_no}></div>
-            <div><label>Ganancias País ($)</label><input type="number" step="0.01" bind:value={formData.top_country_earnings}></div>
+            <div><label for="e_game">Juego</label><input id="e_game" type="text" value={formData.game_name} disabled></div>
+            <div><label for="e_year">Año</label><input id="e_year" type="number" value={formData.year} disabled></div>
+            <div><label for="e_country">País</label><input id="e_country" type="text" bind:value={formData.country}></div>
+            <div><label for="e_genre">Género</label><input id="e_genre" type="text" bind:value={formData.genre}></div>
+            <div><label for="e_money">Dinero Total ($)</label><input id="e_money" type="number" step="0.01" bind:value={formData.total_money}></div>
+            <div><label for="e_tournaments">Torneos</label><input id="e_tournaments" type="number" bind:value={formData.tournament_no}></div>
+            <div><label for="e_players">Jugadores</label><input id="e_players" type="number" bind:value={formData.player_no}></div>
+            <div><label for="e_top">Ganancias País ($)</label><input id="e_top" type="number" step="0.01" bind:value={formData.top_country_earnings}></div>
         </div>
 
         <div class="btn-group">
