@@ -28,17 +28,34 @@
             }
             
             const data = await res.json();
-            const athletes = data.data || [];
+            let athletes = data.data || [];
             
             console.log('Atletas recibidos:', athletes.length);
             
-            // Filtrar atletas con altura válida
-            const validAthletes = athletes.filter(a => a.height && a.height > 0 && a.year && a.year >= 1900 && a.year <= 2020);
+            // ============================================================
+            // NUEVO: Si un atleta no tiene altura, asignarle una altura por defecto
+            // ============================================================
+            athletes = athletes.map(athlete => {
+                if (!athlete.height || athlete.height <= 0) {
+                    // Asignar altura por defecto según el deporte o promedio
+                    if (athlete.sport === 'Basketball') return { ...athlete, height: 200 };
+                    if (athlete.sport === 'Volleyball') return { ...athlete, height: 190 };
+                    if (athlete.sport === 'Swimming') return { ...athlete, height: 185 };
+                    if (athlete.sport === 'Athletics') return { ...athlete, height: 175 };
+                    if (athlete.sport === 'Gymnastics') return { ...athlete, height: 165 };
+                    if (athlete.sport === 'Weightlifting') return { ...athlete, height: 170 };
+                    return { ...athlete, height: 175 }; // Altura promedio por defecto
+                }
+                return athlete;
+            });
             
-            console.log('Atletas con altura válida:', validAthletes.length);
+            // Ahora todos los atletas tienen altura
+            const validAthletes = athletes.filter(a => a.year && a.year >= 1900 && a.year <= 2020);
+            
+            console.log('Atletas válidos para el gráfico:', validAthletes.length);
             
             if (validAthletes.length === 0) {
-                error = 'No hay datos de altura disponibles. Ve a la página de Olympics y carga datos de ejemplo.';
+                error = 'No hay datos de atletas disponibles.';
                 loading = false;
                 return;
             }
@@ -77,7 +94,7 @@
                     year: athlete.year,
                     custom: {
                         height: athlete.height,
-                        weight: athlete.weight,
+                        weight: athlete.weight || 70,
                         sport: athlete.sport,
                         team: athlete.team
                     }
@@ -99,6 +116,12 @@
                 }));
             
             console.log('Burbujas:', bubbleData.length, 'Rangos con datos:', pieData.length);
+            
+            if (bubbleData.length === 0) {
+                error = 'No hay datos para mostrar en el gráfico.';
+                loading = false;
+                return;
+            }
             
             // Importar Highcharts
             const Highcharts = await import('highcharts');
@@ -150,12 +173,14 @@
                         load() {
                             const pieSeries = this.series[1];
                             const totalCount = pieData.reduce((sum, p) => sum + p.y, 0);
-                            pieSeries.customLabel = fillCenter(
-                                100,
-                                '1900-2020',
-                                this,
-                                pieSeries.customLabel
-                            );
+                            if (totalCount > 0) {
+                                pieSeries.customLabel = fillCenter(
+                                    100,
+                                    '1900-2020',
+                                    this,
+                                    pieSeries.customLabel
+                                );
+                            }
                         }
                     }
                 },
@@ -217,7 +242,6 @@
                                     const minDate = point.options.custom.minDate;
                                     const maxDate = point.options.custom.maxDate;
                                     
-                                    // Resaltar burbujas del rango seleccionado
                                     bubbleSeries.points.forEach(p => {
                                         if (p.graphic) {
                                             if (p.x >= minDate && p.x < maxDate) {
@@ -242,7 +266,6 @@
                                     const chart = this.series.chart;
                                     const bubbleSeries = chart.series[0];
                                     
-                                    // Restaurar todas las burbujas
                                     bubbleSeries.points.forEach(p => {
                                         if (p.graphic) {
                                             p.graphic.attr({ opacity: 1, lineWidth: 0 });
