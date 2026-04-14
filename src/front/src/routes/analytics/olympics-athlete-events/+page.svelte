@@ -43,25 +43,23 @@
             let apiUrl = '/api/v2/olympics-athlete-events?limit=500';
             
             let res = await fetch(apiUrl);
-            
-            // Si no hay datos (404 o datos vacíos), cargar datos de ejemplo
-            if (res.status === 404) {
-                console.log('No hay datos, cargando datos de ejemplo...');
-                await cargarDatosEjemplo();
-                // Reintentar la petición después de cargar los datos
-                res = await fetch(apiUrl);
-            }
-            
-            if (!res.ok) {
-                throw new Error(`Error ${res.status}: ${res.statusText}`);
-            }
-            
-            const data = await res.json();
+            let data = await res.json();
             let athletes = data.data || [];
-            
             console.log('Atletas recibidos:', athletes.length);
+
+            if (athletes.length === 0) {
+            console.log('No hay datos, cargando datos de ejemplo...');
             
-            // Si no hay atletas después de cargar, mostrar error
+            await fetch('/api/v2/olympics-athlete-events/loadInitialData');
+            
+            // Reintentar obtener los datos
+            res = await fetch(apiUrl);
+            data = await res.json();
+            athletes = data.data || [];
+            
+            console.log('Atletas después de cargar:', athletes.length);
+        }       
+
             if (athletes.length === 0) {
                 error = 'No hay datos disponibles. Por favor, recarga la página.';
                 loading = false;
