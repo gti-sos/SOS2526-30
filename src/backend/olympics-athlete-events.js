@@ -61,7 +61,7 @@ routerV1.get("/loadInitialData", (req, res) => {
         if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
         
         if (count === 0) {
-            const initialData = csvContent.slice(0, 15);
+            const initialData = csvContent.slice(0, 150);
             db.insert(initialData, (err, newDocs) => {
                 if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
                 console.log(`Datos iniciales cargados: ${newDocs.length} registros`);
@@ -259,7 +259,7 @@ routerV2.get("/loadInitialData", (req, res) => {
         if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
         
         if (count === 0) {
-            const initialData = csvContent.slice(0, 15);
+            const initialData = csvContent.slice(0, 150);
             db.insert(initialData, (err, newDocs) => {
                 if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
                 console.log(`Datos iniciales v2 cargados: ${newDocs.length} registros`);
