@@ -26,11 +26,18 @@
     
     async function initChart() {
         try {
+            // Detectar si estamos en producción o desarrollo
+            const isProduction = window.location.hostname !== 'localhost';
+            const apiUrl = isProduction ? '/api' : 'http://localhost:3000/api';
+            
+            console.log('API URL:', apiUrl);
+            
             const Highcharts = await import('highcharts');
             await import('highcharts/highcharts-more');
             const HC = Highcharts.default;
             
-            const res = await fetch('/api/v2/olympics-athlete-events?limit=500');
+            // Usar ruta absoluta para la API
+            const res = await fetch(`${apiUrl}/v2/olympics-athlete-events?limit=500`);
             
             if (!res.ok) {
                 throw new Error(`Error ${res.status}: ${res.statusText}`);
@@ -38,6 +45,8 @@
             
             const data = await res.json();
             let athletes = data.data || [];
+            
+            console.log('Atletas recibidos:', athletes.length);
             
             athletes = athletes.map(athlete => {
                 if (!athlete.height || athlete.height <= 0) {
@@ -53,8 +62,12 @@
             
             const validAthletes = athletes.filter(a => a.year && a.year >= 1900 && a.year <= 2020);
             
+            console.log('Atletas válidos:', validAthletes.length);
+            
             if (validAthletes.length === 0) {
-                throw new Error('No hay datos de atletas disponibles.');
+                error = 'No hay datos de atletas disponibles.';
+                loading = false;
+                return;
             }
             
             // Crear rangos de 10 años
@@ -117,6 +130,14 @@
                         rangeKey: key
                     }
                 }));
+            
+            // Esperar a que el contenedor esté disponible
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const container = document.getElementById('container');
+            if (!container) {
+                throw new Error('Contenedor no encontrado');
+            }
             
             // Renderizar gráfico
             HC.chart('container', {
@@ -258,7 +279,7 @@
     <p class="subtitle">Relación entre altura de atletas y años de participación (colores por rango de años)</p>
     
     <div id="container" style="height: 700px; width: 100%;"></div>
-    
+
     
     {#if error}
         <div class="error">
