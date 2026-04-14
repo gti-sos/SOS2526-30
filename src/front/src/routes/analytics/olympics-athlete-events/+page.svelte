@@ -3,6 +3,7 @@
     
     let loading = true;
     let error = null;
+    let chart = null;
     
     // Colores vivos para los rangos
     const coloresRangos = {
@@ -20,24 +21,42 @@
         '2010-2020': '#FF00FF'
     };
     
-    onMount(async () => {
-        await initChart();
+    onMount(() => {
+        setTimeout(() => {
+            initChart();
+        }, 100);
     });
+    
+    async function cargarDatosEjemplo() {
+        console.log('Cargando datos de ejemplo...');
+        const apiUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api/v2/olympics-athlete-events/loadInitialData'
+            : '/api/v2/olympics-athlete-events/loadInitialData';
+        
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+            throw new Error('Error al cargar datos de ejemplo');
+        }
+        console.log('Datos de ejemplo cargados correctamente');
+    }
     
     async function initChart() {
         try {
-            // Detectar si estamos en producción o desarrollo
-            const isProduction = window.location.hostname !== 'localhost';
-            const apiUrl = isProduction ? '/api' : 'http://localhost:3000/api';
+            console.log('Iniciando carga del gráfico...');
             
-            console.log('API URL:', apiUrl);
+            let apiUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/api/v2/olympics-athlete-events?limit=500'
+                : '/api/v2/olympics-athlete-events?limit=500';
             
-            const Highcharts = await import('highcharts');
-            await import('highcharts/highcharts-more');
-            const HC = Highcharts.default;
+            let res = await fetch(apiUrl);
             
-            // Usar ruta absoluta para la API
-            const res = await fetch(`${apiUrl}/v2/olympics-athlete-events?limit=500`);
+            // Si no hay datos (404 o datos vacíos), cargar datos de ejemplo
+            if (res.status === 404) {
+                console.log('No hay datos, cargando datos de ejemplo...');
+                await cargarDatosEjemplo();
+                // Reintentar la petición después de cargar los datos
+                res = await fetch(apiUrl);
+            }
             
             if (!res.ok) {
                 throw new Error(`Error ${res.status}: ${res.statusText}`);
@@ -48,6 +67,14 @@
             
             console.log('Atletas recibidos:', athletes.length);
             
+            // Si no hay atletas después de cargar, mostrar error
+            if (athletes.length === 0) {
+                error = 'No hay datos disponibles. Por favor, recarga la página.';
+                loading = false;
+                return;
+            }
+            
+            // Asignar altura por defecto si no tiene
             athletes = athletes.map(athlete => {
                 if (!athlete.height || athlete.height <= 0) {
                     if (athlete.sport === 'Basketball') return { ...athlete, height: 200 };
@@ -65,7 +92,7 @@
             console.log('Atletas válidos:', validAthletes.length);
             
             if (validAthletes.length === 0) {
-                error = 'No hay datos de atletas disponibles.';
+                error = 'No hay atletas con datos de altura válidos.';
                 loading = false;
                 return;
             }
@@ -121,7 +148,7 @@
             const pieData = Object.entries(yearsRange)
                 .filter(([key, value]) => value.count > 0)
                 .map(([key, value]) => ({
-                    name: key,
+                    name: key.split('-')[0],  // "2000" en lugar de "2000-2010"
                     y: value.count,
                     color: value.color,
                     custom: {
@@ -131,8 +158,10 @@
                     }
                 }));
             
-            // Esperar a que el contenedor esté disponible
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Importar Highcharts
+            const Highcharts = await import('highcharts');
+            await import('highcharts/highcharts-more');
+            const HC = Highcharts.default;
             
             const container = document.getElementById('container');
             if (!container) {
@@ -198,12 +227,13 @@
                         dataLabels: { 
                             enabled: true,
                             distance: -30,
-                            format: '{point.name}',
+                            format: '{point.percentage:.0f}%',
+                            allowOverlap: true,
                             style: {
                                 fontSize: '10px',
                                 fontWeight: 'bold',
                                 textOutline: '0px',
-                                color: 'white'
+                                color: 'black'
                             }
                         },
                         borderWidth: 2,
@@ -278,9 +308,7 @@
     <h1>📊 Estadísticas de Atletas Olímpicos</h1>
     <p class="subtitle">Relación entre altura de atletas y años de participación (colores por rango de años)</p>
     
-    <div id="container" style="height: 700px; width: 100%;"></div>
-
-    
+    <div id="container" style="height: 700px; width: 100%;"></div>    
     {#if error}
         <div class="error">
             <p>❌ Error: {error}</p>
@@ -288,16 +316,17 @@
     {/if}
     
     <div class="info">
-        <h3>📖 Interpretación del gráfico</h3>
-        <ul>
-            <li><strong>Burbujas:</strong> Cada burbuja representa un atleta</li>
-            <li><strong>Color de la burbuja:</strong> Indica el rango de años</li>
-            <li><strong>Eje X:</strong> Año de participación</li>
-            <li><strong>Eje Y:</strong> Altura del atleta (cm)</li>
-            <li><strong>Círculo central:</strong> Porcentaje de atletas por rango</li>
-            <li><strong>Interacción:</strong> Pasa el mouse sobre el círculo central para resaltar las burbujas de ese rango</li>
-        </ul>
-    </div>
+    <h3>Interpretacion del gráfico</h3>
+    <ul>
+        <li><strong>Cada burbuja</strong> representa un atleta olímpico</li>
+        <li><strong>Eje X (horizontal):</strong> Año en que participó el atleta</li>
+        <li><strong>Eje Y (vertical):</strong> Altura del atleta en centímetros</li>
+        <li><strong>Tamaño de la burbuja:</strong> Peso del atleta (a mayor peso, burbuja más grande)</li>
+        <li><strong>Color de la burbuja:</strong> Rango de años al que pertenece (cada década tiene un color distinto)</li>
+        <li><strong>Círculo central:</strong> Porcentaje de atletas por cada década</li>
+        <li><strong>Interacción:</strong> Pasa el ratón sobre el círculo central para resaltar las burbujas de esa década</li>
+    </ul>
+</div>
 </div>
 
 <style>
