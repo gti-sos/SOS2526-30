@@ -4,23 +4,32 @@
     let loading = true;
     let error = null;
     
-    // Colores distintos para cada rango
-    const colores = [
-        '#6CDDCA', '#5B8C5A', '#C771F3', '#4D90DB', '#FAB776',
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-        '#DDA0DD', '#98D8C8', '#F7C948', '#D4A5A5', '#9B59B6',
-        '#3498DB', '#E74C3C', '#2ECC71', '#F39C12', '#1ABC9C',
-        '#E67E22', '#16A085', '#C0392B', '#27AE60'
-    ];
+    // Colores vivos para los rangos
+    const coloresRangos = {
+        '1900-1910': '#FF0000',
+        '1910-1920': '#FF4500',
+        '1920-1930': '#FF8C00',
+        '1930-1940': '#FFD700',
+        '1940-1950': '#ADFF2F',
+        '1950-1960': '#00FF00',
+        '1960-1970': '#00FF7F',
+        '1970-1980': '#00FFFF',
+        '1980-1990': '#00BFFF',
+        '1990-2000': '#1E90FF',
+        '2000-2010': '#9370DB',
+        '2010-2020': '#FF00FF'
+    };
     
-    onMount(() => {
-        console.log('Componente montado, iniciando gráfico...');
-        initChart();
+    onMount(async () => {
+        await initChart();
     });
     
     async function initChart() {
         try {
-            console.log('Obteniendo datos de la API...');
+            const Highcharts = await import('highcharts');
+            await import('highcharts/highcharts-more');
+            const HC = Highcharts.default;
+            
             const res = await fetch('/api/v2/olympics-athlete-events?limit=500');
             
             if (!res.ok) {
@@ -30,171 +39,102 @@
             const data = await res.json();
             let athletes = data.data || [];
             
-            console.log('Atletas recibidos:', athletes.length);
-            
-            // ============================================================
-            // NUEVO: Si un atleta no tiene altura, asignarle una altura por defecto
-            // ============================================================
             athletes = athletes.map(athlete => {
                 if (!athlete.height || athlete.height <= 0) {
-                    // Asignar altura por defecto según el deporte o promedio
                     if (athlete.sport === 'Basketball') return { ...athlete, height: 200 };
                     if (athlete.sport === 'Volleyball') return { ...athlete, height: 190 };
                     if (athlete.sport === 'Swimming') return { ...athlete, height: 185 };
                     if (athlete.sport === 'Athletics') return { ...athlete, height: 175 };
                     if (athlete.sport === 'Gymnastics') return { ...athlete, height: 165 };
-                    if (athlete.sport === 'Weightlifting') return { ...athlete, height: 170 };
-                    return { ...athlete, height: 175 }; // Altura promedio por defecto
+                    return { ...athlete, height: 175 };
                 }
                 return athlete;
             });
             
-            // Ahora todos los atletas tienen altura
             const validAthletes = athletes.filter(a => a.year && a.year >= 1900 && a.year <= 2020);
             
-            console.log('Atletas válidos para el gráfico:', validAthletes.length);
-            
             if (validAthletes.length === 0) {
-                error = 'No hay datos de atletas disponibles.';
-                loading = false;
-                return;
+                throw new Error('No hay datos de atletas disponibles.');
             }
             
-            // RANGOS DE 5 AÑOS
-            const rangos = [];
-            for (let i = 1900; i < 2020; i += 5) {
-                rangos.push({
-                    name: `${i}-${i+5}`,
-                    minDate: i,
-                    maxDate: i + 5,
+            // Crear rangos de 10 años
+            const yearsRange = {};
+            for (let i = 1900; i < 2020; i += 10) {
+                const key = `${i}-${i+10}`;
+                yearsRange[key] = {
                     count: 0,
-                    color: colores[Math.floor(i / 5) % colores.length],
-                    data: []
-                });
+                    color: coloresRangos[key] || '#888888',
+                    minDate: i,
+                    maxDate: i + 10
+                };
             }
             
             // Preparar datos para burbujas
             const bubbleData = [];
             
             validAthletes.forEach(athlete => {
-                // Encontrar el rango correspondiente
-                const rango = rangos.find(r => athlete.year >= r.minDate && athlete.year < r.maxDate);
-                if (rango) {
-                    rango.count++;
-                    rango.data.push(athlete);
+                let rangeKey = null;
+                let rangeColor = '#888888';
+                
+                for (const [key, range] of Object.entries(yearsRange)) {
+                    if (athlete.year >= range.minDate && athlete.year < range.maxDate) {
+                        rangeKey = key;
+                        rangeColor = range.color;
+                        yearsRange[key].count++;
+                        break;
+                    }
                 }
                 
                 bubbleData.push({
                     name: athlete.name,
                     x: athlete.year,
                     y: athlete.height,
-                    z: athlete.weight ? Math.min(athlete.weight / 20, 10) : 4,
+                    z: athlete.weight ? Math.min(athlete.weight / 20, 12) : 5,
                     team: athlete.team,
                     sport: athlete.sport,
-                    year: athlete.year,
+                    color: rangeColor,
+                    rangeKey: rangeKey,
                     custom: {
                         height: athlete.height,
                         weight: athlete.weight || 70,
                         sport: athlete.sport,
-                        team: athlete.team
+                        team: athlete.team,
+                        rangeKey: rangeKey
                     }
                 });
             });
             
-            // Filtrar rangos que tienen datos
-            const pieData = rangos
-                .filter(r => r.count > 0)
-                .map(r => ({
-                    name: r.name,
-                    y: r.count,
-                    color: r.color,
+            // Datos para el pie chart
+            const pieData = Object.entries(yearsRange)
+                .filter(([key, value]) => value.count > 0)
+                .map(([key, value]) => ({
+                    name: key,
+                    y: value.count,
+                    color: value.color,
                     custom: {
-                        minDate: r.minDate,
-                        maxDate: r.maxDate,
-                        data: r.data
+                        minDate: value.minDate,
+                        maxDate: value.maxDate,
+                        rangeKey: key
                     }
                 }));
-            
-            console.log('Burbujas:', bubbleData.length, 'Rangos con datos:', pieData.length);
-            
-            if (bubbleData.length === 0) {
-                error = 'No hay datos para mostrar en el gráfico.';
-                loading = false;
-                return;
-            }
-            
-            // Importar Highcharts
-            const Highcharts = await import('highcharts');
-            await import('highcharts/highcharts-more');
-            const HC = Highcharts.default;
-            
-            function fillCenter(percentage, decade, chart, customLabel) {
-                const labelText = `
-                    <div style="text-align: center;">
-                        <div style="font-size: 14px; font-weight: bold;">${decade}</div>
-                        <div style="font-size: 11px; color: #666;">Atletas</div>
-                        <div style="font-size: 18px; font-weight: bold; color: #0284c7;">${percentage.toFixed(1)}%</div>
-                    </div>
-                `;
-                
-                if (!customLabel) {
-                    customLabel = chart.renderer.label(
-                        labelText, 0, 0, void 0, void 0,
-                        void 0, true
-                    ).css({
-                        color: '#000',
-                        pointerEvents: 'none',
-                        backgroundColor: 'rgba(255,255,255,0.95)',
-                        padding: '8px',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                        border: '1px solid #ddd',
-                        fontSize: '12px'
-                    }).add();
-                } else {
-                    customLabel.attr({ text: labelText });
-                }
-                
-                customLabel.attr({
-                    x: (chart.pane[0].center[0] + chart.plotLeft) - customLabel.attr('width') / 2,
-                    y: (chart.pane[0].center[1] + chart.plotTop) - customLabel.attr('height') / 2 - 10
-                });
-                
-                return customLabel;
-            }
             
             // Renderizar gráfico
             HC.chart('container', {
                 chart: {
                     type: 'bubble',
                     polar: true,
-                    height: 700,
-                    events: {
-                        load() {
-                            const pieSeries = this.series[1];
-                            const totalCount = pieData.reduce((sum, p) => sum + p.y, 0);
-                            if (totalCount > 0) {
-                                pieSeries.customLabel = fillCenter(
-                                    100,
-                                    '1900-2020',
-                                    this,
-                                    pieSeries.customLabel
-                                );
-                            }
-                        }
-                    }
+                    height: 700
                 },
                 title: {
                     text: 'Relación Altura vs Año de Atletas Olímpicos',
                     style: { fontSize: '16px' }
                 },
                 subtitle: {
-                    text: `Cada burbuja representa un atleta | Total: ${bubbleData.length} atletas | Rangos de 5 años`,
+                    text: `Cada burbuja representa un atleta | Color = Rango de años | Total: ${bubbleData.length} atletas`,
                     style: { fontSize: '12px' }
                 },
                 accessibility: { enabled: false },
                 xAxis: {
-                    title: { text: 'Año' },
                     min: 1900,
                     max: 2020,
                     tickInterval: 10,
@@ -203,7 +143,6 @@
                     labels: { enabled: true, rotation: 0, step: 2 }
                 },
                 yAxis: {
-                    title: { text: 'Altura (cm)' },
                     min: 140,
                     max: 220,
                     labels: { format: '{value} cm' }
@@ -215,52 +154,60 @@
                         Altura: {point.y} cm<br/>
                         Peso: {point.custom.weight} kg<br/>
                         Deporte: {point.custom.sport}<br/>
-                        País: {point.custom.team}
+                        País: {point.custom.team}<br/>
+                        Rango: {point.custom.rangeKey}
                     `
                 },
                 plotOptions: {
                     bubble: {
-                        minSize: 2,
-                        maxSize: 10,
+                        minSize: 3,
+                        maxSize: 12,
                         tooltip: { followPointer: true },
                         states: {
                             hover: {
-                                opacity: 1
+                                opacity: 1,
+                                lineWidth: 2,
+                                lineColor: 'black'
                             }
                         }
                     },
                     pie: {
                         size: '38%',
                         innerSize: '82%',
-                        dataLabels: { enabled: false },
+                        dataLabels: { 
+                            enabled: true,
+                            distance: -30,
+                            format: '{point.name}',
+                            style: {
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                textOutline: '0px',
+                                color: 'white'
+                            }
+                        },
+                        borderWidth: 2,
+                        borderColor: 'white',
                         point: {
                             events: {
                                 mouseOver() {
                                     const point = this;
                                     const chart = this.series.chart;
                                     const bubbleSeries = chart.series[0];
-                                    const minDate = point.options.custom.minDate;
-                                    const maxDate = point.options.custom.maxDate;
+                                    const rangeKey = point.options.custom.rangeKey;
                                     
                                     bubbleSeries.points.forEach(p => {
                                         if (p.graphic) {
-                                            if (p.x >= minDate && p.x < maxDate) {
-                                                p.graphic.attr({ opacity: 1, lineWidth: 2, stroke: 'black' });
+                                            if (p.rangeKey === rangeKey) {
+                                                p.graphic.attr({ 
+                                                    opacity: 1, 
+                                                    lineWidth: 2, 
+                                                    stroke: 'black'
+                                                });
                                             } else {
-                                                p.graphic.attr({ opacity: 0.15 });
+                                                p.graphic.attr({ opacity: 0.2, lineWidth: 0 });
                                             }
                                         }
                                     });
-                                    
-                                    const totalCount = pieData.reduce((sum, p) => sum + p.y, 0);
-                                    const percentage = (point.y / totalCount) * 100;
-                                    
-                                    chart.series[1].customLabel = fillCenter(
-                                        percentage,
-                                        `${minDate}-${maxDate}`,
-                                        chart,
-                                        chart.series[1].customLabel
-                                    );
                                 },
                                 mouseOut() {
                                     const chart = this.series.chart;
@@ -271,13 +218,6 @@
                                             p.graphic.attr({ opacity: 1, lineWidth: 0 });
                                         }
                                     });
-                                    
-                                    chart.series[1].customLabel = fillCenter(
-                                        100,
-                                        '1900-2020',
-                                        chart,
-                                        chart.series[1].customLabel
-                                    );
                                 }
                             }
                         }
@@ -288,10 +228,9 @@
                         name: 'Atletas',
                         data: bubbleData,
                         type: 'bubble',
-                        colorKey: 'x',
-                        maxSize: 10,
-                        minSize: 2,
-                        color: '#888888'
+                        maxSize: 12,
+                        minSize: 3,
+                        color: 'point.color'
                     },
                     {
                         type: 'pie',
@@ -304,13 +243,7 @@
                 ]
             });
             
-            console.log('Stellar Chart renderizado correctamente');
-            
-            setTimeout(() => {
-                loading = false;
-                const overlay = document.querySelector('.loading-overlay');
-                if (overlay) overlay.style.display = 'none';
-            }, 500);
+            loading = false;
             
         } catch (e) {
             console.error('Error:', e);
@@ -322,29 +255,25 @@
 
 <div class="analytics-container">
     <h1>📊 Estadísticas de Atletas Olímpicos</h1>
-    <p class="subtitle">Relación entre altura de atletas y años de participación (rangos de 5 años)</p>
+    <p class="subtitle">Relación entre altura de atletas y años de participación (colores por rango de años)</p>
     
-    <div id="container" style="height: 700px; width: 100%; margin: 0 auto;"></div>
+    <div id="container" style="height: 700px; width: 100%;"></div>
     
-    <div class="loading-overlay" style="display: flex;">
-        <div class="spinner"></div>
-        <p>Cargando gráfico Stellar...</p>
-    </div>
     
     {#if error}
         <div class="error">
-            <strong>❌ Error:</strong> {error}
+            <p>❌ Error: {error}</p>
         </div>
     {/if}
     
     <div class="info">
-        <h3>📖 Interpretación del Stellar Chart</h3>
+        <h3>📖 Interpretación del gráfico</h3>
         <ul>
             <li><strong>Burbujas:</strong> Cada burbuja representa un atleta</li>
+            <li><strong>Color de la burbuja:</strong> Indica el rango de años</li>
             <li><strong>Eje X:</strong> Año de participación</li>
             <li><strong>Eje Y:</strong> Altura del atleta (cm)</li>
-            <li><strong>Tamaño:</strong> Peso del atleta</li>
-            <li><strong>Colores del círculo central:</strong> Diferentes rangos de años (5 años)</li>
+            <li><strong>Círculo central:</strong> Porcentaje de atletas por rango</li>
             <li><strong>Interacción:</strong> Pasa el mouse sobre el círculo central para resaltar las burbujas de ese rango</li>
         </ul>
     </div>
