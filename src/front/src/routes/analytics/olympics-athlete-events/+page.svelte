@@ -27,9 +27,7 @@
     
     async function cargarDatosEjemplo() {
         console.log('Cargando datos de ejemplo...');
-        const apiUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api/v2/olympics-athlete-events/loadInitialData'
-            : '/api/v2/olympics-athlete-events/loadInitialData';
+        let apiUrl = '/api/v2/olympics-athlete-events?limit=500';
         
         const res = await fetch(apiUrl);
         if (!res.ok) {
@@ -42,9 +40,7 @@
         try {
             console.log('Iniciando carga del gráfico...');
             
-            let apiUrl = window.location.hostname === 'localhost' 
-                ? 'http://localhost:3000/api/v2/olympics-athlete-events?limit=500'
-                : '/api/v2/olympics-athlete-events?limit=500';
+            let apiUrl = '/api/v2/olympics-athlete-events?limit=500';
             
             let res = await fetch(apiUrl);
             
