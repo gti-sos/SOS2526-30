@@ -22,9 +22,7 @@
     };
     
     onMount(() => {
-        setTimeout(() => {
-            initChart();
-        }, 100);
+        initChart();
     });
     
     async function cargarDatosEjemplo() {
@@ -294,13 +292,23 @@
                 ]
             });
             
-            loading = false;
             
-        } catch (e) {
-            console.error('Error:', e);
-            error = e.message;
-            loading = false;
-        }
+        const overlay = document.querySelector('.loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+
+            } catch (e) {
+                console.error('Error:', e);
+                error = e.message;
+                loading = false;
+                
+                // También ocultar overlay en caso de error
+                const overlay = document.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }
     }
 </script>
 
@@ -309,6 +317,14 @@
     <p class="subtitle">Relación entre altura de atletas y años de participación (colores por rango de años)</p>
     
     <div id="container" style="height: 700px; width: 100%;"></div>    
+
+    {#if loading}
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Cargando gráfico...</p>
+    </div>
+    {/if}
+
     {#if error}
         <div class="error">
             <p>❌ Error: {error}</p>

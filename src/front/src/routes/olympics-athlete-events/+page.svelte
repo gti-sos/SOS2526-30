@@ -302,7 +302,7 @@ async function cargarValoresUnicos(campo) {
             }
             
             await getAthletes(1);
-            successMessage = 'Se han cargado 15 atletas de ejemplo correctamente.';
+            successMessage = 'Se han cargado atletas de ejemplo correctamente.';
         } catch (e) {
             // @ts-ignore
             error = e.message;
