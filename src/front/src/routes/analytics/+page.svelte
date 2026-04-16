@@ -8,9 +8,65 @@
         initChart();
     });
     
+    // Función para cargar datos de ejemplo si es necesario
+    async function ensureDataLoaded() {
+        // 1. Verificar datos de Olympics (Gonzalo)
+        let res = await fetch('/api/v2/olympics-athlete-events?limit=1');
+        let data = await res.json();
+        let athletes = data.data || [];
+        
+        if (athletes.length === 0) {
+            console.log('Cargando datos de ejemplo de Olympics...');
+            await fetch('/api/v2/olympics-athlete-events/loadInitialData');
+        }
+        
+        // 2. Verificar datos de Cheaters (Francisco) - Probar ambas versiones
+        res = await fetch('/api/v2/cheaters-stats?limit=1');
+        if (res.status === 404) {
+            // Si v2 no existe, probar v1
+            res = await fetch('/api/v1/cheaters-stats?limit=1');
+        }
+        
+        if (res.ok) {
+            let cheatersData = await res.json();
+            let cheaters = cheatersData.data || cheatersData || [];
+            
+            if (cheaters.length === 0) {
+                console.log('Cargando datos de ejemplo de Cheaters...');
+                // Intentar cargar datos de ejemplo
+                await fetch('/api/v2/cheaters-stats/loadInitialData').catch(async () => {
+                    await fetch('/api/v1/cheaters-stats/loadInitialData');
+                });
+            }
+        } else {
+            console.log('No se pudo acceder a la API de Cheaters');
+        }
+        
+        // 3. Verificar datos de Esports Earnings (Mario)
+        res = await fetch('/api/v1/esportsearnings-stats?limit=1');
+        let earnings = await res.json();
+        
+        if (!earnings || earnings.length === 0) {
+            console.log('Cargando datos de ejemplo de Esports Earnings...');
+            await fetch('/api/v1/esportsearnings-stats/loadInitialData').catch(() => {});
+        }
+        
+        // 4. Verificar datos de Esports Growth (David)
+        res = await fetch('/api/v1/esportsgrowth-stats?limit=1');
+        let growth = await res.json();
+        
+        if (!growth || growth.length === 0) {
+            console.log('Cargando datos de ejemplo de Esports Growth...');
+            await fetch('/api/v1/esportsgrowth-stats/loadInitialData').catch(() => {});
+        }
+    }
+    
     async function initChart() {
         try {
-            // 1. GONZALO: Olympics - contar atletas por país
+            // Primero, asegurar que todos los datos están cargados
+            await ensureDataLoaded();
+            
+            // 1. GONZALO: Olympics
             const resOlympics = await fetch('/api/v2/olympics-athlete-events?limit=500');
             const olympicsData = await resOlympics.json();
             const athletes = olympicsData.data || [];
@@ -23,23 +79,31 @@
                 }
             });
             
-            // 2. FRANCISCO: Cheaters Stats - usar confirmed_ban
-            const resCheaters = await fetch('/api/v2/cheaters-stats?limit=200');
-            const cheatersData = await resCheaters.json();
-            const cheaters = cheatersData.data || [];
+            // 2. FRANCISCO: Cheaters Stats (probar v1 y v2)
+            let cheaters = [];
+            let resCheaters = await fetch('/api/v2/cheaters-stats?limit=200');
+            if (resCheaters.status === 404) {
+                resCheaters = await fetch('/api/v1/cheaters-stats?limit=200');
+            }
             
-            // 3. MARIO: Esports Earnings Stats - usar tournament_no
+            if (resCheaters.ok) {
+                const cheatersData = await resCheaters.json();
+                cheaters = cheatersData.data || cheatersData || [];
+                console.log('Cheaters cargados:', cheaters.length);
+            }
+            
+            // 3. MARIO: Esports Earnings
             const resEarnings = await fetch('/api/v1/esportsearnings-stats?limit=200');
             const earnings = await resEarnings.json();
             
-            // 4. DAVID: Esports Growth Stats - usar viewership
+            // 4. DAVID: Esports Growth
             const resGrowth = await fetch('/api/v1/esportsgrowth-stats?limit=200');
             const growth = await resGrowth.json();
             
             // Agrupar por país
             const countryStats = {};
             
-            // GONZALO: número de atletas olímpicos
+            // GONZALO
             Object.entries(athletesByCountry).forEach(([country, count]) => {
                 if (!countryStats[country]) {
                     countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
@@ -47,52 +111,56 @@
                 countryStats[country].athletes = count;
             });
             
-            // FRANCISCO: baneos confirmados
+            // FRANCISCO
             cheaters.forEach(item => {
                 const country = item.country;
-                if (!countryStats[country]) {
-                    countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
+                if (country) {
+                    if (!countryStats[country]) {
+                        countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
+                    }
+                    countryStats[country].cheaters += item.confirmed_ban || 0;
                 }
-                countryStats[country].cheaters += item.confirmed_ban || 0;
             });
             
-            // MARIO: número de torneos
+            // MARIO
             earnings.forEach(item => {
                 const country = item.country;
-                if (!countryStats[country]) {
-                    countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
+                if (country) {
+                    if (!countryStats[country]) {
+                        countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
+                    }
+                    countryStats[country].tournaments += item.tournament_no || 0;
                 }
-                countryStats[country].tournaments += item.tournament_no || 0;
             });
             
-            // DAVID: audiencia
+            // DAVID
             growth.forEach(item => {
                 const country = item.country;
-                if (!countryStats[country]) {
-                    countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
+                if (country) {
+                    if (!countryStats[country]) {
+                        countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
+                    }
+                    countryStats[country].viewership += item.viewership || 0;
                 }
-                countryStats[country].viewership += item.viewership || 0;
             });
             
-            // Calcular porcentajes
+            // Calcular totales
             const totalAthletes = Object.values(countryStats).reduce((sum, s) => sum + s.athletes, 0);
             const totalCheaters = Object.values(countryStats).reduce((sum, s) => sum + s.cheaters, 0);
             const totalTournaments = Object.values(countryStats).reduce((sum, s) => sum + s.tournaments, 0);
             const totalViewership = Object.values(countryStats).reduce((sum, s) => sum + s.viewership, 0);
             
-            // Top 9 países + forzar que España esté siempre
+            // Top países
             let topCountries = Object.entries(countryStats)
+                .filter(([_, stats]) => stats.athletes > 0)
                 .sort((a, b) => b[1].athletes - a[1].athletes)
-                .slice(0, 9);
+                .slice(0, 12);
             
-            // Verificar si España ya está en el top
+            // Asegurar España
             const hasSpain = topCountries.some(([country]) => country === 'Spain');
-            
             if (!hasSpain && countryStats['Spain']) {
-                // Añadir España al final
                 topCountries.push(['Spain', countryStats['Spain']]);
-            } else if (!hasSpain && !countryStats['Spain']) {
-                // Si no hay datos de España, añadir con valores 0
+            } else if (!hasSpain) {
                 topCountries.push(['Spain', { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 }]);
             }
             
@@ -127,7 +195,7 @@
             HC.chart('container', {
                 chart: { type: 'column', height: 600 },
                 title: { text: '📊 Visualización Integrada del Equipo SOS' },
-                subtitle: { text: 'Distribución porcentual por país (cada serie suma 100%)' },
+                subtitle: { text: totalCheaters === 0 ? '⚠️ Datos de Cheaters (Francisco) no disponibles' : 'Distribución porcentual por país' },
                 xAxis: {
                     categories: categories,
                     title: { text: 'País' },
@@ -166,6 +234,8 @@
         }
     }
 </script>
+
+<!-- Resto del HTML igual -->
 
 <div class="analytics-container">
     <h1>📊 Visualización Integrada del Equipo</h1>
