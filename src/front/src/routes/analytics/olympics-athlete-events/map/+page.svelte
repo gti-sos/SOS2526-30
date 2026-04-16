@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
-    import mapboxgl from 'mapbox-gl';
-    import 'mapbox-gl/dist/mapbox-gl.css';
+    import maplibregl from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
     
     let loading = $state(true);
     let error = $state(null);
@@ -10,17 +10,7 @@
     let athletesList = $state([]);
     let showAthletes = $state(false);
     
-    // Usar variable de entorno (crea un archivo .env en src/front/)
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    
     onMount(async () => {
-        // Verificar que la API key existe
-        if (!mapboxgl.accessToken) {
-            error = 'No se encontró la API key de Mapbox. Crea un archivo .env con VITE_MAPBOX_TOKEN';
-            loading = false;
-            return;
-        }
-        
         setTimeout(() => {
             initMap();
         }, 200);
@@ -44,8 +34,6 @@
             const res = await fetch('/api/v2/olympics-athlete-events?limit=1000&t=' + Date.now());
             const data = await res.json();
             const athletes = data.data || [];
-            
-            console.log('Atletas cargados en mapa:', athletes.length);
             
             // Agrupar por país
             const countries = {};
@@ -87,72 +75,106 @@
                 'Trinidad and Tobago': [-61.2225, 10.6918], 'Bahamas': [-77.3963, 25.0343], 'Barbados': [-59.5432, 13.1939]
             };
             
-            // Inicializar mapa con estilo DARK
-            map = new mapboxgl.Map({
+            // Inicializar mapa con estilo gratuito (sin API key)
+            map = new maplibregl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/dark-v11',
+                style: 'https://tiles.stadiamaps.com/styles/stamen_toner_lite.json', // Estilo oscuro gratuito
                 center: [0, 20],
                 zoom: 1.5,
-                dragPan: true,
-                scrollZoom: true,
-                doubleClickZoom: true,
-                touchZoomRotate: true
+                pitch: 45,
+                bearing: 0,
+                antialias: true
             });
             
+            // Colores según cantidad de atletas
+            const getColor = (count) => {
+                if (count > 100) return '#ef4444';
+                if (count > 50) return '#f97316';
+                if (count > 20) return '#22c55e';
+                return '#3b82f6';
+            };
+            
             map.on('load', () => {
-                // Colores para los círculos según cantidad de atletas
-                const getColor = (count) => {
-                    if (count > 100) return '#ef4444'; // Rojo
-                    if (count > 50) return '#f97316';  // Naranja
-                    if (count > 20) return '#22c55e';  // Verde
-                    return '#3b82f6';                   // Azul
-                };
-                
-                // Añadir marcadores
+                // Añadir marcadores 3D (círculos con altura)
                 Object.entries(countries).forEach(([country, data]) => {
                     const coords = countryCoords[country];
                     if (!coords) return;
                     
                     const size = Math.min(20 + data.count / 5, 50);
+                    const height = size * 2; // Altura 3D
+                    const color = getColor(data.count);
                     
-                    // Crear elemento HTML para el marcador
-                    const el = document.createElement('div');
-                    el.className = 'marker';
-                    el.style.width = `${size}px`;
-                    el.style.height = `${size}px`;
-                    el.style.backgroundColor = getColor(data.count);
-                    el.style.borderRadius = '50%';
-                    el.style.display = 'flex';
-                    el.style.alignItems = 'center';
-                    el.style.justifyContent = 'center';
-                    el.style.color = 'white';
-                    el.style.fontWeight = 'bold';
-                    el.style.fontSize = `${Math.max(10, size / 3)}px`;
-                    el.style.border = '2px solid white';
-                    el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
-                    el.style.cursor = 'pointer';
-                    el.textContent = data.count;
+                    // Crear círculo 3D
+                    map.addSource(`source-${country}`, {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [coords[0], coords[1]]
+                            },
+                            properties: {
+                                name: country,
+                                count: data.count,
+                                medals: data.medals,
+                                athletes: data.athletes
+                            }
+                        }
+                    });
                     
-                    // Popup con tooltip (estilo oscuro)
-                    const popup = new mapboxgl.Popup({ 
-                        offset: 25,
-                        className: 'dark-popup'
-                    }).setHTML(`
-                        <div style="min-width: 150px; background: #1e293b; color: #f1f5f9; padding: 8px; border-radius: 8px;">
-                            <strong style="color: #60a5fa;">${country}</strong><br/>
-                            Atletas: ${data.count}<br/>
-                            🥇 ${data.medals.Gold} | 🥈 ${data.medals.Silver} | 🥉 ${data.medals.Bronze}
-                        </div>
-                    `);
+                    map.addLayer({
+                        id: `circle-${country}`,
+                        type: 'circle',
+                        source: `source-${country}`,
+                        paint: {
+                            'circle-radius': size / 2,
+                            'circle-color': color,
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color': '#ffffff',
+                            'circle-opacity': 0.9
+                        }
+                    });
                     
-                    const marker = new mapboxgl.Marker(el)
-                        .setLngLat([coords[0], coords[1]])
-                        .setPopup(popup)
-                        .addTo(map);
+                    // Añadir texto con el número
+                    map.addLayer({
+                        id: `text-${country}`,
+                        type: 'symbol',
+                        source: `source-${country}`,
+                        layout: {
+                            'text-field': data.count.toString(),
+                            'text-font': ['Open Sans Bold'],
+                            'text-size': Math.max(10, size / 3),
+                            'text-offset': [0, 0]
+                        },
+                        paint: {
+                            'text-color': '#ffffff',
+                            'text-halo-color': '#000000',
+                            'text-halo-width': 1
+                        }
+                    });
                     
-                    // Al hacer clic, mostrar atletas
-                    marker.getElement().addEventListener('click', (e) => {
-                        e.stopPropagation();
+                    // Tooltip al pasar el ratón
+                    const popup = new maplibregl.Popup({ offset: 25 })
+                        .setHTML(`
+                            <div style="min-width: 150px;">
+                                <strong style="color: #60a5fa;">${country}</strong><br/>
+                                Atletas: ${data.count}<br/>
+                                🥇 ${data.medals.Gold} | 🥈 ${data.medals.Silver} | 🥉 ${data.medals.Bronze}
+                            </div>
+                        `);
+                    
+                    map.on('mouseenter', `circle-${country}`, () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                        popup.setLngLat([coords[0], coords[1]]).addTo(map);
+                    });
+                    
+                    map.on('mouseleave', `circle-${country}`, () => {
+                        map.getCanvas().style.cursor = '';
+                        popup.remove();
+                    });
+                    
+                    // Clic para mostrar atletas
+                    map.on('click', `circle-${country}`, () => {
                         selectedCountry = country;
                         athletesList = data.athletes;
                         showAthletes = true;
@@ -177,7 +199,7 @@
 </script>
 
 <div class="map-container">
-    <h1 style="color: #60a5fa;">🗺️ Mapa Geospacial de Atletas Olímpicos</h1>
+    <h1 style="color: #60a5fa;">🗺️ Mapa 3D de Atletas Olímpicos</h1>
     <p class="subtitle" style="color: #94a3b8;">Haz clic en cualquier círculo para ver los atletas de ese país</p>
     
     <div id="map" style="height: 600px; width: 100%; border-radius: 12px;"></div>
@@ -195,7 +217,7 @@
         </div>
     {/if}
     
-    <!-- Modal para mostrar atletas (estilo oscuro) -->
+    <!-- Modal para mostrar atletas -->
     {#if showAthletes}
         <div class="modal dark-modal">
             <div class="modal-content dark-modal-content">
@@ -230,9 +252,10 @@
         <ul style="color: #94a3b8;">
             <li><strong>Tamaño del círculo:</strong> Número de atletas de ese país</li>
             <li><strong>Color del círculo:</strong> 🔴 >100 | 🟠 >50 | 🟢 >20 | 🔵 ≤20 atletas</li>
-            <li><strong>Tooltip:</strong> Pasa el ratón sobre el círculo para ver un resumen</li>
-            <li><strong>Clic:</strong> Haz clic en el círculo para ver todos los atletas de ese país</li>
-            <li><strong>Zoom:</strong> Usa la rueda del ratón o los botones</li>
+            <li><strong>Clic:</strong> Haz clic en el círculo para ver todos los atletas</li>
+            <li><strong>Zoom:</strong> Usa la rueda del ratón</li>
+            <li><strong>Arrastrar:</strong> Mueve el mapa con el ratón</li>
+            <li><strong>Inclinación:</strong> Arrastra con botón derecho o Ctrl + arrastrar</li>
         </ul>
     </div>
 </div>
@@ -371,16 +394,5 @@
         background: #1e293b;
         border-radius: 12px;
         border: 1px solid #334155;
-    }
-    
-    /* Estilo para popups de Mapbox en dark mode */
-    :global(.dark-popup .mapboxgl-popup-content) {
-        background-color: #1e293b;
-        color: #f1f5f9;
-        border: 1px solid #334155;
-    }
-    
-    :global(.dark-popup .mapboxgl-popup-tip) {
-        border-top-color: #1e293b;
     }
 </style>
