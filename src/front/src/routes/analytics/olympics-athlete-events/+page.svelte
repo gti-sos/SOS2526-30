@@ -330,14 +330,19 @@
     <h1>📊 Estadísticas de Atletas Olímpicos</h1>
     <p class="subtitle">Relación entre altura de atletas y años de participación (colores por rango de años)</p>
     
+    <!-- Botón para ir al mapa -->
+    <div class="map-link">
+        <a href="/analytics/olympics-athlete-events/map" class="btn-map">
+            🗺️ Ver mapa geospacial de atletas
+        </a>
+    </div>
+    
     <div id="container" style="height: 700px; width: 100%;"></div>    
 
-    {#if loading}
     <div class="loading-overlay">
         <div class="spinner"></div>
         <p>Cargando gráfico...</p>
     </div>
-    {/if}
 
     {#if error}
         <div class="error">
@@ -383,8 +388,29 @@
         margin-bottom: 2rem;
     }
     
+    .map-link {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-map {
+        display: inline-block;
+        background: #10b981;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .btn-map:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+    
     .loading-overlay {
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
         right: 0;
@@ -394,7 +420,8 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 9999;
+        border-radius: 16px;
+        z-index: 10;
     }
     
     .spinner {
