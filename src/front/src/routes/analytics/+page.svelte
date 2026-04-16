@@ -80,32 +80,43 @@
             const totalTournaments = Object.values(countryStats).reduce((sum, s) => sum + s.tournaments, 0);
             const totalViewership = Object.values(countryStats).reduce((sum, s) => sum + s.viewership, 0);
             
-            // Top 10 países
-            const topCountries = Object.entries(countryStats)
+            // Top 9 países + forzar que España esté siempre
+            let topCountries = Object.entries(countryStats)
                 .sort((a, b) => b[1].athletes - a[1].athletes)
-                .slice(0, 10);
+                .slice(0, 9);
+            
+            // Verificar si España ya está en el top
+            const hasSpain = topCountries.some(([country]) => country === 'Spain');
+            
+            if (!hasSpain && countryStats['Spain']) {
+                // Añadir España al final
+                topCountries.push(['Spain', countryStats['Spain']]);
+            } else if (!hasSpain && !countryStats['Spain']) {
+                // Si no hay datos de España, añadir con valores 0
+                topCountries.push(['Spain', { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 }]);
+            }
             
             const categories = topCountries.map(([country]) => country);
             
             const series = [
                 {
                     name: '🏅 Gonzalo - Atletas Olímpicos',
-                    data: topCountries.map(([, stats]) => (stats.athletes / totalAthletes) * 100),
+                    data: topCountries.map(([, stats]) => totalAthletes > 0 ? (stats.athletes / totalAthletes) * 100 : 0),
                     color: '#0284c7'
                 },
                 {
                     name: '🚫 Francisco - Baneos Cheaters',
-                    data: topCountries.map(([, stats]) => (stats.cheaters / totalCheaters) * 100),
+                    data: topCountries.map(([, stats]) => totalCheaters > 0 ? (stats.cheaters / totalCheaters) * 100 : 0),
                     color: '#dc2626'
                 },
                 {
                     name: '🏆 Mario - Torneos Esports',
-                    data: topCountries.map(([, stats]) => (stats.tournaments / totalTournaments) * 100),
+                    data: topCountries.map(([, stats]) => totalTournaments > 0 ? (stats.tournaments / totalTournaments) * 100 : 0),
                     color: '#f59e0b'
                 },
                 {
                     name: '👁️ David - Audiencia Esports',
-                    data: topCountries.map(([, stats]) => (stats.viewership / totalViewership) * 100),
+                    data: topCountries.map(([, stats]) => totalViewership > 0 ? (stats.viewership / totalViewership) * 100 : 0),
                     color: '#10b981'
                 }
             ];
@@ -138,7 +149,6 @@
             
             loading = false;
             
-            // FORZAR EL CIERRE DEL OVERLAY
             const overlay = document.querySelector('.loading-overlay');
             if (overlay) {
                 overlay.style.display = 'none';
@@ -149,7 +159,6 @@
             error = e.message;
             loading = false;
             
-            // FORZAR EL CIERRE DEL OVERLAY EN CASO DE ERROR
             const overlay = document.querySelector('.loading-overlay');
             if (overlay) {
                 overlay.style.display = 'none';
