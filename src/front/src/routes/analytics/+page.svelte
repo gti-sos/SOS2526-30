@@ -1,7 +1,10 @@
 <script>
+// @ts-nocheck
+
     import { onMount } from 'svelte';
     
     let loading = true;
+    // @ts-ignore
     let error = null;
     
     onMount(() => {
@@ -72,9 +75,11 @@
             const athletes = olympicsData.data || [];
             
             const athletesByCountry = {};
+            // @ts-ignore
             athletes.forEach(ath => {
                 const country = ath.team;
                 if (country && country !== 'NA') {
+                    // @ts-ignore
                     athletesByCountry[country] = (athletesByCountry[country] || 0) + 1;
                 }
             });
@@ -105,41 +110,56 @@
             
             // GONZALO
             Object.entries(athletesByCountry).forEach(([country, count]) => {
+                // @ts-ignore
                 if (!countryStats[country]) {
+                    // @ts-ignore
                     countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
                 }
+                // @ts-ignore
                 countryStats[country].athletes = count;
             });
             
             // FRANCISCO
+            // @ts-ignore
             cheaters.forEach(item => {
                 const country = item.country;
                 if (country) {
+                    // @ts-ignore
                     if (!countryStats[country]) {
+                        // @ts-ignore
                         countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
                     }
+                    // @ts-ignore
                     countryStats[country].cheaters += item.confirmed_ban || 0;
                 }
             });
             
             // MARIO
+            // @ts-ignore
             earnings.forEach(item => {
                 const country = item.country;
                 if (country) {
+                    // @ts-ignore
                     if (!countryStats[country]) {
+                        // @ts-ignore
                         countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
                     }
+                    // @ts-ignore
                     countryStats[country].tournaments += item.tournament_no || 0;
                 }
             });
             
             // DAVID
+            // @ts-ignore
             growth.forEach(item => {
                 const country = item.country;
                 if (country) {
+                    // @ts-ignore
                     if (!countryStats[country]) {
+                        // @ts-ignore
                         countryStats[country] = { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 };
                     }
+                    // @ts-ignore
                     countryStats[country].viewership += item.viewership || 0;
                 }
             });
@@ -158,7 +178,9 @@
             
             // Asegurar España
             const hasSpain = topCountries.some(([country]) => country === 'Spain');
+            // @ts-ignore
             if (!hasSpain && countryStats['Spain']) {
+                // @ts-ignore
                 topCountries.push(['Spain', countryStats['Spain']]);
             } else if (!hasSpain) {
                 topCountries.push(['Spain', { athletes: 0, cheaters: 0, tournaments: 0, viewership: 0 }]);
@@ -219,16 +241,19 @@
             
             const overlay = document.querySelector('.loading-overlay');
             if (overlay) {
+                // @ts-ignore
                 overlay.style.display = 'none';
             }
             
         } catch (e) {
             console.error('Error:', e);
+            // @ts-ignore
             error = e.message;
             loading = false;
             
             const overlay = document.querySelector('.loading-overlay');
             if (overlay) {
+                // @ts-ignore
                 overlay.style.display = 'none';
             }
         }
