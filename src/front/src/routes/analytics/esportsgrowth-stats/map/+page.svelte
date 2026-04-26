@@ -24,13 +24,13 @@
     
     async function initMap() {
         try {
-            // 1. Obtener datos de TU API de eSports
-            const res = await fetch('/api/v1/esportsgrowth-stats');
+            // Obtener datos de TU API de eSports (Obligatorio por rúbrica)
+            const res = await fetch('/api/v1/esportsgrowth-stats?limit=1000&t=' + Date.now());
             if (!res.ok) throw new Error('Error al cargar la API');
             const data = await res.json();
             const stats = Array.isArray(data) ? data : [];
             
-            // 2. Agrupar por país y sumar jugadores
+            // Agrupar por país y sumar jugadores
             const countries = {};
             // @ts-ignore
             stats.forEach(stat => {
@@ -53,7 +53,7 @@
                 }
             });
             
-            // 3. Coordenadas de tus países (hemos mapeado los tuyos)
+            // Coordenadas de tus países
             const countryCoords = {
                 'United States': [-98.5795, 39.8283], 
                 'China': [104.1954, 35.8617], 
@@ -75,17 +75,16 @@
                     totalPlayers: data.totalPlayers,
                     totalViewers: data.totalViewers,
                     records: data.records,
-                    // El tamaño del círculo depende de los jugadores activos
                     radius: Math.min(15 + (data.totalPlayers / 5), 45)
                 }));
             
-            // Colores en tonos morados (adaptados a tu diseño original)
+            // Colores en tonos morados para que pegue con tu frontend
             // @ts-ignore
             const getColor = (players) => {
-                if (players > 100) return '#7e22ce'; // Morado muy oscuro
-                if (players > 50) return '#9333ea';  // Morado normal
-                if (players > 20) return '#a855f7';  // Morado claro
-                return '#d8b4fe';                    // Lila
+                if (players > 100) return '#7e22ce'; 
+                if (players > 50) return '#9333ea';  
+                if (players > 20) return '#a855f7';  
+                return '#d8b4fe';                    
             };
             
             // Crear SVG
@@ -109,7 +108,7 @@
             
             const path = d3.geoPath(projection);
             
-            // Cargar datos del mapa mundial
+            // Cargar datos del mapa mundial topológico
             const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
             // @ts-ignore
             const countriesGeo = topojson.feature(world, world.objects.countries);
@@ -139,7 +138,7 @@
                 .style('opacity', '0')
                 .style('z-index', '100');
             
-            // Dibujar los círculos de tus países
+            // Dibujar los círculos
             svg.selectAll('circle')
                 .data(markers)
                 .enter()
@@ -178,7 +177,7 @@
                     showStats = true;
                 });
             
-            // Etiqueta de texto (mostrando suma de jugadores en vez de count)
+            // Etiqueta de texto (Suma total)
             svg.selectAll('text')
                 .data(markers)
                 .enter()
@@ -218,7 +217,7 @@
 
 <div class="map-container">
     <h1 style="color: #a855f7;">🌍 Mapa Mundial de eSports Growth</h1>
-    <p class="subtitle" style="color: #94a3b8;">Haz clic en cualquier círculo para ver las estadísticas de cada año</p>
+    <p class="subtitle" style="color: #94a3b8;">Haz clic en cualquier círculo para ver las estadísticas anuales de ese país</p>
     
     <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem;">
         <a href="/analytics/esportsgrowth-stats" class="btn-nav btn-gray">Volver a la Gráfica</a>
@@ -248,7 +247,7 @@
                     <button onclick={closeStatsModal} class="close-btn dark-close-btn">✗</button>
                 </div>
                 <div class="modal-body dark-modal-body">
-                    <p><strong>Registros anuales encontrados:</strong> {statsList.length}</p>
+                    <p><strong>Registros encontrados:</strong> {statsList.length}</p>
                     <div class="athletes-grid">
                         {#each statsList as stat}
                             <div class="athlete-item dark-athlete-item">
@@ -269,9 +268,9 @@
     <div class="info dark-info">
         <h3 style="color: #a855f7; margin-top:0;">📖 Interpretación</h3>
         <ul style="color: #94a3b8;">
-            <li><strong>Mapa base:</strong> Mapa mundial (D3 & TopoJSON)</li>
+            <li><strong>Mapa base:</strong> Mapa mundial creado con D3.js y TopoJSON</li>
             <li><strong>Tamaño del círculo:</strong> Millones de jugadores activos totales</li>
-            <li><strong>Color del círculo:</strong> Más oscuro cuantos más jugadores haya</li>
+            <li><strong>Color:</strong> Más oscuro cuantos más jugadores haya</li>
             <li><strong>Clic:</strong> Haz clic en el círculo para ver el desglose por año</li>
             <li><strong>Número:</strong> Suma total de millones de jugadores</li>
         </ul>
