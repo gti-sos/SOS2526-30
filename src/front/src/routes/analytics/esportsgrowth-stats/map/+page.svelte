@@ -2,24 +2,23 @@
     import { onMount } from 'svelte';
 
     let mapContainer;
-    let errorMessage = $state(''); // Usamos $state correctamente
+    let errorMessage = $state('');
 
     onMount(async () => {
         try {
-            // 1. Importamos Highcharts y su módulo de Mapas de forma segura
-            const Highcharts = (await import('highcharts')).default;
-            const mapModule = (await import('highcharts/modules/map')).default;
-            mapModule(Highcharts); // Activamos el módulo de mapas
+            // SOLUCIÓN: Importamos directamente 'highmaps' para que Render no rompa la función al minificar
+            const HighchartsModule = await import('highcharts/highmaps');
+            const Highcharts = HighchartsModule.default || HighchartsModule;
 
-            // 2. Cargamos el mapa del mundo (oficial de Highcharts)
+            // Cargamos el mapa del mundo topológico
             const topology = await fetch('https://code.highcharts.com/mapdata/custom/world.topo.json').then(r => r.json());
 
-            // 3. Obtenemos los datos de TU API
+            // Obtenemos los datos de TU API
             const response = await fetch('/api/v1/esportsgrowth-stats');
             if (!response.ok) throw new Error('Error al cargar la API');
             const apiData = await response.json();
 
-            // 4. Sumamos los jugadores y espectadores por país
+            // Sumamos los jugadores y espectadores por país
             const countryTotals = {};
             apiData.forEach(item => {
                 const country = item.country;
@@ -33,7 +32,7 @@
                 }
             });
 
-            // 5. Mapeamos tus países a los códigos de Highcharts (hc-key)
+            // Mapeamos tus países a los códigos de Highcharts (hc-key)
             const countryCodes = {
                 'Spain': 'es',
                 'United States': 'us',
@@ -53,27 +52,26 @@
                 value: stats.players, // El color dependerá de los jugadores activos
                 viewers: stats.viewers,
                 records: stats.count
-            })).filter(d => d['hc-key']); // Filtramos los que no tengan código
+            })).filter(d => d['hc-key']);
 
-            // 6. Dibujamos el mapa
+            // Dibujamos el mapa
             Highcharts.mapChart(mapContainer, {
                 chart: {
                     map: topology,
                     backgroundColor: '#ffffff',
                     borderRadius: 12
                 },
-                title: { text: '' }, // Ocultamos el título porque ya tienes el h1 HTML
+                title: { text: '' }, 
                 mapNavigation: {
                     enabled: true,
                     buttonOptions: { verticalAlign: 'bottom' }
                 },
                 colorAxis: {
                     min: 0,
-                    // Degradado morado adaptado a tu diseño
                     stops: [
-                        [0, '#f3e8ff'],   // Morado muy clarito (pocos jugadores)
+                        [0, '#f3e8ff'],   // Morado muy clarito
                         [0.5, '#a855f7'], // Morado medio
-                        [1, '#7e22ce']    // Morado oscuro (muchos jugadores)
+                        [1, '#7e22ce']    // Morado oscuro
                     ]
                 },
                 tooltip: {
