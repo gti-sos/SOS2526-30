@@ -5,54 +5,49 @@
     let errorMessage = '';
 
     // Diccionario de coordenadas para los países de tu API (Latitud, Longitud)
-    // Si en el futuro añades más países en tu frontend, puedes añadir sus coordenadas aquí
     const countryCoords = {
         "United States": [37.0902, -95.7129],
         "China": [35.8617, 104.1954],
         "Japan": [36.2048, 138.2529],
         "South Korea": [35.9078, 127.7669],
         "Spain": [40.4637, -3.7492],
-        "Testland":, // Por si acaso ejecutas el test E2E y crea este país
+        "Testland":, 
         "Robotlandia":
     };
 
     onMount(async () => {
         try {
-            // 1. Importamos Leaflet de forma dinámica para que no dé errores en SvelteKit al compilar
+            // Importamos Leaflet de forma dinámica para que no dé errores en SvelteKit al compilar
             const L = (await import('leaflet')).default;
 
-            // 2. Pedimos los datos a tu API
+            // Pedimos los datos a tu API
             const res = await fetch('/api/v1/esportsgrowth-stats');
             if (!res.ok) throw new Error('Error al cargar la API');
             const data = await res.json();
 
-            // 3. Inicializamos el mapa centrado en el mundo
-            // El es la latitud/longitud inicial y el 2 es el nivel de zoom
+            // Inicializamos el mapa centrado en el mundo
             const map = L.map(mapElement).setView(, 2);
 
-            // 4. Cargamos el diseño del mapa (usamos OpenStreetMap, que es gratis y abierto)
+            // Cargamos el diseño del mapa
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            // 5. Dibujamos los datos en el mapa
+            // Dibujamos los datos en el mapa
             data.forEach(stat => {
                 const coords = countryCoords[stat.country];
                 
                 // Si tenemos las coordenadas del país, lo dibujamos
                 if (coords) {
-                    // Calculamos el radio del círculo según los jugadores activos (multiplicado para que se vea)
                     const radiusSize = Math.max((stat.active_player_no || 1) * 20000, 50000);
 
-                    // Creamos el círculo
                     const circle = L.circle(coords, {
-                        color: '#9333ea',       // Borde morado oscuro
-                        fillColor: '#a855f7',   // Relleno morado clarito
+                        color: '#9333ea',       
+                        fillColor: '#a855f7',   
                         fillOpacity: 0.5,
                         radius: radiusSize
                     }).addTo(map);
 
-                    // Le añadimos un popup al hacer clic
                     circle.bindPopup(`
                         <div style="text-align: center;">
                             <strong style="color: #7e22ce; font-size: 1.1rem;">${stat.country} (${stat.year})</strong><br>
@@ -125,12 +120,12 @@
     
     .map-container {
         width: 100%;
-        height: 600px; /* Altura del mapa */
+        height: 600px;
         border-radius: 12px;
         box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         border: 2px solid #e9d5ff;
         background: #f3f4f6;
-        z-index: 1; /* Para evitar problemas con otros elementos */
+        z-index: 1;
     }
     .error {
         color: #dc2626;
