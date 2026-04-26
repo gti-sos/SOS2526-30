@@ -267,7 +267,7 @@
     <p class="subtitle">Distribución porcentual por país (datos reales de sus APIs)</p>
     
     <div class="individual-links">
-        <a href="/analytics/easportsgrowth-stats" class="link-btn">David - Esports growth stats</a>
+        <a href="/analytics/esportsgrowth-stats" class="link-btn">David - Esports growth stats</a>
         <a href="/analytics/esportsearnings-stats" class="link-btn">Mario - Esports earnings stats</a>
         <a href="/analytics/olympics-athlete-events" class="link-btn">Gonzalo - Olympics Athlete Events</a>
         <a href="/analytics/cheaters-stats" class="link-btn">Francisco - Cheaters Stats</a>
