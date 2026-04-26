@@ -4,40 +4,32 @@
     let mapElement;
     let errorMessage = '';
 
-    // Diccionario de coordenadas para los países de tu API (Latitud, Longitud)
+    // Diccionario de coordenadas SOLO para los países reales
     const countryCoords = {
         "United States": [37.0902, -95.7129],
         "China": [35.8617, 104.1954],
         "Japan": [36.2048, 138.2529],
         "South Korea": [35.9078, 127.7669],
-        "Spain": [40.4637, -3.7492],
-        "Testland":, 
-        "Robotlandia":
+        "Spain": [40.4637, -3.7492]
     };
 
     onMount(async () => {
         try {
-            // Importamos Leaflet de forma dinámica para que no dé errores en SvelteKit al compilar
             const L = (await import('leaflet')).default;
 
-            // Pedimos los datos a tu API
             const res = await fetch('/api/v1/esportsgrowth-stats');
             if (!res.ok) throw new Error('Error al cargar la API');
             const data = await res.json();
 
-            // Inicializamos el mapa centrado en el mundo
             const map = L.map(mapElement).setView(, 2);
 
-            // Cargamos el diseño del mapa
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+                attribution: '© OpenStreetMap'
             }).addTo(map);
 
-            // Dibujamos los datos en el mapa
             data.forEach(stat => {
                 const coords = countryCoords[stat.country];
                 
-                // Si tenemos las coordenadas del país, lo dibujamos
                 if (coords) {
                     const radiusSize = Math.max((stat.active_player_no || 1) * 20000, 50000);
 
