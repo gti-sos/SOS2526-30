@@ -4,7 +4,6 @@
     let mapElement;
     let errorMessage = '';
 
-    // Diccionario de coordenadas SOLO para los países reales
     const countryCoords = {
         "United States": [37.0902, -95.7129],
         "China": [35.8617, 104.1954],
@@ -21,6 +20,7 @@
             if (!res.ok) throw new Error('Error al cargar la API');
             const data = await res.json();
 
+            // AQUÍ ESTABA EL ERROR: Faltaba el
             const map = L.map(mapElement).setView(, 2);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
