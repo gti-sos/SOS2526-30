@@ -7,15 +7,11 @@
     let loading = $state(true);
     let error = $state(null);
     let selectedCountry = $state(null);
-    // @ts-ignore
     let statsList = $state([]);
     let showStats = $state(false);
     
-    // @ts-ignore
-    let width = 1000;
     let height = 500;
     let svg;
-    // @ts-ignore
     let tooltip;
     
     onMount(async () => {
@@ -24,7 +20,7 @@
     
     async function initMap() {
         try {
-            // 1. Obtener datos de TU API de eSports (Obligatorio por rúbrica)
+            // 1. Obtener datos de TU API de eSports
             const res = await fetch('/api/v1/esportsgrowth-stats');
             if (!res.ok) throw new Error('Error al cargar la API');
             const data = await res.json();
@@ -32,45 +28,40 @@
             
             // 2. Agrupar por país y sumar jugadores
             const countries = {};
-            // @ts-ignore
             stats.forEach(stat => {
                 if (stat.country) {
-                    // @ts-ignore
                     if (!countries[stat.country]) {
-                        // @ts-ignore
                         countries[stat.country] = {
                             totalPlayers: 0,
                             totalViewers: 0,
                             records: []
                         };
                     }
-                    // @ts-ignore
                     countries[stat.country].totalPlayers += (stat.active_player_no || 0);
-                    // @ts-ignore
                     countries[stat.country].totalViewers += (stat.viewership || 0);
-                    // @ts-ignore
                     countries[stat.country].records.push(stat);
                 }
             });
             
-            // 3. Coordenadas de los países principales
+            // 3. Coordenadas (He añadido más por si acaso tienes otros en tu API)
             const countryCoords = {
                 'United States': [-98.5795, 39.8283], 
+                'USA': [-98.5795, 39.8283],
                 'China': [104.1954, 35.8617], 
                 'Spain': [-3.7492, 40.4637],
                 'Japan': [138.2529, 36.2048],
-                'South Korea': [127.7669, 35.9078]
+                'South Korea': [127.7669, 35.9078],
+                'Brazil': [-51.9253, -14.2350],
+                'Germany': [10.4515, 51.1657],
+                'France': [2.2137, 46.2276]
             };
             
             // Preparar marcadores
             const markers = Object.entries(countries)
-                // @ts-ignore
                 .filter(([name]) => countryCoords[name])
                 .map(([name, data]) => ({
                     name: name,
-                    // @ts-ignore
                     x: countryCoords[name],
-                    // @ts-ignore
                     y: countryCoords[name],
                     totalPlayers: data.totalPlayers,
                     totalViewers: data.totalViewers,
@@ -78,8 +69,7 @@
                     radius: Math.min(15 + (data.totalPlayers / 5), 45)
                 }));
             
-            // Colores morados (tu temática)
-            // @ts-ignore
+            // Colores morados
             const getColor = (players) => {
                 if (players > 100) return '#7e22ce'; 
                 if (players > 50) return '#9333ea';  
@@ -87,10 +77,9 @@
                 return '#d8b4fe';                    
             };
             
-            // Crear SVG
+            // Crear SVG (con un valor por defecto seguro de 1000px por si falla el cálculo inicial)
             const container = document.getElementById('map');
-            // @ts-ignore
-            const containerWidth = container.clientWidth;
+            const containerWidth = container.clientWidth || 1000;
             
             svg = d3.select('#map')
                 .append('svg')
@@ -100,17 +89,15 @@
                 .style('background', '#0f172a')
                 .style('border-radius', '12px');
             
-            const projection = d3.geoEquirectangular()
-                .scale(containerWidth / (2 * Math.PI))
-                .translate([containerWidth / 2, height / 2])
-                .precision(0.1);
+            // Cargar mapa mundial PRIMERO para poder ajustar la proyección
+            const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
+            const countriesGeo = topojson.feature(world, world.objects.countries);
+
+            // Proyección geográfica automática (Mercator queda más proporcionado y fitSize arregla el error de las coordenadas 0,0)
+            const projection = d3.geoMercator()
+                .fitSize([containerWidth, height], countriesGeo);
             
             const path = d3.geoPath(projection);
-            
-            // Cargar mapa mundial
-            const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
-            // @ts-ignore
-            const countriesGeo = topojson.feature(world, world.objects.countries);
             
             // Dibujar países
             svg.append('g')
@@ -142,9 +129,7 @@
                 .data(markers)
                 .enter()
                 .append('circle')
-                // @ts-ignore
                 .attr('cx', d => projection([d.x, d.y]))
-                // @ts-ignore
                 .attr('cy', d => projection([d.x, d.y]))
                 .attr('r', d => d.radius)
                 .attr('fill', d => getColor(d.totalPlayers))
@@ -153,9 +138,7 @@
                 .attr('opacity', 0.9)
                 .attr('cursor', 'pointer')
                 .on('mouseover', (event, d) => {
-                    // @ts-ignore
                     tooltip.transition().duration(200).style('opacity', 0.9);
-                    // @ts-ignore
                     tooltip.html(`
                         <strong style="color: #a855f7;">${d.name}</strong><br/>
                         🎮 Jugadores: ${d.totalPlayers.toFixed(1)} M<br/>
@@ -165,25 +148,20 @@
                     .style('top', (event.pageY - 28) + 'px');
                 })
                 .on('mouseout', () => {
-                    // @ts-ignore
                     tooltip.transition().duration(500).style('opacity', 0);
                 })
-                // @ts-ignore
                 .on('click', (event, d) => {
-                    // @ts-ignore
                     selectedCountry = d.name;
                     statsList = d.records;
                     showStats = true;
                 });
             
-            // Etiqueta de texto
+            // Etiqueta de texto centrada en el círculo
             svg.selectAll('text')
                 .data(markers)
                 .enter()
                 .append('text')
-                // @ts-ignore
                 .attr('x', d => projection([d.x, d.y]))
-                // @ts-ignore
                 .attr('y', d => projection([d.x, d.y]))
                 .attr('text-anchor', 'middle')
                 .attr('dominant-baseline', 'middle')
@@ -197,7 +175,6 @@
             
         } catch (e) {
             console.error('Error:', e);
-            // @ts-ignore
             error = e.message;
             loading = false;
         }
