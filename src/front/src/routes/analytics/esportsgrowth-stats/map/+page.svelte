@@ -10,7 +10,9 @@
     let statsList = $state([]);
     let showStats = $state(false);
     
-    let height = 500;
+    // MEDIDAS VIRTUALES FIJAS PARA EVITAR EL ERROR DEL 0,0
+    const width = 1000;
+    const height = 500;
     let svg;
     let tooltip;
     
@@ -43,10 +45,10 @@
                 }
             });
             
-            // 3. Coordenadas (He añadido más por si acaso tienes otros en tu API)
+            // 3. Coordenadas de los países principales
             const countryCoords = {
                 'United States': [-98.5795, 39.8283], 
-                'USA': [-98.5795, 39.8283],
+                'USA': [-98.5795, 39.8283], 
                 'China': [104.1954, 35.8617], 
                 'Spain': [-3.7492, 40.4637],
                 'Japan': [138.2529, 36.2048],
@@ -77,27 +79,28 @@
                 return '#d8b4fe';                    
             };
             
-            // Crear SVG (con un valor por defecto seguro de 1000px por si falla el cálculo inicial)
-            const container = document.getElementById('map');
-            const containerWidth = container.clientWidth || 1000;
-            
+            // Limpiar mapa anterior por si acaso Svelte recarga
+            d3.select('#map').selectAll('*').remove();
+
+            // CREAR SVG CON VIEWBOX (La clave para arreglar el fallo)
             svg = d3.select('#map')
                 .append('svg')
-                .attr('width', containerWidth)
-                .attr('height', height)
-                .attr('viewBox', `0 0 ${containerWidth} ${height}`)
+                .attr('viewBox', `0 0 ${width} ${height}`)
+                .style('width', '100%')
+                .style('height', '100%')
                 .style('background', '#0f172a')
                 .style('border-radius', '12px');
             
-            // Cargar mapa mundial PRIMERO para poder ajustar la proyección
-            const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
-            const countriesGeo = topojson.feature(world, world.objects.countries);
-
-            // Proyección geográfica automática (Mercator queda más proporcionado y fitSize arregla el error de las coordenadas 0,0)
+            // Proyección Mercator estática e infalible
             const projection = d3.geoMercator()
-                .fitSize([containerWidth, height], countriesGeo);
+                .scale(140)
+                .translate([width / 2, height / 1.4]);
             
             const path = d3.geoPath(projection);
+            
+            // Cargar mapa mundial
+            const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
+            const countriesGeo = topojson.feature(world, world.objects.countries);
             
             // Dibujar países
             svg.append('g')
@@ -124,13 +127,19 @@
                 .style('opacity', '0')
                 .style('z-index', '100');
             
-            // Dibujar círculos interactivos
+            // Dibujar círculos interactivos protegiendo las coordenadas
             svg.selectAll('circle')
                 .data(markers)
                 .enter()
                 .append('circle')
-                .attr('cx', d => projection([d.x, d.y]))
-                .attr('cy', d => projection([d.x, d.y]))
+                .attr('cx', d => {
+                    const coords = projection([d.x, d.y]);
+                    return coords ? coords : 0;
+                })
+                .attr('cy', d => {
+                    const coords = projection([d.x, d.y]);
+                    return coords ? coords : 0;
+                })
                 .attr('r', d => d.radius)
                 .attr('fill', d => getColor(d.totalPlayers))
                 .attr('stroke', 'white')
@@ -144,6 +153,7 @@
                         🎮 Jugadores: ${d.totalPlayers.toFixed(1)} M<br/>
                         👀 Espectadores: ${d.totalViewers.toFixed(1)} M
                     `)
+                    // Evitar que el tooltip se salga de la pantalla
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
                 })
@@ -156,13 +166,19 @@
                     showStats = true;
                 });
             
-            // Etiqueta de texto centrada en el círculo
+            // Etiqueta de texto
             svg.selectAll('text')
                 .data(markers)
                 .enter()
                 .append('text')
-                .attr('x', d => projection([d.x, d.y]))
-                .attr('y', d => projection([d.x, d.y]))
+                .attr('x', d => {
+                    const coords = projection([d.x, d.y]);
+                    return coords ? coords : 0;
+                })
+                .attr('y', d => {
+                    const coords = projection([d.x, d.y]);
+                    return coords ? coords : 0;
+                })
                 .attr('text-anchor', 'middle')
                 .attr('dominant-baseline', 'middle')
                 .attr('fill', 'white')
@@ -199,7 +215,7 @@
         <a href="/analytics/esportsgrowth-stats" class="btn-nav btn-gray">Volver a la Gráfica</a>
     </div>
 
-    <div id="map" style="height: 500px; width: 100%; border-radius: 12px; position: relative;"></div>
+    <div id="map" style="width: 100%; aspect-ratio: 2/1; border-radius: 12px; position: relative; overflow: hidden;"></div>
     
     {#if loading}
         <div class="loading-overlay">
