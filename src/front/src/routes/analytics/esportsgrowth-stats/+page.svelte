@@ -1,183 +1,140 @@
 <script>
-    let allResources = $state([]);
-    let displayedResources = $state([]);
-    
-    let loading = $state(false);
-    let error = $state(null);
-    let successMessage = $state(null);
-    
-    let showDeleteModal = $state(false);
-    let deleteTarget = $state(null);
-    let showCreateForm = $state(false);
-    
-    let currentPage = $state(1);
-    let itemsPerPage = $state(5);
-    
-    let totalPages = $derived(Math.ceil((allResources?.length || 0) / itemsPerPage) || 1);
-    
-    let formData = $state({
-        country: '', year: new Date().getFullYear(), active_player_no: '', viewership: '',
-        top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '',
-        internet_penetration: '', company_no: ''
-    });
+    import { onMount } from 'svelte';
 
-    let searchParams = $state({
-        country: '', year: '', from: '', to: '', active_player_no: '', viewership: '',
-        top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '',
-        internet_penetration: '', company_no: ''
-    });
+    let chartContainer;
+    let errorMessage = '';
 
-    $effect(() => {
-        const safeResources = Array.isArray(allResources) ? allResources : [];
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        displayedResources = safeResources.slice(start, end);
-    });
-
-    function clearMessages() {
-        setTimeout(() => { error = null; successMessage = null; }, 5000);
-    }
-
-    async function getResources() {
-        loading = true;
+    onMount(async () => {
         try {
-            const params = new URLSearchParams();
-            for (const [key, value] of Object.entries(searchParams)) {
-                if (value !== '' && value !== null) params.append(key, value);
-            }
-            const res = await fetch(`/api/v1/esportsgrowth-stats?${params.toString()}`);
-            if (res.status === 404) { allResources = []; error = 'No existen resultados.'; return; }
-            if (!res.ok) throw new Error('Error');
-            const data = await res.json();
-            allResources = Array.isArray(data) ? data : [];
-            successMessage = allResources.length > 0 ? `Cargados ${allResources.length} registros.` : null;
-            currentPage = 1;
-        } catch (e) {
-            allResources = []; error = 'Error de conexión.';
-        } finally {
-            loading = false; clearMessages();
-        }
-    }
+            // 1. Importamos Highcharts
+            const Highcharts = (await import('highcharts')).default;
 
-    async function loadSampleData() {
-        if (!confirm('¿Cargar datos de ejemplo?')) return;
-        try {
-            await fetch('/api/v1/esportsgrowth-stats/loadInitialData');
-            await getResources();
-        } catch (e) { error = 'Error al cargar.'; }
-    }
+            // 2. Pedimos los datos a tu API
+            const response = await fetch('/api/v1/esportsgrowth-stats');
+            if (!response.ok) throw new Error('Error al cargar los datos de la API');
+            
+            const data = await response.json();
 
-    async function saveNewResource() {
-        try {
-            const res = await fetch('/api/v1/esportsgrowth-stats', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({...formData, year: parseInt(formData.year)})
+            // Ordenamos por año para que el gráfico no haga zig-zags raros
+            data.sort((a, b) => a.year - b.year);
+
+            // 3. Preparamos los datos
+            const categories = data.map(d => `${d.country} (${d.year})`);
+            const activePlayers = data.map(d => d.active_player_no);
+            const viewership = data.map(d => d.viewership);
+
+            // 4. Dibujamos el gráfico
+            Highcharts.chart(chartContainer, {
+                chart: {
+                    type: 'area' // TIPO: Área. (Totalmente distinto al círculo de la foto)
+                },
+                title: {
+                    text: 'Crecimiento de eSports: Jugadores vs Espectadores'
+                },
+                xAxis: {
+                    categories: categories,
+                    title: { text: 'Países y Años' },
+                    crosshair: true
+                },
+                yAxis: {
+                    min: 0,
+                    title: { text: 'Millones de personas (M)' }
+                },
+                tooltip: {
+                    shared: true,
+                    valueSuffix: ' M'
+                },
+                plotOptions: {
+                    area: {
+                        fillOpacity: 0.5,
+                        marker: {
+                            enabled: true,
+                            symbol: 'circle',
+                            radius: 4
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Jugadores Activos',
+                        data: activePlayers,
+                        color: '#9333ea' // Morado de tu tema
+                    },
+                    {
+                        name: 'Espectadores',
+                        data: viewership,
+                        color: '#0ea5e9' // Azul claro
+                    }
+                ]
             });
-            if (!res.ok) throw new Error();
-            showCreateForm = false;
-            resetForm();
-            await getResources();
-        } catch (e) { alert('Error al guardar.'); }
-    }
-
-    async function deleteResource(country, year) {
-        try {
-            await fetch(`/api/v1/esportsgrowth-stats/${country}/${year}`, { method: 'DELETE' });
-            showDeleteModal = false;
-            await getResources();
-        } catch (e) { alert('Error al eliminar.'); }
-    }
-
-    function resetForm() {
-        formData = { country: '', year: new Date().getFullYear(), active_player_no: '', viewership: '', top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '', internet_penetration: '', company_no: '' };
-    }
-
-    function clearSearch() {
-        searchParams = { country: '', year: '', from: '', to: '', active_player_no: '', viewership: '', top_genre: '', top_platform: '', tournament_no: '', pro_player_no: '', internet_penetration: '', company_no: '' };
-        getResources();
-    }
-
-    getResources();
+        } catch (error) {
+            errorMessage = error.message;
+        }
+    });
 </script>
 
-<div class="container">
-    <h1>Estadísticas de Crecimiento de eSports</h1>
+<svelte:head>
+    <title>Gráfica Analítica - eSports Growth</title>
+</svelte:head>
 
-    {#if successMessage}<div class="msg-success">{successMessage}</div>{/if}
-    {#if error}<div class="msg-error">{error}</div>{/if}
-
-    <div class="btn-group main-actions">
-        <button class="btn-blue" onclick={() => { resetForm(); showCreateForm = true; }}>➕ Añadir Nuevo</button>
-        <button class="btn-purple" onclick={loadSampleData}>📥 Cargar Ejemplo</button>
-        <button class="btn-gray" onclick={getResources}>🔄 Actualizar</button>
+<main>
+    <h1>📊 Analítica de eSports Growth</h1>
+    
+    <div class="nav-links">
+        <a href="/analytics/esportsgrowth-stats/map" class="btn-green">🌍 Ir al Mapa Geoespacial</a>
     </div>
 
-    <div class="analytics-nav">
-        <a href="/analytics/esportsgrowth-stats" class="btn-analytics">📊 Ver Gráfica Analítica</a>
-        <a href="/analytics/esportsgrowth-stats/map" class="btn-map">🌍 Ver Mapa Geoespacial</a>
-    </div>
-
-    <div class="search-box">
-        <h3 style="margin-top: 0; color: var(--p-700);">Búsqueda Avanzada</h3>
-        <div class="search-grid">
-            <div><label>País</label><input type="text" bind:value={searchParams.country}></div>
-            <div><label>Desde año</label><input type="number" bind:value={searchParams.from}></div>
-            <div><label>Hasta año</label><input type="number" bind:value={searchParams.to}></div>
-            <div><label>Género</label><input type="text" bind:value={searchParams.top_genre}></div>
-        </div>
-        <div style="text-align: right; margin-top: 1rem;">
-            <button class="btn-purple" onclick={getResources}>Buscar</button>
-            <button class="btn-gray" onclick={clearSearch}>Limpiar</button>
-        </div>
-    </div>
-
-    {#if loading}
-        <p style="text-align: center;">Cargando...</p>
+    {#if errorMessage}
+        <p class="error">❌ {errorMessage}</p>
     {:else}
-        {#each displayedResources as resource}
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>{resource.country} ({resource.year})</h3>
-                    <div>
-                        <a href={`/esportsgrowth-stats/${resource.country}/${resource.year}`} class="btn-orange-small">Editar</a>
-                        <button class="btn-red-small" onclick={() => { deleteTarget = resource; showDeleteModal = true; }}>Borrar</button>
-                    </div>
-                </div>
-                <div class="grid-info">
-                    <span><strong>Jugadores:</strong> {resource.active_player_no}M</span>
-                    <span><strong>Espectadores:</strong> {resource.viewership}M</span>
-                    <span><strong>Género:</strong> {resource.top_genre}</span>
-                </div>
-            </div>
-        {/each}
+        <div bind:this={chartContainer} class="chart-container"></div>
     {/if}
-
-    <div style="text-align: center; margin-top: 2rem;">
-        <button class="btn-red" style="font-size: 0.8rem; opacity: 0.7;" onclick={() => { if(confirm('¿Borrar TODO?')) fetch('/api/v1/esportsgrowth-stats', {method:'DELETE'}).then(getResources) }}>⚠️ Vaciar Base de Datos</button>
-    </div>
-</div>
+</main>
 
 <style>
-    :root { --p-50: #faf5ff; --p-200: #e9d5ff; --p-500: #a855f7; --p-600: #9333ea; --p-700: #7e22ce; }
-    .container { max-width: 900px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }
-    h1 { color: var(--p-700); text-align: center; border-bottom: 2px solid var(--p-500); }
+    main {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 1rem;
+        font-family: sans-serif;
+    }
+    h1 {
+        color: #7e22ce;
+        text-align: center;
+        border-bottom: 2px solid #a855f7;
+        padding-bottom: 0.5rem;
+    }
+    .nav-links {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    a {
+        text-decoration: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+        transition: 0.2s;
+    }
+    .btn-green { background: #10b981; }
+    .btn-green:hover { background: #059669; }
     
-    .btn-group { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
-    
-    /* Estilos nuevos para los botones de analíticas */
-    .analytics-nav { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--p-200); }
-    .btn-analytics, .btn-map { text-decoration: none; padding: 0.8rem 1.5rem; border-radius: 8px; color: white; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .btn-analytics { background: #0f172a; } .btn-analytics:hover { background: #1e293b; transform: translateY(-2px); }
-    .btn-map { background: #10b981; } .btn-map:hover { background: #059669; transform: translateY(-2px); }
-
-    .search-box { background: var(--p-50); padding: 1rem; border-radius: 8px; border: 1px solid var(--p-200); margin-bottom: 2rem; }
-    .search-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
-    .card { border: 1px solid #e2e8f0; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; background: white; }
-    .grid-info { display: flex; gap: 1.5rem; font-size: 0.9rem; color: #475569; margin-top: 0.5rem; }
-    
-    button { cursor: pointer; border: none; border-radius: 6px; padding: 0.5rem 1rem; color: white; font-weight: bold; }
-    .btn-blue { background: #0284c7; } .btn-purple { background: var(--p-600); } .btn-gray { background: #64748b; } .btn-red { background: #ef4444; }
-    .btn-orange-small { background: #f59e0b; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
-    .btn-red-small { background: #ef4444; padding: 4px 8px; font-size: 0.8rem; margin-left: 4px;}
+    .chart-container {
+        width: 100%;
+        height: 500px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        border: 1px solid #e9d5ff;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+    .error {
+        color: #dc2626;
+        text-align: center;
+        background: #fee2e2;
+        padding: 1rem;
+        border-radius: 8px;
+    }
 </style>
