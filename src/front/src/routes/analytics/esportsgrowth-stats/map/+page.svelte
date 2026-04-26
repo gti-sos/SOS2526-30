@@ -24,13 +24,13 @@
     
     async function initMap() {
         try {
-            // Obtener datos de TU API de eSports (Obligatorio por rúbrica)
-            const res = await fetch('/api/v1/esportsgrowth-stats?limit=1000&t=' + Date.now());
+            // 1. Obtener datos de TU API de eSports (Obligatorio por rúbrica)
+            const res = await fetch('/api/v1/esportsgrowth-stats');
             if (!res.ok) throw new Error('Error al cargar la API');
             const data = await res.json();
             const stats = Array.isArray(data) ? data : [];
             
-            // Agrupar por país y sumar jugadores
+            // 2. Agrupar por país y sumar jugadores
             const countries = {};
             // @ts-ignore
             stats.forEach(stat => {
@@ -53,7 +53,7 @@
                 }
             });
             
-            // Coordenadas de tus países
+            // 3. Coordenadas de los países principales
             const countryCoords = {
                 'United States': [-98.5795, 39.8283], 
                 'China': [104.1954, 35.8617], 
@@ -62,7 +62,7 @@
                 'South Korea': [127.7669, 35.9078]
             };
             
-            // Preparar datos para los marcadores
+            // Preparar marcadores
             const markers = Object.entries(countries)
                 // @ts-ignore
                 .filter(([name]) => countryCoords[name])
@@ -78,7 +78,7 @@
                     radius: Math.min(15 + (data.totalPlayers / 5), 45)
                 }));
             
-            // Colores en tonos morados para que pegue con tu frontend
+            // Colores morados (tu temática)
             // @ts-ignore
             const getColor = (players) => {
                 if (players > 100) return '#7e22ce'; 
@@ -100,7 +100,6 @@
                 .style('background', '#0f172a')
                 .style('border-radius', '12px');
             
-            // Proyección geográfica
             const projection = d3.geoEquirectangular()
                 .scale(containerWidth / (2 * Math.PI))
                 .translate([containerWidth / 2, height / 2])
@@ -108,7 +107,7 @@
             
             const path = d3.geoPath(projection);
             
-            // Cargar datos del mapa mundial topológico
+            // Cargar mapa mundial
             const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
             // @ts-ignore
             const countriesGeo = topojson.feature(world, world.objects.countries);
@@ -138,7 +137,7 @@
                 .style('opacity', '0')
                 .style('z-index', '100');
             
-            // Dibujar los círculos
+            // Dibujar círculos interactivos
             svg.selectAll('circle')
                 .data(markers)
                 .enter()
@@ -177,7 +176,7 @@
                     showStats = true;
                 });
             
-            // Etiqueta de texto (Suma total)
+            // Etiqueta de texto
             svg.selectAll('text')
                 .data(markers)
                 .enter()
@@ -216,12 +215,11 @@
 </svelte:head>
 
 <div class="map-container">
-    <h1 style="color: #a855f7;">🌍 Mapa Mundial de eSports Growth</h1>
+    <h1 style="color: #a855f7;">🌍 Mapa Mundial de eSports</h1>
     <p class="subtitle" style="color: #94a3b8;">Haz clic en cualquier círculo para ver las estadísticas anuales de ese país</p>
     
     <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem;">
         <a href="/analytics/esportsgrowth-stats" class="btn-nav btn-gray">Volver a la Gráfica</a>
-        <a href="/esportsgrowth-stats" class="btn-nav btn-purple">Ir a la Tabla de Datos</a>
     </div>
 
     <div id="map" style="height: 500px; width: 100%; border-radius: 12px; position: relative;"></div>
@@ -268,11 +266,10 @@
     <div class="info dark-info">
         <h3 style="color: #a855f7; margin-top:0;">📖 Interpretación</h3>
         <ul style="color: #94a3b8;">
-            <li><strong>Mapa base:</strong> Mapa mundial creado con D3.js y TopoJSON</li>
+            <li><strong>Mapa base:</strong> Mapa mundial (D3.js & TopoJSON)</li>
             <li><strong>Tamaño del círculo:</strong> Millones de jugadores activos totales</li>
-            <li><strong>Color:</strong> Más oscuro cuantos más jugadores haya</li>
+            <li><strong>Color del círculo:</strong> Más oscuro cuantos más jugadores haya</li>
             <li><strong>Clic:</strong> Haz clic en el círculo para ver el desglose por año</li>
-            <li><strong>Número:</strong> Suma total de millones de jugadores</li>
         </ul>
     </div>
 </div>
@@ -284,7 +281,6 @@
     
     .btn-nav { text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; color: white; transition: 0.2s; }
     .btn-gray { background: #475569; } .btn-gray:hover { background: #334155; }
-    .btn-purple { background: #9333ea; } .btn-purple:hover { background: #7e22ce; }
 
     .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px; z-index: 10; }
     .spinner { border: 4px solid #334155; border-top: 4px solid #a855f7; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
