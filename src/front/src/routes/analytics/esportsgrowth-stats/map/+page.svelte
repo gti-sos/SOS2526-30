@@ -1,20 +1,9 @@
 <script>
     import { onMount } from 'svelte';
-    import * as d3 from 'd3';
-    // @ts-ignore
-    import * as topojson from 'topojson';
+    import 'leaflet/dist/leaflet.css';
     
-    let loading = $state(true);
-    let error = $state(null);
-    let selectedCountry = $state(null);
-    let statsList = $state([]);
-    let showStats = $state(false);
-    
-    // MEDIDAS VIRTUALES FIJAS PARA EVITAR EL ERROR DEL 0,0
-    const width = 1000;
-    const height = 500;
-    let svg;
-    let tooltip;
+    let error = null;
+    let map = null;
     
     onMount(async () => {
         await initMap();
@@ -22,273 +11,390 @@
     
     async function initMap() {
         try {
-            // 1. Obtener datos de TU API de eSports
-            const res = await fetch('/api/v1/esportsgrowth-stats');
-            if (!res.ok) throw new Error('Error al cargar la API');
-            const data = await res.json();
-            const stats = Array.isArray(data) ? data : [];
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) {
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 100);
+            }
             
-            // 2. Agrupar por país y sumar jugadores
-            const countries = {};
-            stats.forEach(stat => {
-                if (stat.country) {
-                    if (!countries[stat.country]) {
-                        countries[stat.country] = {
-                            totalPlayers: 0,
-                            totalViewers: 0,
-                            records: []
+            const L = (await import('leaflet')).default;
+            
+            delete L.Icon.Default.prototype._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+                iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            });
+            
+            const res = await fetch('/api/v1/esportsgrowth-stats');
+            
+            if (!res.ok) {
+                throw new Error(`Error al cargar datos: ${res.status}`);
+            }
+            
+            let data = await res.json();
+            let esportsData = Array.isArray(data) ? data : [];
+            
+            const countryCoordinates = {
+                'Spain': { lat: 40.4168, lon: -3.7038, name: 'España' },
+                'United States': { lat: 38.8951, lon: -77.0364, name: 'Estados Unidos' },
+                'China': { lat: 39.9042, lon: 116.4074, name: 'China' },
+                'Japan': { lat: 35.6762, lon: 139.6503, name: 'Japón' },
+                'South Korea': { lat: 37.5665, lon: 126.9780, name: 'Corea del Sur' },
+                'Brazil': { lat: -15.8267, lon: -47.9218, name: 'Brasil' },
+                'Germany': { lat: 52.5200, lon: 13.4050, name: 'Alemania' },
+                'France': { lat: 48.8566, lon: 2.3522, name: 'Francia' }
+            };
+            
+            const countryStats = {};
+            
+            esportsData.forEach(item => {
+                const country = item.country;
+                if (country && countryCoordinates[country]) {
+                    if (!countryStats[country]) {
+                        countryStats[country] = {
+                            players: 0,
+                            viewers: 0,
+                            count: 0
                         };
                     }
-                    countries[stat.country].totalPlayers += (stat.active_player_no || 0);
-                    countries[stat.country].totalViewers += (stat.viewership || 0);
-                    countries[stat.country].records.push(stat);
+                    countryStats[country].players += item.active_player_no || 0;
+                    countryStats[country].viewers += item.viewership || 0;
+                    countryStats[country].count++;
                 }
             });
             
-            // 3. Coordenadas de los países principales
-            const countryCoords = {
-                'United States': [-98.5795, 39.8283], 
-                'USA': [-98.5795, 39.8283], 
-                'China': [104.1954, 35.8617], 
-                'Spain': [-3.7492, 40.4637],
-                'Japan': [138.2529, 36.2048],
-                'South Korea': [127.7669, 35.9078],
-                'Brazil': [-51.9253, -14.2350],
-                'Germany': [10.4515, 51.1657],
-                'France': [2.2137, 46.2276]
-            };
+            map = L.map('map-container').setView(, 2);
             
-            // Preparar marcadores
-            const markers = Object.entries(countries)
-                .filter(([name]) => countryCoords[name])
-                .map(([name, data]) => ({
-                    name: name,
-                    x: countryCoords[name],
-                    y: countryCoords[name],
-                    totalPlayers: data.totalPlayers,
-                    totalViewers: data.totalViewers,
-                    records: data.records,
-                    radius: Math.min(15 + (data.totalPlayers / 5), 45)
-                }));
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19,
+                minZoom: 1
+            }).addTo(map);
             
-            // Colores morados
-            const getColor = (players) => {
-                if (players > 100) return '#7e22ce'; 
-                if (players > 50) return '#9333ea';  
-                if (players > 20) return '#a855f7';  
-                return '#d8b4fe';                    
-            };
-            
-            // Limpiar mapa anterior por si acaso Svelte recarga
-            d3.select('#map').selectAll('*').remove();
-
-            // CREAR SVG CON VIEWBOX (La clave para arreglar el fallo)
-            svg = d3.select('#map')
-                .append('svg')
-                .attr('viewBox', `0 0 ${width} ${height}`)
-                .style('width', '100%')
-                .style('height', '100%')
-                .style('background', '#0f172a')
-                .style('border-radius', '12px');
-            
-            // Proyección Mercator estática e infalible
-            const projection = d3.geoMercator()
-                .scale(140)
-                .translate([width / 2, height / 1.4]);
-            
-            const path = d3.geoPath(projection);
-            
-            // Cargar mapa mundial
-            const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json());
-            const countriesGeo = topojson.feature(world, world.objects.countries);
-            
-            // Dibujar países
-            svg.append('g')
-                .selectAll('path')
-                .data(countriesGeo.features)
-                .enter()
-                .append('path')
-                .attr('d', path)
-                .attr('fill', '#1e293b')
-                .attr('stroke', '#334155')
-                .attr('stroke-width', 0.5);
-            
-            // Tooltip interactivo
-            tooltip = d3.select('#map')
-                .append('div')
-                .attr('class', 'tooltip')
-                .style('position', 'absolute')
-                .style('background', '#1e293b')
-                .style('color', 'white')
-                .style('padding', '8px 12px')
-                .style('border-radius', '8px')
-                .style('border', '1px solid #334155')
-                .style('pointer-events', 'none')
-                .style('opacity', '0')
-                .style('z-index', '100');
-            
-            // Dibujar círculos interactivos protegiendo las coordenadas
-            svg.selectAll('circle')
-                .data(markers)
-                .enter()
-                .append('circle')
-                .attr('cx', d => {
-                    const coords = projection([d.x, d.y]);
-                    return coords ? coords : 0;
-                })
-                .attr('cy', d => {
-                    const coords = projection([d.x, d.y]);
-                    return coords ? coords : 0;
-                })
-                .attr('r', d => d.radius)
-                .attr('fill', d => getColor(d.totalPlayers))
-                .attr('stroke', 'white')
-                .attr('stroke-width', 2)
-                .attr('opacity', 0.9)
-                .attr('cursor', 'pointer')
-                .on('mouseover', (event, d) => {
-                    tooltip.transition().duration(200).style('opacity', 0.9);
-                    tooltip.html(`
-                        <strong style="color: #a855f7;">${d.name}</strong><br/>
-                        🎮 Jugadores: ${d.totalPlayers.toFixed(1)} M<br/>
-                        👀 Espectadores: ${d.totalViewers.toFixed(1)} M
+            Object.entries(countryStats).forEach(([country, stats]) => {
+                const coords = countryCoordinates[country];
+                if (coords) {
+                    const players = stats.players;
+                    let radius = 15;
+                    
+                    if (players > 200) radius = 40;
+                    else if (players > 100) radius = 30;
+                    else if (players > 50) radius = 25;
+                    else if (players > 20) radius = 20;
+                    else radius = 15;
+                    
+                    L.circleMarker([coords.lat, coords.lon], {
+                        radius: radius,
+                        fillColor: '#a855f7',
+                        color: '#7e22ce',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.7
+                    })
+                    .bindTooltip(`
+                        <b>${coords.name}</b><br/>
+                        🎮 Jugadores: ${stats.players.toFixed(1)} M<br/>
+                        👀 Espectadores: ${stats.viewers.toFixed(1)} M
+                    `, { sticky: true })
+                    .bindPopup(`
+                        <div style="text-align: center; min-width: 200px;">
+                            <h3 style="color: #7e22ce; margin: 0 0 10px 0;">${coords.name}</h3>
+                            <hr style="margin: 5px 0;">
+                            <p><strong>🎮 Jugadores:</strong> ${stats.players.toFixed(1)} M</p>
+                            <p><strong>👀 Espectadores:</strong> ${stats.viewers.toFixed(1)} M</p>
+                            <p><strong>📊 Registros:</strong> ${stats.count}</p>
+                        </div>
                     `)
-                    // Evitar que el tooltip se salga de la pantalla
-                    .style('left', (event.pageX + 10) + 'px')
-                    .style('top', (event.pageY - 28) + 'px');
-                })
-                .on('mouseout', () => {
-                    tooltip.transition().duration(500).style('opacity', 0);
-                })
-                .on('click', (event, d) => {
-                    selectedCountry = d.name;
-                    statsList = d.records;
-                    showStats = true;
-                });
+                    .addTo(map);
+                }
+            });
             
-            // Etiqueta de texto
-            svg.selectAll('text')
-                .data(markers)
-                .enter()
-                .append('text')
-                .attr('x', d => {
-                    const coords = projection([d.x, d.y]);
-                    return coords ? coords : 0;
-                })
-                .attr('y', d => {
-                    const coords = projection([d.x, d.y]);
-                    return coords ? coords : 0;
-                })
-                .attr('text-anchor', 'middle')
-                .attr('dominant-baseline', 'middle')
-                .attr('fill', 'white')
-                .attr('font-size', d => Math.max(10, d.radius / 2.5) + 'px')
-                .attr('font-weight', 'bold')
-                .attr('pointer-events', 'none')
-                .text(d => Math.round(d.totalPlayers));
-            
-            loading = false;
+            setTimeout(() => {
+                if (map) {
+                    map.invalidateSize();
+                }
+                const overlay = document.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }, 500);
             
         } catch (e) {
-            console.error('Error:', e);
             error = e.message;
-            loading = false;
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
         }
-    }
-    
-    function closeStatsModal() {
-        showStats = false;
-        selectedCountry = null;
-        statsList = [];
     }
 </script>
 
-<svelte:head>
-    <title>Mapa Geoespacial - eSports</title>
-</svelte:head>
-
 <div class="map-container">
-    <h1 style="color: #a855f7;">🌍 Mapa Mundial de eSports</h1>
-    <p class="subtitle" style="color: #94a3b8;">Haz clic en cualquier círculo para ver las estadísticas anuales de ese país</p>
-    
-    <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem;">
-        <a href="/analytics/esportsgrowth-stats" class="btn-nav btn-gray">Volver a la Gráfica</a>
-    </div>
-
-    <div id="map" style="width: 100%; aspect-ratio: 2/1; border-radius: 12px; position: relative; overflow: hidden;"></div>
-    
-    {#if loading}
-        <div class="loading-overlay">
-            <div class="spinner"></div>
-            <p style="color: white;">Cargando mapa...</p>
+    <div class="map-header">
+        <h1>🌍 Mapa Geoespacial: eSports Growth</h1>
+        <p class="subtitle">Visualización geolocalizada de jugadores y espectadores</p>
+        
+        <div class="nav-links">
+            <a href="/analytics/esportsgrowth-stats" class="link-btn">📊 Volver a la Gráfica</a>
+            <a href="/analytics/esportsgrowth-stats/map" class="link-btn active">📈 David - Esports Growth Map</a>
+            <a href="/analytics/esportsearnings-stats/map" class="link-btn">💰 Mario - Esports Earnings Map</a>
+            <a href="/analytics/olympics-athlete-events/map" class="link-btn">🏅 Gonzalo - Olympics Map</a>
+            <a href="/analytics/cheaters-stats/map" class="link-btn">🗺️ Francisco - Cheaters Map</a>
         </div>
-    {/if}
+    </div>
+    
+    <div class="map-wrapper">
+        <div id="map-container"></div>
+    </div>
+    
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Cargando mapa geoespacial de eSports...</p>
+    </div>
     
     {#if error}
         <div class="error">
             <p>❌ Error: {error}</p>
+            <button onclick={() => window.location.reload()}>Reintentar</button>
         </div>
     {/if}
     
-    {#if showStats}
-        <div class="modal dark-modal">
-            <div class="modal-content dark-modal-content">
-                <div class="modal-header dark-modal-header">
-                    <h2 style="color: #a855f7; margin:0;">🎮 Estadísticas de {selectedCountry}</h2>
-                    <button onclick={closeStatsModal} class="close-btn dark-close-btn">✗</button>
-                </div>
-                <div class="modal-body dark-modal-body">
-                    <p><strong>Registros encontrados:</strong> {statsList.length}</p>
-                    <div class="athletes-grid">
-                        {#each statsList as stat}
-                            <div class="athlete-item dark-athlete-item">
-                                <strong style="color: #a855f7;">Año {stat.year}</strong>
-                                <div class="athlete-details" style="color: #94a3b8; margin-top: 5px;">
-                                    <strong>Jugadores:</strong> {stat.active_player_no} M<br>
-                                    <strong>Espectadores:</strong> {stat.viewership} M<br>
-                                    <strong>Género Top:</strong> {stat.top_genre}
-                                </div>
-                            </div>
-                        {/each}
-                    </div>
-                </div>
+    <div class="info">
+        <h3>📖 Interpretación del Mapa</h3>
+        <div class="info-content">
+            <div class="info-text">
+                <p>Este mapa muestra la distribución geográfica del crecimiento de los eSports a nivel mundial.</p>
+                <ul>
+                    <li><strong>🟣 Círculos morados:</strong> El tamaño del círculo es proporcional a la cantidad de jugadores activos en cada país.</li>
+                    <li><strong>💬 Tooltips:</strong> Pasa el ratón sobre cualquier círculo para ver datos básicos.</li>
+                    <li><strong>📋 Popups:</strong> Haz clic en los círculos para ver información detallada.</li>
+                </ul>
+            </div>
+            <div class="info-stats">
+                <h4>📈 Datos clave</h4>
+                <p><strong>🔝 Países con más jugadores:</strong> China, Estados Unidos, Corea del Sur</p>
+                <p><strong>🌍 Cobertura:</strong> América, Europa y Asia</p>
             </div>
         </div>
-    {/if}
-    
-    <div class="info dark-info">
-        <h3 style="color: #a855f7; margin-top:0;">📖 Interpretación</h3>
-        <ul style="color: #94a3b8;">
-            <li><strong>Mapa base:</strong> Mapa mundial (D3.js & TopoJSON)</li>
-            <li><strong>Tamaño del círculo:</strong> Millones de jugadores activos totales</li>
-            <li><strong>Color del círculo:</strong> Más oscuro cuantos más jugadores haya</li>
-            <li><strong>Clic:</strong> Haz clic en el círculo para ver el desglose por año</li>
-        </ul>
     </div>
 </div>
 
 <style>
-    .map-container { max-width: 1200px; margin: 2rem auto; padding: 2rem; background: #0f172a; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); position: relative; min-height: 600px; font-family: sans-serif; }
-    h1 { text-align: center; margin-bottom: 0.5rem; margin-top: 0; }
-    .subtitle { text-align: center; margin-bottom: 1.5rem; }
+    .map-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.2);
+        border: 1px solid #e9d5ff;
+        position: relative;
+        min-height: 700px;
+    }
     
-    .btn-nav { text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; color: white; transition: 0.2s; }
-    .btn-gray { background: #475569; } .btn-gray:hover { background: #334155; }
-
-    .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px; z-index: 10; }
-    .spinner { border: 4px solid #334155; border-top: 4px solid #a855f7; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .map-header {
+        margin-bottom: 1.5rem;
+    }
     
-    .error { text-align: center; padding: 2rem; margin-top: 1rem; color: #f87171; background: #1e293b; border-radius: 8px; }
+    h1 {
+        color: #7e22ce;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
     
-    .dark-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .dark-modal-content { background: #1e293b; border-radius: 16px; max-width: 800px; width: 90%; max-height: 80vh; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 1px solid #334155; }
-    .dark-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #334155; background: #0f172a; }
-    .dark-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; } .dark-close-btn:hover { color: #f87171; }
-    .dark-modal-body { padding: 1.5rem; overflow-y: auto; max-height: calc(80vh - 70px); color: #e2e8f0; }
+    .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 2rem;
+    }
     
-    .dark-athlete-item { padding: 0.75rem; background: #0f172a; border-radius: 8px; border: 1px solid #334155; }
-    .athletes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+    .nav-links {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
     
-    .dark-info { margin-top: 2rem; padding: 1rem; background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+    .link-btn {
+        background: #faf5ff;
+        color: #7e22ce;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        border: 1px solid #e9d5ff;
+        transition: all 0.2s;
+    }
+    
+    .link-btn:hover {
+        background: #a855f7;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .link-btn.active {
+        background: #a855f7;
+        color: white;
+        border-color: #a855f7;
+    }
+    
+    .map-wrapper {
+        position: relative;
+        z-index: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e9d5ff;
+        margin-bottom: 2rem;
+    }
+    
+    #map-container {
+        height: 500px;
+        width: 100%;
+        background: #f0f0f0;
+        z-index: 1;
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 16px;
+        z-index: 100;
+    }
+    
+    .spinner {
+        border: 4px solid #e9d5ff;
+        border-top: 4px solid #a855f7;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .error {
+        text-align: center;
+        padding: 2rem;
+        margin-top: 1rem;
+        color: #dc2626;
+        background: #fee2e2;
+        border-radius: 8px;
+    }
+    
+    .error button {
+        margin-top: 1rem;
+        background: #dc2626;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    
+    .info {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #faf5ff;
+        border-radius: 12px;
+        border: 1px solid #e9d5ff;
+        position: relative;
+        z-index: 2;
+        clear: both;
+    }
+    
+    .info h3 {
+        color: #7e22ce;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .info-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: space-between;
+    }
+    
+    .info-text {
+        flex: 2;
+        min-width: 250px;
+    }
+    
+    .info-stats {
+        flex: 1;
+        min-width: 200px;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e9d5ff;
+    }
+    
+    .info-stats h4 {
+        color: #7e22ce;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .info-stats p {
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .info ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+    }
+    
+    .info li {
+        margin: 0.5rem 0;
+        color: #333;
+    }
+    
+    :global(.leaflet-container) {
+        z-index: 1;
+    }
+    
+    :global(.leaflet-popup-content) {
+        font-size: 14px;
+        line-height: 1.4;
+        min-width: 220px;
+    }
+    
+    :global(.leaflet-popup-content h3) {
+        color: #7e22ce;
+        margin-top: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .map-container {
+            padding: 1rem;
+        }
+        
+        #map-container {
+            height: 400px;
+        }
+        
+        .info-content {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
 </style>
