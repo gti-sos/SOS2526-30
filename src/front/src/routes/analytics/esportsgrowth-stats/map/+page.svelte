@@ -1,12 +1,19 @@
 <script>
-    import { onMount } from 'svelte';
-    import 'leaflet/dist/leaflet.css';
+    import { onMount, onDestroy } from 'svelte';
     
-    let error = null;
+    let error = $state(null);
+    let mapElement; // Referencia directa al contenedor (mejor que usar IDs)
     let map = null;
     
     onMount(async () => {
         await initMap();
+    });
+
+    // Limpiamos el mapa de la memoria cuando cambies de página
+    onDestroy(() => {
+        if (map) {
+            map.remove();
+        }
     });
     
     async function initMap() {
@@ -18,8 +25,10 @@
                 }, 100);
             }
             
+            // Cargamos Leaflet dinámicamente
             const L = (await import('leaflet')).default;
             
+            // Arreglamos los iconos
             delete L.Icon.Default.prototype._getIconUrl;
             L.Icon.Default.mergeOptions({
                 iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -27,18 +36,21 @@
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
             });
             
+            // Petición a TU API
             const res = await fetch('/api/v1/esportsgrowth-stats');
             
             if (!res.ok) {
-                throw new Error(`Error al cargar datos: ${res.status}`);
+                throw new Error(`Error al cargar datos de la API: ${res.status}`);
             }
             
             let data = await res.json();
             let esportsData = Array.isArray(data) ? data : [];
             
+            // Coordenadas
             const countryCoordinates = {
                 'Spain': { lat: 40.4168, lon: -3.7038, name: 'España' },
                 'United States': { lat: 38.8951, lon: -77.0364, name: 'Estados Unidos' },
+                'USA': { lat: 38.8951, lon: -77.0364, name: 'Estados Unidos' },
                 'China': { lat: 39.9042, lon: 116.4074, name: 'China' },
                 'Japan': { lat: 35.6762, lon: 139.6503, name: 'Japón' },
                 'South Korea': { lat: 37.5665, lon: 126.9780, name: 'Corea del Sur' },
@@ -49,6 +61,7 @@
             
             const countryStats = {};
             
+            // Agrupar datos
             esportsData.forEach(item => {
                 const country = item.country;
                 if (country && countryCoordinates[country]) {
@@ -65,7 +78,9 @@
                 }
             });
             
-            map = L.map('map-container').setView(, 2);
+            // Inicializar mapa de forma segura usando bind:this
+            if (!mapElement) return;
+            map = L.map(mapElement).setView(, 2);
             
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
@@ -74,6 +89,7 @@
                 minZoom: 1
             }).addTo(map);
             
+            // Pintar círculos
             Object.entries(countryStats).forEach(([country, stats]) => {
                 const coords = countryCoordinates[country];
                 if (coords) {
@@ -116,10 +132,6 @@
                 if (map) {
                     map.invalidateSize();
                 }
-                const overlay = document.querySelector('.loading-overlay');
-                if (overlay) {
-                    overlay.style.display = 'none';
-                }
             }, 500);
             
         } catch (e) {
@@ -131,6 +143,11 @@
         }
     }
 </script>
+
+<svelte:head>
+    <title>Mapa Geoespacial - eSports Growth</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+</svelte:head>
 
 <div class="map-container">
     <div class="map-header">
@@ -147,7 +164,7 @@
     </div>
     
     <div class="map-wrapper">
-        <div id="map-container"></div>
+        <div bind:this={mapElement} style="height: 500px; width: 100%; z-index: 1; background: #f0f0f0;"></div>
     </div>
     
     <div class="loading-overlay">
@@ -193,6 +210,7 @@
         border: 1px solid #e9d5ff;
         position: relative;
         min-height: 700px;
+        font-family: sans-serif;
     }
     
     .map-header {
@@ -249,13 +267,6 @@
         overflow: hidden;
         border: 1px solid #e9d5ff;
         margin-bottom: 2rem;
-    }
-    
-    #map-container {
-        height: 500px;
-        width: 100%;
-        background: #f0f0f0;
-        z-index: 1;
     }
     
     .loading-overlay {
@@ -386,10 +397,6 @@
     @media (max-width: 768px) {
         .map-container {
             padding: 1rem;
-        }
-        
-        #map-container {
-            height: 400px;
         }
         
         .info-content {
