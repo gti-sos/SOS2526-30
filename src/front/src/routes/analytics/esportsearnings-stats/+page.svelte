@@ -6,71 +6,48 @@
 
     onMount(async () => {
         try {
-            // 1. Importamos Highcharts de forma dinámica
             const Highcharts = (await import('highcharts')).default;
 
-            // 2. Cargamos los datos de TU API
+            // 1. Cargamos los datos de TU API
             const response = await fetch('/api/v1/esportsearnings-stats');
-            if (!response.ok) throw new Error('No se pudo conectar con la API de Earnings');
+            if (!response.ok) throw new Error('No se pudo conectar con la API');
             
             const data = await response.json();
-
-            // Ordenamos por año para que la cronología sea correcta
             data.sort((a, b) => a.year - b.year);
 
-            // 3. Preparamos tus categorías y series de datos
+            // 2. Preparamos los datos usando tus nombres de variable (total_money, tournament_no)
             const categories = data.map(d => `${d.country} (${d.year})`);
-            const earnings = data.map(d => d.earnings);
-            const tournaments = data.map(d => d.tournaments);
+            const money = data.map(d => d.total_money);
+            const tournaments = data.map(d => d.tournament_no);
 
-            // 4. Configuración del Gráfico
+            // 3. Dibujamos el gráfico
             Highcharts.chart(chartContainer, {
                 chart: {
-                    type: 'bar', // Tipo Barras Horizontales: Único en el grupo
+                    type: 'bar', // Único en el grupo
                     backgroundColor: '#ffffff'
                 },
-                title: {
-                    text: '💰 Análisis de Ganancias y Torneos en eSports'
-                },
-                subtitle: {
-                    text: 'Visualización individual - Mario'
-                },
+                title: { text: '💰 Ganancias y Torneos en eSports' },
+                subtitle: { text: 'Visualización Individual - Mario' },
                 xAxis: {
                     categories: categories,
-                    title: { text: 'País (Año)' },
-                    gridLineWidth: 1
+                    title: { text: 'País y Año' }
                 },
                 yAxis: [
-                    { // Eje para el dinero
-                        title: { text: 'Ganancias Totales (M$)' },
-                        labels: { format: '{value}M' }
-                    },
-                    { // Eje para el número de torneos
-                        title: { text: 'Cantidad de Torneos' },
-                        opposite: true
-                    }
+                    { title: { text: 'Dinero Total (M$)' } },
+                    { title: { text: 'Nº Torneos' }, opposite: true }
                 ],
-                tooltip: {
-                    shared: true,
-                    borderRadius: 10
-                },
-                plotOptions: {
-                    bar: {
-                        dataLabels: { enabled: true },
-                        borderWidth: 0
-                    }
-                },
+                tooltip: { shared: true },
                 series: [
                     {
-                        name: 'Ganancias (Millones)',
-                        data: earnings,
-                        color: '#059669', // Verde esmeralda
-                        tooltip: { valuePrefix: '$', valueSuffix: ' M' }
+                        name: 'Dinero Total',
+                        data: money,
+                        color: '#10b981', // Verde
+                        tooltip: { valueSuffix: ' M$' }
                     },
                     {
-                        name: 'Nº de Torneos',
+                        name: 'Torneos',
                         data: tournaments,
-                        color: '#f59e0b', // Ámbar/Dorado
+                        color: '#fbbf24', // Dorado
                         yAxis: 1
                     }
                 ]
@@ -82,86 +59,28 @@
 </script>
 
 <svelte:head>
-    <title>Analítica Individual - Mario</title>
+    <title>Analítica - Mario</title>
 </svelte:head>
 
-<div class="analytics-wrapper">
-    <div class="header-section">
-        <h1>📊 Estadísticas de Ganancias (Earnings)</h1>
-        <p class="desc">Comparativa de ingresos generados y torneos disputados por país.</p>
-        
-        <div class="nav-links">
-            <a href="/analytics/esportsearnings-stats/map" class="btn-map">🌍 Ver Mapa de Ganancias</a>
-        </div>
+<main class="container">
+    <h1>📊 Mi Análisis de eSports Earnings</h1>
+    
+    <div class="nav">
+        <a href="/analytics/esportsearnings-stats/map" class="btn">🌍 Ir al Mapa</a>
     </div>
 
-    <div class="chart-box">
-        {#if errorMessage}
-            <div class="error-msg">❌ Error: {errorMessage}</div>
-        {:else}
-            <div bind:this={chartContainer} style="width: 100%; height: 600px;"></div>
-        {/if}
-    </div>
-
-    <div class="info-footer">
-        <h3>💡 Sobre esta visualización</h3>
-        <ul>
-            <li><strong>Tipo de Gráfico:</strong> Barras horizontales (Bar), seleccionado para no repetir el estilo de los compañeros.</li>
-            <li><strong>Datos Dinámicos:</strong> Se obtienen directamente de <code>/api/v1/esportsearnings-stats</code>.</li>
-            <li><strong>Doble Eje:</strong> Permite comparar el dinero ganado (verde) frente al volumen de torneos (naranja) simultáneamente.</li>
-        </ul>
-    </div>
-</div>
+    {#if errorMessage}
+        <div class="error">❌ {errorMessage}</div>
+    {:else}
+        <div bind:this={chartContainer} class="chart"></div>
+    {/if}
+</main>
 
 <style>
-    .analytics-wrapper {
-        max-width: 1100px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: #f8fafc;
-        border-radius: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    h1 { color: #064e3b; text-align: center; margin-bottom: 0.5rem; }
-    .desc { text-align: center; color: #4b5563; margin-bottom: 2rem; }
-
-    .nav-links { display: flex; justify-content: center; margin-bottom: 2rem; }
-    .btn-map {
-        background: #059669;
-        color: white;
-        padding: 0.7rem 1.5rem;
-        border-radius: 50px;
-        text-decoration: none;
-        font-weight: bold;
-        transition: 0.3s;
-    }
-    .btn-map:hover { background: #047857; transform: scale(1.05); }
-
-    .chart-box {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .info-footer {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: #ecfdf5;
-        border-radius: 12px;
-        border-left: 5px solid #059669;
-    }
-    .info-footer h3 { color: #064e3b; margin-top: 0; }
-    .info-footer ul { margin-bottom: 0; }
-
-    .error-msg {
-        color: #b91c1c;
-        background: #fef2f2;
-        padding: 2rem;
-        text-align: center;
-        border-radius: 10px;
-        font-weight: bold;
-    }
+    .container { max-width: 1000px; margin: 2rem auto; padding: 1rem; font-family: sans-serif; }
+    h1 { color: #064e3b; text-align: center; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+    .nav { display: flex; justify-content: center; margin-bottom: 2rem; }
+    .btn { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .chart { width: 100%; height: 550px; border-radius: 12px; border: 1px solid #d1fae5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .error { color: #dc2626; text-align: center; background: #fee2e2; padding: 1rem; border-radius: 8px; }
 </style>
