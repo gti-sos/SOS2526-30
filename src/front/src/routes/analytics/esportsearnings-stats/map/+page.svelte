@@ -1,81 +1,170 @@
 <script>
     import { onMount } from 'svelte';
-    import 'leaflet/dist/leaflet.css';
-    
+
     let mapContainer;
-    let loading = true;
-    let error = null;
+    let errorMessage = '';
 
     onMount(async () => {
         try {
-            const L = (await import('leaflet')).default;
-            
-            // Fix de iconos
-            delete L.Icon.Default.prototype._getIconUrl;
-            L.Icon.Default.mergeOptions({
-                iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-                iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            });
+            // Importamos directamente 'highmaps' para que funcione bien
+            const HighchartsModule = await import('highcharts/highmaps');
+            const Highcharts = HighchartsModule.default || HighchartsModule;
 
-            const res = await fetch('/api/v1/esportsearnings-stats');
-            const data = await res.json();
+            // Cargamos el mapa del mundo topológico
+            const topology = await fetch('https://code.highcharts.com/mapdata/custom/world.topo.json').then(r => r.json());
 
-            // Coordenadas
-            const coords = {
-                'Spain': [40.41, -3.70], 'USA': [38.89, -77.03], 'United States': [38.89, -77.03],
-                'China': [39.90, 116.40], 'Japan': [35.67, 139.65], 'Germany': [52.52, 13.40],
-                'Italy': [41.90, 12.49], 'UK': [51.50, -0.12], 'United Kingdom': [51.50, -0.12],
-                'Sweden': [60.12, 18.64], 'South Korea': [35.90, 127.76]
-            };
+            // Obtenemos los datos de TU API
+            const response = await fetch('/api/v1/esportsearnings-stats');
+            if (!response.ok) throw new Error('Error al cargar la API');
+            const apiData = await response.json();
 
-            const stats = {};
-            data.forEach(d => {
-                if (coords[d.country]) {
-                    if (!stats[d.country]) stats[d.country] = { money: 0, tournaments: 0 };
-                    stats[d.country].money += d.total_money || 0;
-                    stats[d.country].tournaments += d.tournament_no || 0;
+            // Sumamos el dinero y los torneos por país
+            const countryTotals = {};
+            apiData.forEach(item => {
+                const country = item.country;
+                if (country) {
+                    if (!countryTotals[country]) {
+                        countryTotals[country] = { money: 0, tournaments: 0, count: 0 };
+                    }
+                    // IMPORTANTE: Aquí usamos tus variables de la base de datos
+                    countryTotals[country].money += item.total_money || 0;
+                    countryTotals[country].tournaments += item.tournament_no || 0;
+                    countryTotals[country].count++;
                 }
             });
 
-            const map = L.map('map').setView([20, 0], 2);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            // Mapeamos TUS países a los códigos de Highcharts (hc-key)
+            const countryCodes = {
+                'Spain': 'es', 'United States': 'us', 'USA': 'us', 'China': 'cn',
+                'Japan': 'jp', 'South Korea': 'kr', 'Brazil': 'br', 'Germany': 'de',
+                'France': 'fr', 'United Kingdom': 'gb', 'UK': 'gb', 'Sweden': 'se',
+                'Italy': 'it', 'Canada': 'ca', 'Russia': 'ru'
+            };
 
-            Object.entries(stats).forEach(([name, s]) => {
-                L.circleMarker(coords[name], {
-                    radius: Math.max(10, Math.min(s.money / 2, 40)),
-                    fillColor: '#10b981', color: '#fbbf24', weight: 2, fillOpacity: 0.6
-                })
-                .bindPopup(`<b>${name}</b><br>💰 $${s.money.toFixed(2)}M<br>🏆 ${s.tournaments} Torneos`)
-                .addTo(map);
+            // Preparamos los datos finales para el mapa
+            const mapData = Object.entries(countryTotals).map(([name, stats]) => ({
+                'hc-key': countryCodes[name],
+                name: name,
+                value: stats.money, // El color del país dependerá del dinero ganado
+                tournaments: stats.tournaments,
+                records: stats.count
+            })).filter(d => d['hc-key']);
+
+            // Dibujamos el mapa
+            Highcharts.mapChart(mapContainer, {
+                chart: {
+                    map: topology,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 12
+                },
+                title: { text: '' }, 
+                mapNavigation: {
+                    enabled: true,
+                    buttonOptions: { verticalAlign: 'bottom' }
+                },
+                colorAxis: {
+                    min: 0,
+                    stops: [
+                        [0, '#d1fae5'],   // Verde muy clarito (pocas ganancias)
+                        [0.5, '#10b981'], // Verde medio
+                        [1, '#047857']    // Verde oscuro (muchas ganancias)
+                    ]
+                },
+                tooltip: {
+                    headerFormat: '<strong style="color: #047857; font-size: 14px;">{point.point.name}</strong><br><hr style="margin:5px 0;">',
+                    pointFormat: '💰 Ganancias: <b>{point.value:.2f} M$</b><br>🏆 Torneos: <b>{point.tournaments}</b><br>📊 Registros: <b>{point.records}</b>'
+                },
+                series: [{
+                    data: mapData,
+                    name: 'Ganancias',
+                    states: {
+                        hover: { color: '#fbbf24' } // Se vuelve dorado al pasar el ratón
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.name}'
+                    }
+                }]
             });
-
-            loading = false;
-        } catch (e) { error = e.message; loading = false; }
+        } catch (error) {
+            errorMessage = error.message;
+        }
     });
 </script>
 
-<div class="map-page">
-    <div class="header">
-        <h1>🌍 Mapa de Ganancias - Mario</h1>
-        <div class="nav">
-            <a href="/analytics/esportsearnings-stats" class="btn">📊 Volver a Gráfico</a>
+<svelte:head>
+    <title>Mapa Geoespacial - eSports Earnings</title>
+</svelte:head>
+
+<div class="map-page-wrapper">
+    <div class="map-header">
+        <h1>🌍 Mapa Geoespacial: eSports Earnings</h1>
+        <p class="subtitle">Visualización de ganancias de dinero y torneos por país</p>
+        
+        <div class="nav-links">
+            <a href="/analytics/esportsearnings-stats" class="link-btn">📊 Volver a la Gráfica</a>
+            <a href="/analytics/esportsgrowth-stats/map" class="link-btn">📈 David - Esports Growth Map</a>
+            <a href="/analytics/esportsearnings-stats/map" class="link-btn active">💰 Mario - Esports Earnings Map</a>
+            <a href="/analytics/olympics-athlete-events/map" class="link-btn">🏅 Gonzalo - Olympics Map</a>
+            <a href="/analytics/cheaters-stats/map" class="link-btn">🗺️ Francisco - Cheaters Map</a>
         </div>
     </div>
-
-    <div class="wrapper">
-        <div id="map"></div>
-        {#if loading}<div class="overlay">Cargando...</div>{/if}
-        {#if error}<div class="overlay">❌ {error}</div>{/if}
+    
+    <div class="map-wrapper">
+        {#if errorMessage}
+            <div class="error">
+                <p>❌ Error: {errorMessage}</p>
+            </div>
+        {:else}
+            <div bind:this={mapContainer} style="height: 500px; width: 100%;"></div>
+        {/if}
+    </div>
+    
+    <div class="info">
+        <h3>📖 Interpretación del Mapa</h3>
+        <div class="info-content">
+            <div class="info-text">
+                <p>Este mapa muestra la distribución geográfica de los ingresos generados en eSports a nivel mundial.</p>
+                <ul>
+                    <li><strong>🟢 Color de los países:</strong> La intensidad del color verde es proporcional a la cantidad de ganancias (en millones de dólares) de cada país. Cuanto más oscuro, más dinero.</li>
+                    <li><strong>💬 Tooltips interactivos:</strong> Pasa el ratón sobre los países coloreados para ver el desglose exacto de millones ganados y cantidad de torneos disputados.</li>
+                    <li><strong>🔍 Navegación:</strong> Puedes usar los botones de zoom (+ / -) en la esquina inferior izquierda.</li>
+                </ul>
+            </div>
+            <div class="info-stats">
+                <h4>📈 Datos clave</h4>
+                <p><strong>🔝 Países principales:</strong> Estados Unidos, China, Suecia y Reino Unido.</p>
+                <p><strong>🌍 Tecnología:</strong> Highcharts Maps (Highmaps)</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-    .map-page { max-width: 1200px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }
-    h1 { text-align: center; color: #064e3b; }
-    .nav { display: flex; justify-content: center; margin-bottom: 1rem; }
-    .btn { background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; }
-    .wrapper { position: relative; height: 550px; border-radius: 12px; overflow: hidden; border: 2px solid #10b981; }
-    #map { height: 100%; width: 100%; background: #1a1a1a; }
-    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .map-page-wrapper { max-width: 1400px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.2); border: 1px solid #d1fae5; position: relative; min-height: 700px; font-family: sans-serif; }
+    .map-header { margin-bottom: 1.5rem; }
+    h1 { color: #047857; text-align: center; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
+    .nav-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .link-btn { background: #f0fdf4; color: #047857; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 500; border: 1px solid #d1fae5; transition: all 0.2s; }
+    .link-btn:hover { background: #10b981; color: white; transform: translateY(-2px); }
+    .link-btn.active { background: #10b981; color: white; border-color: #10b981; }
+    .map-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid #d1fae5; margin-bottom: 2rem; background: #f8fafc; }
+    
+    .error { text-align: center; padding: 2rem; margin: 1rem; color: #dc2626; background: #fee2e2; border-radius: 8px; font-weight: bold; }
+    
+    .info { padding: 1.5rem; background: #f0fdf4; border-radius: 12px; border: 1px solid #d1fae5; }
+    .info h3 { color: #047857; margin-top: 0; margin-bottom: 1rem; text-align: center; }
+    .info-content { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; }
+    .info-text { flex: 2; min-width: 250px; }
+    .info-stats { flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; border: 1px solid #d1fae5; }
+    .info-stats h4 { color: #047857; margin-top: 0; margin-bottom: 1rem; text-align: center; }
+    .info-stats p { margin: 0.5rem 0; font-size: 0.9rem; }
+    .info ul { margin: 0.5rem 0; padding-left: 1.5rem; }
+    .info li { margin: 0.5rem 0; color: #333; line-height: 1.5; }
+    
+    @media (max-width: 768px) {
+        .map-page-wrapper { padding: 1rem; }
+        .info-content { flex-direction: column; gap: 1rem; }
+    }
 </style>
