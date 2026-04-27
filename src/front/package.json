@@ -30,5 +30,18 @@
 		"svelte-check": "^4.4.2",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
+	},
+	"dependencies": {
+		"@deck.gl/layers": "^9.3.0",
+		"@deck.gl/react": "^9.3.0",
+		"d3": "^7.9.0",
+		"deck.gl": "^9.3.0",
+		"highcharts": "^12.6.0",
+		"highcharts-more": "^0.1.7",
+		"leaflet": "^1.9.4",
+		"mapbox-gl": "^3.22.0",
+		"maplibre-gl": "^5.23.0",
+		"three": "^0.184.0",
+		"topojson": "^3.0.2"
 	}
 }

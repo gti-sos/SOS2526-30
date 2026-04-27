@@ -20,7 +20,7 @@
               "pm.test(\"La respuesta debe ser un array\", function(){\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).is.an(\"array\");\r",
-              "    pm.expect(jsonData.length).eql(15);\r",
+              "    pm.expect(jsonData.length).eql(136);\r",
               "})\r",
               "\r",
               ""
