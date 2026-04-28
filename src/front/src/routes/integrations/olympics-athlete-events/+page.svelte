@@ -6,14 +6,14 @@
             ruta: "/integrations/olympics-athlete-events/ozone-depleting-substance-consumptions",
         },
         {
-            titulo: "Integracion 2 - ",
-            descripcion: "...",
-            ruta: "/integrations/olympics-athlete-events",
+            titulo: "Integracion 2 - Average Monthly Wages",
+            descripcion: "Integracion con api G24-average-monthly-wages",
+            ruta: "/integrations/olympics-athlete-events/average-monthly-wages",
         },
         {
-            titulo: "Integracion 3 - ",
-            descripcion: "...",
-            ruta: "/integrations/olympics-athlete-events",
+            titulo: "Integracion 3 - SpaceX",
+            descripcion: "Integracion con api SpaceX",
+            ruta: "/integrations/olympics-athlete-events/SpaceX",
             
         },
         {
@@ -30,7 +30,7 @@
 </script>
 
 <div class="integrations-container">
-    <h1>🏅 Integraciones - Olympics Athlete Events</h1>
+    <h1> Integraciones - Olympics Athlete Events</h1>
     <p class="subtitle">Visualizaciones y usos de la API de atletas olímpicos (Gonzalo García Gómez)</p>
 
     <div class="integrations-grid">
