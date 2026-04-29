@@ -34,6 +34,9 @@ jobs:
         
       - name: Run API tests (Newman)
         run: npm test
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Run E2E tests (Playwright)
         run: npm run test:e2e
