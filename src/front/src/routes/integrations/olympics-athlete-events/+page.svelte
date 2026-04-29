@@ -17,9 +17,9 @@
             
         },
         {
-            titulo: "Integracion 4 - ",
-            descripcion: "...",
-            ruta: "/integrations/olympics-athlete-events"
+            titulo: "Integracion 4 - GitHub API",
+            descripcion: "Integracion con api GitHub",
+            ruta: "/integrations/olympics-athlete-events/github",
         },
         {
             titulo: "Integracion 5 - ",
