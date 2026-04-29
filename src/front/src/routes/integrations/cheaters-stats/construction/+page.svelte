@@ -11,7 +11,7 @@
     
     async function loadData() {
         try {
-            const res = await fetch('https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts?limit=20');
+            const res = await fetch('https://sos2526-24.onrender.com/api/v1/international-construction-costs?limit=20');
             if (!res.ok) throw new Error('Error al cargar datos');
             data = await res.json();
             loading = false;
@@ -23,16 +23,16 @@
 </script>
 
 <svelte:head>
-    <title>Agriculture Climate | Integraciones</title>
+    <title>Construction Costs | Integraciones</title>
 </svelte:head>
 
 <div class="integration-page">
     <div class="header">
         <a href="/integrations" class="back-link">← Volver a integraciones</a>
-        <h1>🌾 Global Agriculture Climate Impacts</h1>
-        <p class="subtitle">API de Celia Leal Salvago (Grupo 22)</p>
+        <h1>🏗️ International Construction Costs</h1>
+        <p class="subtitle">API de Isaac Rodríguez Godino (Grupo 24)</p>
         <div class="badges">
-            <span class="badge sos">SOS - Grupo 22</span>
+            <span class="badge sos">SOS - Grupo 24</span>
             <span class="badge rest">RESTful</span>
         </div>
     </div>
@@ -53,8 +53,8 @@
                     <span class="stat-label">Países</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-value">{new Set(data.map(c => c.crop_type)).size}</span>
-                    <span class="stat-label">Tipos de cultivo</span>
+                    <span class="stat-value">{new Set(data.map(c => c.city)).size}</span>
+                    <span class="stat-label">Ciudades</span>
                 </div>
             </div>
             
@@ -62,27 +62,29 @@
                 <thead>
                     <tr>
                         <th>País</th>
+                        <th>Ciudad</th>
                         <th>Año</th>
-                        <th>Cultivo</th>
-                        <th>Temperatura (°C)</th>
-                        <th>Precipitación (mm)</th>
+                        <th>Coste (USD/m²)</th>
+                        <th>Variación</th>
+                        <th>Rank</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each data as item}
                         <tr>
-                            <td><strong>{item.country ? item.country.toUpperCase() : 'N/A'}</strong></td>
+                            <td><strong>{item.country}</strong></td>
+                            <td>{item.city}</td>
                             <td>{item.year}</td>
-                            <td>{item.crop_type}</td>
-                            <td>{item.average_temperature_c}°C</td>
-                            <td>{item.total_precipitation_mm} mm</td>
+                            <td>${item.cost_usd_per_m2 ? item.cost_usd_per_m2.toLocaleString() : 'N/A'}</td>
+                            <td class={item.cost_change_range && item.cost_change_range.includes('-') ? 'negative' : 'positive'}>{item.cost_change_range || 'N/A'}</td>
+                            <td>{item.rank ? `#${item.rank}` : 'N/A'}</td>
                         </tr>
                     {/each}
                 </tbody>
             </table>
             
             <div class="api-info">
-                <p><strong>🔗 Endpoint:</strong> <code>https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts</code></p>
+                <p><strong>🔗 Endpoint:</strong> <code>https://sos2526-24.onrender.com/api/v1/international-construction-costs</code></p>
                 <p><strong>📡 Método:</strong> GET</p>
                 <p><strong>📦 Formato:</strong> JSON</p>
             </div>
@@ -153,6 +155,16 @@
     .badge.rest {
         background: #3b82f6;
         color: white;
+    }
+    
+    .positive {
+        color: #10b981;
+        font-weight: bold;
+    }
+    
+    .negative {
+        color: #dc2626;
+        font-weight: bold;
     }
     
     .loading, .error {

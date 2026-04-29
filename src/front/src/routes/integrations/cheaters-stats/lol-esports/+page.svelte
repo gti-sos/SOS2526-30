@@ -11,9 +11,16 @@
     
     async function loadData() {
         try {
-            const res = await fetch('https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts?limit=20');
-            if (!res.ok) throw new Error('Error al cargar datos');
-            data = await res.json();
+            const res = await fetch('/api/rapid-proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    endpoint: 'lol-esports', 
+                    params: { tournamentId: '1177' }
+                })
+            });
+            const responseData = await res.json();
+            data = Array.isArray(responseData) ? responseData : [];
             loading = false;
         } catch (err) {
             error = err.message;
@@ -23,68 +30,59 @@
 </script>
 
 <svelte:head>
-    <title>Agriculture Climate | Integraciones</title>
+    <title>LoL Esports | Integraciones</title>
 </svelte:head>
 
 <div class="integration-page">
     <div class="header">
         <a href="/integrations" class="back-link">← Volver a integraciones</a>
-        <h1>🌾 Global Agriculture Climate Impacts</h1>
-        <p class="subtitle">API de Celia Leal Salvago (Grupo 22)</p>
+        <h1>🎮 League of Legends Esports</h1>
+        <p class="subtitle">API externa vía RapidAPI</p>
         <div class="badges">
-            <span class="badge sos">SOS - Grupo 22</span>
-            <span class="badge rest">RESTful</span>
+            <span class="badge external">🌍 Externa</span>
+            <span class="badge rapid">RapidAPI</span>
         </div>
     </div>
     
     <div class="content">
         {#if loading}
-            <div class="loading">Cargando datos...</div>
+            <div class="loading">Cargando equipos...</div>
         {:else if error}
             <div class="error">❌ Error: {error}</div>
         {:else}
             <div class="stats-summary">
                 <div class="stat-card">
                     <span class="stat-value">{data.length}</span>
-                    <span class="stat-label">Total registros</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">{new Set(data.map(c => c.country)).size}</span>
-                    <span class="stat-label">Países</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">{new Set(data.map(c => c.crop_type)).size}</span>
-                    <span class="stat-label">Tipos de cultivo</span>
+                    <span class="stat-label">Equipos</span>
                 </div>
             </div>
             
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>País</th>
-                        <th>Año</th>
-                        <th>Cultivo</th>
-                        <th>Temperatura (°C)</th>
-                        <th>Precipitación (mm)</th>
+                        <th>Equipo</th>
+                        <th>Victorias</th>
+                        <th>Derrotas</th>
+                        <th>Win Rate</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {#each data as item}
+                    {#each data.slice(0, 15) as team}
                         <tr>
-                            <td><strong>{item.country ? item.country.toUpperCase() : 'N/A'}</strong></td>
-                            <td>{item.year}</td>
-                            <td>{item.crop_type}</td>
-                            <td>{item.average_temperature_c}°C</td>
-                            <td>{item.total_precipitation_mm} mm</td>
+                            <td><strong>{team.team_name || team.name || 'Equipo'}</strong></td>
+                            <td>{team.wins || team.wins_total || 0}</td>
+                            <td>{team.losses || team.losses_total || 0}</td>
+                            <td>{team.win_rate || team.winrate || 0}%</td>
                         </tr>
                     {/each}
                 </tbody>
             </table>
             
             <div class="api-info">
-                <p><strong>🔗 Endpoint:</strong> <code>https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts</code></p>
+                <p><strong>🔗 Endpoint:</strong> <code>https://league-of-legends-esports1.p.rapidapi.com/team-statistics</code></p>
                 <p><strong>📡 Método:</strong> GET</p>
                 <p><strong>📦 Formato:</strong> JSON</p>
+                <p><strong>🔑 Autenticación:</strong> RapidAPI Key (vía proxy)</p>
             </div>
         {/if}
     </div>
@@ -145,13 +143,13 @@
         font-weight: bold;
     }
     
-    .badge.sos {
-        background: #f59e0b;
+    .badge.external {
+        background: #6b7280;
         color: white;
     }
     
-    .badge.rest {
-        background: #3b82f6;
+    .badge.rapid {
+        background: #f59e0b;
         color: white;
     }
     
@@ -170,7 +168,7 @@
     
     .stats-summary {
         display: flex;
-        justify-content: space-around;
+        justify-content: center;
         flex-wrap: wrap;
         gap: 1rem;
         margin-bottom: 2rem;
@@ -233,10 +231,6 @@
     @media (max-width: 768px) {
         .integration-page {
             padding: 1rem;
-        }
-        
-        .stats-summary {
-            flex-direction: column;
         }
         
         .data-table {

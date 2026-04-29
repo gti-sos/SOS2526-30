@@ -11,89 +11,64 @@
     
     async function loadData() {
         try {
-            const proxyUrl = '/api/proxy?url=';
-            const targetUrl = '/api/v2/cheaters-stats?limit=15';
-            const res = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-            if (!res.ok) {
-                const res2 = await fetch('/api/v2/cheaters-stats?limit=15');
-                const responseData = await res2.json();
-                data = responseData.data || responseData || [];
-            } else {
-                const responseData = await res.json();
-                data = responseData.data || responseData || [];
-            }
+            const res = await fetch('/api/rapid-proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: 'pokemon', method: 'GET' })
+            });
+            const responseData = await res.json();
+            data = Array.isArray(responseData) ? responseData.slice(0, 20) : [];
             loading = false;
-        } catch (e) {
-            error = e.message;
+        } catch (err) {
+            error = err.message;
             loading = false;
         }
     }
 </script>
 
 <svelte:head>
-    <title>Cheaters Stats | Integraciones</title>
+    <title>Pokémon API | Integraciones</title>
 </svelte:head>
 
 <div class="integration-page">
     <div class="header">
         <a href="/integrations" class="back-link">← Volver a integraciones</a>
-        <h1>🎮 Cheaters Stats API</h1>
-        <p class="subtitle">Estadísticas de tramposos en videojuegos</p>
+        <h1>⚡ Pokémon API</h1>
+        <p class="subtitle">API externa vía RapidAPI</p>
         <div class="badges">
-            <span class="badge sos">SOS - Grupo 30</span>
-            <span class="badge proxy">✅ Vía Proxy</span>
-            <span class="badge rest">RESTful</span>
+            <span class="badge external">🌍 Externa</span>
+            <span class="badge rapid">RapidAPI</span>
         </div>
     </div>
     
     <div class="content">
         {#if loading}
-            <div class="loading">Cargando datos...</div>
+            <div class="loading">Cargando Pokémons...</div>
         {:else if error}
             <div class="error">❌ Error: {error}</div>
         {:else}
             <div class="stats-summary">
                 <div class="stat-card">
                     <span class="stat-value">{data.length}</span>
-                    <span class="stat-label">Total registros</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">{new Set(data.map(c => c.country)).size}</span>
-                    <span class="stat-label">Países</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">{data.reduce((sum, c) => sum + (c.cheater_report || 0), 0).toLocaleString()}</span>
-                    <span class="stat-label">Total reportes</span>
+                    <span class="stat-label">Pokémons</span>
                 </div>
             </div>
             
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>País</th>
-                        <th>Año</th>
-                        <th>Reportes</th>
-                        <th>Baneos</th>
-                        <th>% Estimado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each data as item}
-                        <tr>
-                            <td><strong>{item.country}</strong></td>
-                            <td>{item.year}</td>
-                            <td>{item.cheater_report?.toLocaleString() || 'N/A'}</td>
-                            <td>{item.confirmed_ban?.toLocaleString() || 'N/A'}</td>
-                            <td>{item.estimated_cheater || 'N/A'}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
+            <div class="pokemon-grid">
+                {#each data as pokemon}
+                    <div class="pokemon-card">
+                        <div class="pokemon-number">#{pokemon.id || pokemon.number || '?'}</div>
+                        <strong>{pokemon.name}</strong>
+                        <small>Tipo: {pokemon.type || (pokemon.types ? pokemon.types.join(', ') : 'Desconocido')}</small>
+                    </div>
+                {/each}
+            </div>
             
             <div class="api-info">
-                <p><strong>🔗 Endpoint:</strong> <code>/api/v2/cheaters-stats</code></p>
+                <p><strong>🔗 Endpoint:</strong> <code>https://pokemon-api3.p.rapidapi.com/pokemon</code></p>
                 <p><strong>📡 Método:</strong> GET</p>
                 <p><strong>📦 Formato:</strong> JSON</p>
+                <p><strong>🔑 Autenticación:</strong> RapidAPI Key (vía proxy)</p>
             </div>
         {/if}
     </div>
@@ -143,6 +118,7 @@
         display: flex;
         justify-content: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
     
     .badge {
@@ -153,18 +129,13 @@
         font-weight: bold;
     }
     
-    .badge.sos {
+    .badge.external {
+        background: #6b7280;
+        color: white;
+    }
+    
+    .badge.rapid {
         background: #f59e0b;
-        color: white;
-    }
-    
-    .badge.proxy {
-        background: #10b981;
-        color: white;
-    }
-    
-    .badge.rest {
-        background: #3b82f6;
         color: white;
     }
     
@@ -183,7 +154,7 @@
     
     .stats-summary {
         display: flex;
-        justify-content: space-around;
+        justify-content: center;
         flex-wrap: wrap;
         gap: 1rem;
         margin-bottom: 2rem;
@@ -209,23 +180,41 @@
         color: #666;
     }
     
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
+    .pokemon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
         margin-bottom: 1.5rem;
     }
     
-    .data-table th,
-    .data-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid #e9d5ff;
+    .pokemon-card {
+        background: #faf5ff;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid #e9d5ff;
+        transition: transform 0.2s;
     }
     
-    .data-table th {
-        background: #faf5ff;
+    .pokemon-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .pokemon-number {
+        font-size: 0.7rem;
         color: #7e22ce;
-        font-weight: bold;
+        margin-bottom: 0.3rem;
+    }
+    
+    .pokemon-card strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .pokemon-card small {
+        font-size: 0.7rem;
+        color: #666;
     }
     
     .api-info {
@@ -246,12 +235,8 @@
             padding: 1rem;
         }
         
-        .stats-summary {
-            flex-direction: column;
-        }
-        
-        .data-table {
-            font-size: 0.8rem;
+        .pokemon-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         }
     }
 </style>

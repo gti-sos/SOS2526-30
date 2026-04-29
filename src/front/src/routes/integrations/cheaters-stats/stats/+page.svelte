@@ -11,9 +11,17 @@
     
     async function loadData() {
         try {
-            const res = await fetch('https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts?limit=20');
-            if (!res.ok) throw new Error('Error al cargar datos');
-            data = await res.json();
+            const proxyUrl = '/api/proxy?url=';
+            const targetUrl = '/api/v2/cheaters-stats?limit=15';
+            const res = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+            if (!res.ok) {
+                const res2 = await fetch('/api/v2/cheaters-stats?limit=15');
+                const responseData = await res2.json();
+                data = responseData.data || responseData || [];
+            } else {
+                const responseData = await res.json();
+                data = responseData.data || responseData || [];
+            }
             loading = false;
         } catch (err) {
             error = err.message;
@@ -23,16 +31,17 @@
 </script>
 
 <svelte:head>
-    <title>Agriculture Climate | Integraciones</title>
+    <title>Cheaters Stats | Integraciones</title>
 </svelte:head>
 
 <div class="integration-page">
     <div class="header">
         <a href="/integrations" class="back-link">← Volver a integraciones</a>
-        <h1>🌾 Global Agriculture Climate Impacts</h1>
-        <p class="subtitle">API de Celia Leal Salvago (Grupo 22)</p>
+        <h1>🎮 Cheaters Stats API</h1>
+        <p class="subtitle">Estadísticas de tramposos en videojuegos</p>
         <div class="badges">
-            <span class="badge sos">SOS - Grupo 22</span>
+            <span class="badge sos">SOS - Grupo 30</span>
+            <span class="badge proxy">✅ Vía Proxy</span>
             <span class="badge rest">RESTful</span>
         </div>
     </div>
@@ -53,8 +62,8 @@
                     <span class="stat-label">Países</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-value">{new Set(data.map(c => c.crop_type)).size}</span>
-                    <span class="stat-label">Tipos de cultivo</span>
+                    <span class="stat-value">{data.reduce((sum, c) => sum + (c.cheater_report || 0), 0).toLocaleString()}</span>
+                    <span class="stat-label">Total reportes</span>
                 </div>
             </div>
             
@@ -63,26 +72,26 @@
                     <tr>
                         <th>País</th>
                         <th>Año</th>
-                        <th>Cultivo</th>
-                        <th>Temperatura (°C)</th>
-                        <th>Precipitación (mm)</th>
+                        <th>Reportes</th>
+                        <th>Baneos</th>
+                        <th>% Estimado</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each data as item}
                         <tr>
-                            <td><strong>{item.country ? item.country.toUpperCase() : 'N/A'}</strong></td>
+                            <td><strong>{item.country}</strong></td>
                             <td>{item.year}</td>
-                            <td>{item.crop_type}</td>
-                            <td>{item.average_temperature_c}°C</td>
-                            <td>{item.total_precipitation_mm} mm</td>
+                            <td>{item.cheater_report ? item.cheater_report.toLocaleString() : 'N/A'}</td>
+                            <td>{item.confirmed_ban ? item.confirmed_ban.toLocaleString() : 'N/A'}</td>
+                            <td>{item.estimated_cheater || 'N/A'}</td>
                         </tr>
                     {/each}
                 </tbody>
             </table>
             
             <div class="api-info">
-                <p><strong>🔗 Endpoint:</strong> <code>https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts</code></p>
+                <p><strong>🔗 Endpoint:</strong> <code>/api/v2/cheaters-stats</code></p>
                 <p><strong>📡 Método:</strong> GET</p>
                 <p><strong>📦 Formato:</strong> JSON</p>
             </div>
@@ -147,6 +156,11 @@
     
     .badge.sos {
         background: #f59e0b;
+        color: white;
+    }
+    
+    .badge.proxy {
+        background: #10b981;
         color: white;
     }
     
