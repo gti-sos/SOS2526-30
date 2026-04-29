@@ -5,7 +5,7 @@ dotenv.config();
 
 const router = express.Router();
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = process.env.XITHUB_TOKEN;
 
 // Cambiar 'GET *' por 'use' (middleware)
 router.use(async (req, res) => {
