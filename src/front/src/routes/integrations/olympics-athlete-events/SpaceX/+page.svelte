@@ -4,11 +4,9 @@
     import { onMount } from 'svelte';
     import Chart from 'chart.js/auto';
     
-    let loading = true;
-    // @ts-ignore
-    let error = null;
-    // @ts-ignore
-    let chart = null;
+    let loading = $state(true);
+    let error = $state(null);
+    let chart = $state(null);
     // @ts-ignore
     let combinedData = [];
     
