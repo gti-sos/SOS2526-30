@@ -250,20 +250,19 @@
                                     const point = this;
                                     const chart = this.series.chart;
                                     const bubbleSeries = chart.series[0];
-                                    // @ts-ignore
-                                    const rangeKey = point.options.custom.rangeKey;
+                                    const minDate = point.options.custom.minDate;
+                                    const maxDate = point.options.custom.maxDate;
                                     
                                     bubbleSeries.points.forEach(p => {
                                         if (p.graphic) {
-                                            // @ts-ignore
-                                            if (p.rangeKey === rangeKey) {
+                                            if (p.x >= minDate && p.x < maxDate) {
                                                 p.graphic.attr({ 
                                                     opacity: 1, 
-                                                    lineWidth: 2, 
+                                                    lineWidth: 3, 
                                                     stroke: 'black'
                                                 });
                                             } else {
-                                                p.graphic.attr({ opacity: 0.2, lineWidth: 0 });
+                                                p.graphic.attr({ opacity: 0.08, lineWidth: 0 });
                                             }
                                         }
                                     });
@@ -274,7 +273,7 @@
                                     
                                     bubbleSeries.points.forEach(p => {
                                         if (p.graphic) {
-                                            p.graphic.attr({ opacity: 1, lineWidth: 0 });
+                                            p.graphic.attr({ opacity: 0.08, lineWidth: 0 });
                                         }
                                     });
                                 }

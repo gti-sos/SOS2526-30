@@ -8,6 +8,7 @@
         <a href="/">Inicio</a>
         <a href="/about">Acerca de</a>
         <a href="/analytics">Analytics</a>
+        <a href="/integrations">Integraciones</a>
     </nav>
 </header>
 
