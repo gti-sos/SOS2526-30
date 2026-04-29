@@ -27,7 +27,7 @@
     "highcharts": "^12.6.0",
     "highcharts-map": "^0.1.7",
     "leaflet": "^1.9.4",
-    "mapbox-gl": "^3.21.0",
+    "mapbox-gl": "^3.22.0",
     "nedb": "^1.8.0",
     "nedb-promises": "^6.2.3",
     "nodemon": "^3.1.14",
