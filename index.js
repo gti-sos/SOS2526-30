@@ -16,13 +16,22 @@
     import esportsearningsAPIv1 from './src/backend/esportsearnings-stats-v1.js';
     import esportsearningsAPIv2 from './src/backend/esportsearnings-stats-v2.js';
 
+    import githubGGGProxy from './src/backend/github-GGG-proxy.js';
+
+    
+
     const app = express();
     app.use(cors());
     const BASE_URL_API = "/api/v1";
     const BASE_URL_API2 = "/api/v2";
 
+   
+
+
  
     app.use(express.json());
+    
+    app.use('/api/github', githubGGGProxy);
 
     loadBackendGGG(app)
     loadBackendFMGP(app)
