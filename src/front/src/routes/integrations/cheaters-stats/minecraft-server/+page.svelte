@@ -1,9 +1,13 @@
 <script>
     import { onMount } from 'svelte';
     
-    let data = {};
     let loading = true;
     let error = null;
+    let serverAddress = 'Cargando...';
+    let playersOnline = 0;
+    let playersMax = 0;
+    let motd = 'Cargando...';
+    let version = 'Cargando...';
     
     onMount(async () => {
         await loadData();
@@ -20,7 +24,15 @@
                 })
             });
             const responseData = await res.json();
-            data = responseData || {};
+            
+            if (responseData) {
+                serverAddress = responseData.server_address || responseData.ip || 'mc.hypixel.net';
+                playersOnline = responseData.players_online || responseData.online || 0;
+                playersMax = responseData.players_max || responseData.max || 0;
+                motd = responseData.motd || responseData.description || 'Minecraft Server';
+                version = responseData.version || responseData.game_version || '1.8+';
+            }
+            
             loading = false;
         } catch (err) {
             error = err.message;
@@ -39,7 +51,7 @@
         <h1>⛏️ Minecraft Server Status</h1>
         <p class="subtitle">API externa vía RapidAPI</p>
         <div class="badges">
-            <span class="badge external">🌍 Externa</span>
+            <span class="badge external">Externa</span>
             <span class="badge rapid">RapidAPI</span>
         </div>
     </div>
@@ -48,35 +60,27 @@
         {#if loading}
             <div class="loading">Consultando servidor...</div>
         {:else if error}
-            <div class="error">❌ Error: {error}</div>
+            <div class="error">Error: {error}</div>
         {:else}
-            <div class="server-info">
-                <div class="server-card">
-                    <div class="server-icon">⛏️</div>
-                    <h2>{data.server_address || data.ip || 'mc.hypixel.net'}</h2>
-                    
-                    <div class="server-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Jugadores online:</span>
-                            <span class="detail-value">{data.players_online || data.online || 0} / {data.players_max || data.max || 0}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">MOTD:</span>
-                            <span class="detail-value">{data.motd || data.description || 'Minecraft Server'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Versión:</span>
-                            <span class="detail-value">{data.version || data.game_version || '1.8+'}</span>
-                        </div>
-                    </div>
+            <div class="server-card">
+                <div class="server-icon">⛏️</div>
+                <h2>{serverAddress}</h2>
+                <div class="detail-item">
+                    <strong>Jugadores online:</strong> {playersOnline} / {playersMax}
+                </div>
+                <div class="detail-item">
+                    <strong>MOTD:</strong> {motd}
+                </div>
+                <div class="detail-item">
+                    <strong>Versión:</strong> {version}
                 </div>
             </div>
             
             <div class="api-info">
-                <p><strong>🔗 Endpoint:</strong> <code>https://minecraftstefan-skliarovv1.p.rapidapi.com/getPCServerMOTD</code></p>
-                <p><strong>📡 Método:</strong> POST</p>
-                <p><strong>📦 Formato:</strong> JSON</p>
-                <p><strong>🔑 Autenticación:</strong> RapidAPI Key (vía proxy)</p>
+                <p><strong>Endpoint:</strong> <code>https://minecraftstefan-skliarovv1.p.rapidapi.com/getPCServerMOTD</code></p>
+                <p><strong>Método:</strong> POST</p>
+                <p><strong>Formato:</strong> JSON</p>
+                <p><strong>Autenticación:</strong> RapidAPI Key (vía proxy)</p>
             </div>
         {/if}
     </div>
@@ -160,18 +164,12 @@
         color: #dc2626;
     }
     
-    .server-info {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 2rem;
-    }
-    
     .server-card {
         background: linear-gradient(135deg, #faf5ff, #e9d5ff);
         border-radius: 20px;
         padding: 2rem;
         text-align: center;
-        min-width: 300px;
+        margin-bottom: 2rem;
         border: 1px solid #e9d5ff;
     }
     
@@ -184,28 +182,15 @@
         color: #7e22ce;
         margin: 0 0 1.5rem 0;
         font-size: 1.3rem;
-    }
-    
-    .server-details {
-        text-align: left;
+        word-break: break-word;
     }
     
     .detail-item {
-        margin: 1rem 0;
+        margin: 0.8rem 0;
         padding: 0.5rem;
         background: white;
         border-radius: 8px;
-    }
-    
-    .detail-label {
-        font-weight: bold;
-        color: #7e22ce;
-        display: block;
-        margin-bottom: 0.3rem;
-    }
-    
-    .detail-value {
-        color: #333;
+        text-align: left;
     }
     
     .api-info {
@@ -219,6 +204,7 @@
         background: white;
         padding: 0.2rem 0.4rem;
         border-radius: 4px;
+        word-break: break-word;
     }
     
     @media (max-width: 768px) {
@@ -227,7 +213,6 @@
         }
         
         .server-card {
-            min-width: auto;
             padding: 1rem;
         }
     }
