@@ -253,10 +253,10 @@
                             <tr>
                                 <td><strong>{item.year}</strong></td>
                                 <td>{item.athletes}</td>
-                                <td>{formatNumber(item.substances.hcfc)}很少
-                                <td>{formatNumber(item.substances.cfc)}很少
-                                <td>{formatNumber(item.substances.halon)}很少
-                                <td>{formatNumber(item.substances.methyl_chloroform)}很少
+                                <td>{formatNumber(item.substances.hcfc)}</td>
+                                <td>{formatNumber(item.substances.cfc)}</td>
+                                <td>{formatNumber(item.substances.halon)}</td>
+                                <td>{formatNumber(item.substances.methyl_chloroform)}</td>
                             </tr>
                         {/each}
                     </tbody>
