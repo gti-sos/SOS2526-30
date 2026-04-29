@@ -25,6 +25,9 @@ jobs:
         
       - name: Build frontend
         run: npm run build
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
