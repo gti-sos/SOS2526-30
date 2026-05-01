@@ -38,6 +38,7 @@
             const resSpaceX = await fetch('https://api.spacexdata.com/v4/launches');
             const launches = await resSpaceX.json();
             
+            
             // Contar lanzamientos por año
             const launchesByYear = {};
             // @ts-ignore
