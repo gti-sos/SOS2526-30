@@ -222,7 +222,7 @@
             <label>Seleccionar sustancia contaminante:</label>
             <div class="substance-buttons">
                 {#each substances as s}
-                    <button 
+                    <button
                         class="substance-btn {selectedSubstance === s.value ? 'active' : ''}"
                         style="border-bottom-color: {s.color}"
                         onclick={() => { selectedSubstance = s.value; updateChart(); }}>
