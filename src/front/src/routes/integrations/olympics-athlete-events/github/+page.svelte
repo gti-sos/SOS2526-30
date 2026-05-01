@@ -3,6 +3,7 @@
     
     let loading = $state(true);
     let error = $state(null);
+    // @ts-ignore
     let combinedData = $state([]);
     let chartInitialized = false;
     
@@ -35,9 +36,11 @@
             
             // Contar atletas por deporte
             const sportCount = {};
+            // @ts-ignore
             athletes.forEach(ath => {
                 const sport = ath.sport;
                 if (sport && sport !== 'NA') {
+                    // @ts-ignore
                     sportCount[sport] = (sportCount[sport] || 0) + 1;
                 }
             });
@@ -45,13 +48,16 @@
             // 2. Obtener datos de GitHub
             const languages = {};
             
+            // @ts-ignore
             for (const [sport, language] of Object.entries(sportToLanguage)) {
                 if (language) {
                     try {
                         const repoRes = await fetch(`/api/github/search/repositories?q=language:${language.toLowerCase()}&per_page=1`);
                         const repoData = await repoRes.json();
+                        // @ts-ignore
                         languages[language] = repoData.total_count || 0;
                     } catch (e) {
+                        // @ts-ignore
                         languages[language] = 0;
                     }
                     await new Promise(r => setTimeout(r, 100));
@@ -60,29 +66,36 @@
             
             // 3. Combinar datos
             combinedData = Object.entries(sportToLanguage)
+                // @ts-ignore
                 .filter(([sport]) => sportCount[sport] > 0)
                 .map(([sport, language]) => ({
                     sport: sport,
                     language: language,
+                    // @ts-ignore
                     athletes: sportCount[sport] || 0,
+                    // @ts-ignore
                     repos: languages[language] || 0
                 }))
                 .sort((a, b) => b.athletes - a.athletes);
             
             loading = false;
             
+            // Pequeño retraso para asegurar que el DOM se actualizó
             setTimeout(() => {
                 initChart();
             }, 200);
             
             const overlay = document.querySelector('.loading-overlay');
+            // @ts-ignore
             if (overlay) overlay.style.display = 'none';
             
         } catch (e) {
             console.error('Error:', e);
+            // @ts-ignore
             error = e.message;
             loading = false;
             const overlay = document.querySelector('.loading-overlay');
+            // @ts-ignore
             if (overlay) overlay.style.display = 'none';
         }
     }
@@ -90,6 +103,7 @@
     async function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
+        // Esperar a que el elemento exista en el DOM
         const container = document.getElementById('chart-container');
         if (!container) {
             console.log('Esperando contenedor...');
@@ -100,64 +114,39 @@
         const Highcharts = await import('highcharts');
         const HC = Highcharts.default;
         
-        const maxAthletes = Math.max(...combinedData.map(d => d.athletes));
-        const maxRepos = Math.max(...combinedData.map(d => d.repos));
-        
-        // Normalizar repositorios para que quepa en el gráfico (escala relativa)
-        const normalizedRepos = combinedData.map(d => (d.repos / maxRepos) * maxAthletes);
-        
+        // @ts-ignore
         HC.chart('chart-container', {
-            chart: { 
-                type: 'bar',  // ← Barras horizontales (no está en tu lista de usados)
-                height: 500 
-            },
-            title: { 
-                text: 'Relación: Atletas Olímpicos vs Repositorios GitHub',
-                style: { fontSize: '16px' }
-            },
-            subtitle: {
-                text: 'Las barras azules representan atletas | Las barras amarillas representan repositorios (escala ajustada)',
-                style: { fontSize: '12px' }
-            },
-            xAxis: { 
-                categories: combinedData.map(d => d.sport),
-                title: { text: 'Deporte Olímpico' },
-                labels: { style: { fontSize: '11px' } }
-            },
+            chart: { type: 'scatter', zoomType: 'xy', height: 500 },
+            title: { text: 'Relación: Atletas Olímpicos vs Repositorios GitHub' },
+            xAxis: { title: { text: 'Número de Atletas' } },
             yAxis: { 
-                title: { text: 'Número de Atletas' },
-                labels: { format: '{value}' }
+                title: { text: 'Repositorios GitHub' },
+                labels: { formatter: function() { 
+                    // @ts-ignore
+                    if (this.value > 1000000) return (this.value / 1000000).toFixed(1) + 'M';
+                    // @ts-ignore
+                    if (this.value > 1000) return (this.value / 1000).toFixed(1) + 'K';
+                    return this.value;
+                } }
             },
-            tooltip: { 
-                shared: true,
-                pointFormat: '<b>{point.category}</b><br/>{series.name}: {point.y:,.0f}'
-            },
-            plotOptions: {
-                bar: {
-                    dataLabels: {
-                        enabled: true,
-                        format: '{point.y:,.0f}',
-                        style: { fontSize: '9px' }
-                    }
-                }
-            },
-            series: [
-                {
-                    name: 'Atletas Olímpicos',
-                    data: combinedData.map(d => d.athletes),
-                    color: '#0284c7'
-                },
-                {
-                    name: 'Repositorios GitHub (normalizado)',
-                    data: normalizedRepos,
-                    color: '#eab308'
-                }
-            ]
+            tooltip: { pointFormat: '<b>{point.sport}</b><br/>Atletas: {point.x}<br/>Repositorios: {point.y:,.0f}' },
+            series: [{
+                name: 'Deportes',
+                data: combinedData.map(d => ({ 
+                    x: d.athletes, 
+                    y: d.repos, 
+                    sport: d.sport, 
+                    language: d.language 
+                })),
+                color: '#0284c7',
+                marker: { radius: 8, symbol: 'circle' }
+            }]
         });
         
         chartInitialized = true;
     }
     
+    // @ts-ignore
     function formatNumber(num) {
         if (num > 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num > 1000) return (num / 1000).toFixed(1) + 'K';
@@ -185,8 +174,8 @@
             <p>❌ Error: {error}</p>
         </div>
     {:else}
-        <!-- Gráfico de Barras Horizontales -->
-        <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem;"></div>
+        <!-- Gráfico Scatter -->
+        <div id="chart-container" style="height: 500px; width: 100%; margin-bottom: 2rem;"></div>
         
         <!-- Tabla de datos combinados -->
         <div class="table-container">
@@ -213,7 +202,7 @@
                             </tr>
                         {/each}
                     </tbody>
-                </table>
+                </table>                
             </div>
         </div>
     {/if}
@@ -221,12 +210,11 @@
     <div class="info">
         <h3>📖 Interpretación</h3>
         <ul>
-            <li><strong>Tipo de gráfico:</strong> Bar (barras horizontales) con <strong>Highcharts</strong></li>
             <li><strong>Objetivo:</strong> Explorar correlación entre deportes populares y lenguajes de programación</li>
             <li><strong>Datos de Olympics:</strong> Número de atletas por deporte (tu API)</li>
             <li><strong>Datos de GitHub:</strong> Repositorios por lenguaje de programación (vía proxy)</li>
             <li><strong>Proxy implementado:</strong> Endpoint <code>/api/github</code> que redirige a GitHub API</li>
-            <li><strong>Nota:</strong> Los repositorios están normalizados a la escala de atletas para visualización</li>
+            <li><strong>Gráfico:</strong> Scatter (dispersión) - No es tipo "line"</li>
         </ul>
     </div>
 </div>

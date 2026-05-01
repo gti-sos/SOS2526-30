@@ -19,16 +19,16 @@
             loading = true;
             
             // 1. Obtener datos de Olympics - atletas por año
-            const resOlympics = await fetch('/api/v2/olympics-athlete-events?limit=3000');
+            const resOlympics = await fetch('https://sos2526-30.onrender.com/api/v1/olympics-athlete-events/loadInitialData');
             const olympicsData = await resOlympics.json();
-            const athletes = olympicsData.data || [];
+            const athletes = olympicsData;
             
             // Contar atletas por año (2000-2024)
             const athletesByYear = {};
             // @ts-ignore
             athletes.forEach(ath => {
                 const year = ath.year;
-                if (year && year >= 2000 && year <= 2024) {
+                if (year && year >= 1900 && year <= 2024) {
                     // @ts-ignore
                     athletesByYear[year] = (athletesByYear[year] || 0) + 1;
                 }
@@ -44,7 +44,7 @@
             launches.forEach(launch => {
                 const date = new Date(launch.date_utc);
                 const year = date.getFullYear();
-                if (year >= 2000 && year <= 2024) {
+                if (year >= 1900 && year <= 2024) {
                     // @ts-ignore
                     launchesByYear[year] = (launchesByYear[year] || 0) + 1;
                 }

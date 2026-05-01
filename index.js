@@ -5,6 +5,9 @@
     import { fileURLToPath } from 'url';
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
+    import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
+
+
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -16,7 +19,7 @@
     import esportsearningsAPIv1 from './src/backend/esportsearnings-stats-v1.js';
     import esportsearningsAPIv2 from './src/backend/esportsearnings-stats-v2.js';
 
-    import githubGGGProxy from './src/backend/github-GGG-proxy.js';
+    
 
     
 

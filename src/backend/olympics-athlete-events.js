@@ -73,7 +73,7 @@ routerV1.get("/loadInitialData", (req, res) => {
                 });
             });
         } else {
-            db.find({}).sort({ id: 1 }).limit(15).exec((err, data) => {
+            db.find({}).sort({ id: 1 }).exec((err, data) => {
                 if (err) return res.status(500).json({ error: "Error al recuperar datos" });
                 const resultado = data.map(({ _id, ...rest }) => rest);
                 res.status(200).json(resultado);
@@ -271,7 +271,7 @@ routerV2.get("/loadInitialData", (req, res) => {
                 });
             });
         } else {
-            db.find({}).sort({ id: 1 }).limit(15).exec((err, data) => {
+            db.find({}).sort({ id: 1 }).exec((err, data) => {
                 if (err) return res.status(500).json({ error: "Error al recuperar datos" });
                 const resultado = data.map(({ _id, ...rest }) => rest);
                 res.status(200).json(resultado);
