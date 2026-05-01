@@ -7,6 +7,7 @@
     let combinedData = $state([]);
     let chartInitialized = false;
     
+    
     // Relación deporte → lenguaje de programación
     const sportToLanguage = {
         'Basketball': 'JavaScript',
@@ -143,7 +144,7 @@
             }]
         });
         
-        
+
         chartInitialized = true;
     }
     
