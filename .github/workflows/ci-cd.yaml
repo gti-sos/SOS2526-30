@@ -27,7 +27,7 @@ jobs:
         run: npm run build
         env:
           VITE_GITHUB_TOKEN: ${{ secrets.VITE_GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.XITHUB_TOKEN }}
         
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
@@ -36,7 +36,7 @@ jobs:
         run: npm test
         env:
           VITE_GITHUB_TOKEN: ${{ secrets.VITE_GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.XITHUB_TOKEN }}
         
       - name: Run E2E tests (Playwright)
         run: npm run test:e2e

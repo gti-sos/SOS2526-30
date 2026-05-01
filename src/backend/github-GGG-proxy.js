@@ -3,7 +3,11 @@ import express from 'express';
 
 const router = express.Router();
 
-const GITHUB_TOKEN = process.env.XITHUB_TOKEN;
+
+const XITHUB_TOKEN = process.env.XITHUB_TOKEN;
+
+console.log('🔍 Valor de XITHUB_TOKEN:', XITHUB_TOKEN ? '✅ Cargado correctamente' : '❌ No cargado - undefined');
+console.log('🔍 Variable de entorno:', process.env.XITHUB_TOKEN);
 
 // Cambiar 'GET *' por 'use' (middleware)
 router.use(async (req, res) => {
@@ -11,7 +15,7 @@ router.use(async (req, res) => {
     
     console.log('🔵 Proxy GGG request:', req.method, url);
     
-    if (!GITHUB_TOKEN) {
+    if (!XITHUB_TOKEN) {
         console.warn('⚠️ No hay token de GitHub');
     }
     
@@ -21,8 +25,8 @@ router.use(async (req, res) => {
             'Accept': 'application/vnd.github.v3+json'
         };
         
-        if (GITHUB_TOKEN) {
-            headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+        if (XITHUB_TOKEN) {
+            headers['Authorization'] = `Bearer ${XITHUB_TOKEN}`;
         }
         
         const response = await fetch(url, { headers });
