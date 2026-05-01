@@ -26,7 +26,7 @@ jobs:
       - name: Build frontend
         run: npm run build
         env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          VITE_GITHUB_TOKEN: ${{ secrets.VITE_GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Install Playwright Browsers
@@ -35,7 +35,7 @@ jobs:
       - name: Run API tests (Newman)
         run: npm test
         env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          VITE_GITHUB_TOKEN: ${{ secrets.VITE_GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Run E2E tests (Playwright)
