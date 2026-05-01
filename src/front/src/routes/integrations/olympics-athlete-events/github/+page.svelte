@@ -143,6 +143,7 @@
             }]
         });
         
+        
         chartInitialized = true;
     }
     
