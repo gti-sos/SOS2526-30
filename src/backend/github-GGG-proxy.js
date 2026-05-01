@@ -1,15 +1,12 @@
 import express from 'express';
 
-
 const router = express.Router();
-
 
 const XITHUB_TOKEN = process.env.XITHUB_TOKEN;
 
 console.log('🔍 Valor de XITHUB_TOKEN:', XITHUB_TOKEN ? '✅ Cargado correctamente' : '❌ No cargado - undefined');
 console.log('🔍 Variable de entorno:', process.env.XITHUB_TOKEN);
 
-// Cambiar 'GET *' por 'use' (middleware)
 router.use(async (req, res) => {
     const url = 'https://api.github.com' + req.url;
     
@@ -18,6 +15,11 @@ router.use(async (req, res) => {
     if (!XITHUB_TOKEN) {
         console.warn('⚠️ No hay token de GitHub');
     }
+    
+    // AÑADIDO: Headers para evitar caché en Render
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     
     try {
         const headers = {
