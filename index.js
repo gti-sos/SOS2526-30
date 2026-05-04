@@ -14,46 +14,36 @@
 
 
 
-    
-    
 
 
-    import loadBackendGGG from './src/backend/olympics-athlete-events.js';
-    import loadBackendFMGP from './src/backend/cheaters-stats.js';
-    import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
-    import esportsearningsAPIv1 from './src/backend/esportsearnings-stats-v1.js';
-    import esportsearningsAPIv2 from './src/backend/esportsearnings-stats-v2.js';
+import loadBackendGGG from './src/backend/olympics-athlete-events.js';
+import loadBackendFMGP from './src/backend/cheaters-stats.js';
+import esportsgrowthAPI from './src/backend/esportsgrowth-stats.js';
+import esportsearningsAPIv1 from './src/backend/esportsearnings-stats-v1.js';
+import esportsearningsAPIv2 from './src/backend/esportsearnings-stats-v2.js';
 
-    
+const app = express();
+app.use(cors());
+const BASE_URL_API = "/api/v1";
+const BASE_URL_API2 = "/api/v2";
 
-    
+app.use(express.json());
 
-    const app = express();
-    app.use(cors());
-    const BASE_URL_API = "/api/v1";
-    const BASE_URL_API2 = "/api/v2";
+app.use('/api/github', githubGGGProxy);
 
-   
+loadBackendGGG(app);
+loadBackendFMGP(app);
+loadCheatersStatsGithubOAuth(app);
 
+app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
+app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
+app.use(`${BASE_URL_API2}/esportsearnings-stats`, esportsearningsAPIv2);
 
- 
-    app.use(express.json());
-    
-    app.use('/api/github', githubGGGProxy);
+app.use(handler);
 
-    loadBackendGGG(app)
-    loadBackendFMGP(app)
-
-    app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
-    app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
-    app.use(`${BASE_URL_API2}/esportsearnings-stats`, esportsearningsAPIv2);
-
-    app.use(handler);
-
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log("=".repeat(50));
-        console.log(`Servidor corriendo en puerto ${PORT}`);
-        console.log("=".repeat(50));
-        
-    });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log("=".repeat(50));
+    console.log(`Servidor corriendo en puerto ${PORT}`);
+    console.log("=".repeat(50));
+});
