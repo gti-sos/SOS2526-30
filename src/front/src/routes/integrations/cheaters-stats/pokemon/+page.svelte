@@ -13,8 +13,8 @@
         try {
             console.log('Cargando Cheaters Stats...');
             
-            // 1. Cheaters Stats
-            const cheatersRes = await fetch('http://localhost:3000/api/v2/cheaters-stats?limit=200');
+            // 1. Cheaters Stats - URL RELATIVA
+            const cheatersRes = await fetch('/api/v2/cheaters-stats?limit=200');
             const cheatersJson = await cheatersRes.json();
             const cheatersData = cheatersJson.data || [];
             
@@ -33,8 +33,8 @@
             
             console.log('Cargando Pokémon...');
             
-            // 2. Pokémon
-            const pokemonRes = await fetch('http://localhost:3000/api/cheaters-stats/github-pokemon');
+            // 2. Pokémon - URL RELATIVA
+            const pokemonRes = await fetch('/api/cheaters-stats/github-pokemon');
             
             if (!pokemonRes.ok) {
                 throw new Error(`Error al cargar Pokémon: ${pokemonRes.status}`);
@@ -75,7 +75,6 @@
                 assignedReports: Math.floor((pokemon.totalStats / maxPower) * maxReports * 0.8)
             }));
             
-            // Esperar a que el DOM esté listo
             setTimeout(() => {
                 createChart(combinedData);
                 loading = false;
@@ -104,7 +103,6 @@
             return norm;
         });
         
-        // Verificar que el contenedor existe
         const container = document.getElementById('chart');
         if (!container) {
             console.error('Contenedor #chart no encontrado');
