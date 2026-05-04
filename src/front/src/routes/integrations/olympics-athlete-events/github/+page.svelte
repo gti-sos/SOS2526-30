@@ -40,7 +40,7 @@
             
             // 1. Obtener datos de Olympics
             console.log('📡 Obteniendo datos de Olympics...');
-            const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=1000');
+            const olympicsRes = await fetch('/api/v1/olympics-athlete-events/loadInitialData?limit=1000');
             const olympicsData = await olympicsRes.json();
             const athletes = olympicsData.data || [];
             
