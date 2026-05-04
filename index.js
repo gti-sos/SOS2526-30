@@ -12,8 +12,8 @@
     util.isDate = function(d) { return d instanceof Date; };
     import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
     import loadCheatersStatsGithubOAuth from './src/backend/cheaters-stats-github-oauth.js';
-
-
+    import loadTwitchProxy from './src/backend/twitch-proxy.js';
+    import loadSpotifyProxy from './src/backend/spotify-proxy.js';
 
 
 import loadBackendGGG from './src/backend/olympics-athlete-events.js';
@@ -31,6 +31,8 @@ app.use(express.json());
 
 app.use('/api/github', githubGGGProxy);
 loadCheatersStatsGithubOAuth(app);
+loadTwitchProxy(app);
+loadSpotifyProxy(app);
 
 loadBackendGGG(app);
 loadBackendFMGP(app);
