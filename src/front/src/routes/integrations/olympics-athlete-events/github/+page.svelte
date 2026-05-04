@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import Highcharts from 'highcharts';
     
     let loading = $state(true);
     let error = $state(null);
@@ -20,173 +21,209 @@
         'Cycling': 'Kotlin'
     };
     
+    // Agrupar lenguajes en 5 grupos para reducir peticiones
+    const languageGroups = {
+        'Group1': ['javascript', 'python'],
+        'Group2': ['java', 'typescript'],
+        'Group3': ['go', 'ruby'],
+        'Group4': ['c++', 'rust'],
+        'Group5': ['swift', 'kotlin']
+    };
+    
     onMount(() => {
         fetchCombinedData();
     });
     
     async function fetchCombinedData() {
-    try {
-        loading = true;
-        
-        // 1. Obtener datos de Olympics
-        const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=1000');
-        const olympicsData = await olympicsRes.json();
-        const athletes = olympicsData.data || [];
-        
-        const sportCount = {};
-        // @ts-ignore
-        athletes.forEach(ath => {
-            const sport = ath.sport;
-            if (sport && sport !== 'NA') {
-                // @ts-ignore
-                sportCount[sport] = (sportCount[sport] || 0) + 1;
-            }
-        });
-        
-        // 2. Obtener datos de GitHub CON DELAY DE 6 SEGUNDOS
-        const languages = {};
-        let index = 0;
-        const entries = Object.entries(sportToLanguage);
-        
-        for (const [sport, language] of entries) {
-            if (language) {
-                // Esperar 6 segundos entre peticiones (excepto la primera)
-                if (index > 0) {
-                    console.log(`⏳ Esperando 6 segundos antes de consultar ${language} (${index + 1}/${entries.length})...`);
-                    await new Promise(r => setTimeout(r, 6000));
+        try {
+            loading = true;
+            
+            // 1. Obtener datos de Olympics
+            console.log('📡 Obteniendo datos de Olympics...');
+            const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=1000');
+            const olympicsData = await olympicsRes.json();
+            const athletes = olympicsData.data || [];
+            
+            const sportCount = {};
+            // @ts-ignore
+            athletes.forEach(ath => {
+                const sport = ath.sport;
+                if (sport && sport !== 'NA') {
+                    // @ts-ignore
+                    sportCount[sport] = (sportCount[sport] || 0) + 1;
                 }
+            });
+            
+            // 2. Obtener datos de GitHub (SOLO 5 GRUPOS)
+            const languages = {};
+            let groupIndex = 0;
+            const groupEntries = Object.entries(languageGroups);
+            
+            for (const [groupName, langList] of groupEntries) {
+                groupIndex++;
+                console.log(`\n📡 [Grupo ${groupIndex}/5] Consultando ${groupName}...`);
                 
-                let success = false;
-                let retries = 0;
-                
-                while (!success && retries < 3) {
-                    try {
-                        const timestamp = Date.now();
-                        console.log(`📡 Consultando ${language} (intento ${retries + 1})...`);
-                        
-                        const repoRes = await fetch(`/api/github/search/repositories?q=language:${language.toLowerCase()}&per_page=1&_=${timestamp}`);
-                        
-                        if (repoRes.ok) {
-                            const repoData = await repoRes.json();
-                            // @ts-ignore
-                            languages[language] = repoData.total_count || 0;
-                            // @ts-ignore
-                            console.log(`✅ ${sport} (${language}): ${languages[language]} repos`);
-                            success = true;
-                        } else if (repoRes.status === 403) {
-                            const errorData = await repoRes.json();
-                            if (errorData.message && errorData.message.includes('secondary rate limit')) {
-                                console.warn(`⚠️ Secondary rate limit para ${language}, esperando 10 segundos...`);
-                                await new Promise(r => setTimeout(r, 10000));
+                for (const lang of langList) {
+                    let success = false;
+                    let retries = 0;
+                    
+                    while (!success && retries < 3) {
+                        try {
+                            const timestamp = Date.now();
+                            const response = await fetch(`/api/github/search/repositories?q=language:${lang}&per_page=1&_=${timestamp}`);
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                // @ts-ignore
+                                languages[lang] = data.total_count || 0;
+                                // @ts-ignore
+                                console.log(`  ✅ ${lang}: ${languages[lang].toLocaleString()} repos`);
+                                success = true;
+                            } else if (response.status === 403) {
+                                console.warn(`  ⚠️ ${lang}: Rate limit, esperando 8 segundos...`);
+                                await new Promise(r => setTimeout(r, 8000));
                                 retries++;
                             } else {
-                                console.warn(`⚠️ ${language} - Error ${repoRes.status}`);
+                                console.warn(`  ⚠️ ${lang}: error ${response.status}`);
                                 // @ts-ignore
-                                languages[language] = 0;
+                                languages[lang] = 0;
                                 success = true;
                             }
-                        } else {
-                            console.warn(`⚠️ ${language} - Status ${repoRes.status}`);
-                            // @ts-ignore
-                            languages[language] = 0;
-                            success = true;
+                        } catch (e) {
+                            console.error(`  ❌ Error con ${lang}:`, e);
+                            retries++;
+                            await new Promise(r => setTimeout(r, 5000));
                         }
-                    } catch (e) {
-                        console.error(`❌ Error con ${language}:`, e);
-                        retries++;
-                        await new Promise(r => setTimeout(r, 5000));
+                    }
+                    
+                    if (!success) {
+                        console.log(`  ❌ ${lang}: 0 repos después de reintentos`);
+                        // @ts-ignore
+                        languages[lang] = 0;
+                    }
+                    
+                    // Esperar 2 segundos entre lenguajes del mismo grupo
+                    if (langList.indexOf(lang) < langList.length - 1) {
+                        await new Promise(r => setTimeout(r, 2000));
                     }
                 }
                 
-                if (!success) {
-                    console.log(`❌ ${sport} (${language}): 0 repos después de reintentos`);
-                    // @ts-ignore
-                    languages[language] = 0;
+                // Esperar 5 segundos entre grupos (excepto después del último)
+                if (groupIndex < groupEntries.length) {
+                    console.log(`⏳ Esperando 5 segundos antes del siguiente grupo...\n`);
+                    await new Promise(r => setTimeout(r, 5000));
                 }
-                
-                index++;
             }
-        }
-        
-        // 3. Combinar datos
-        combinedData = Object.entries(sportToLanguage)
+            
+            // 3. Combinar datos
+            combinedData = Object.entries(sportToLanguage)
+                // @ts-ignore
+                .filter(([sport]) => sportCount[sport] > 0)
+                .map(([sport, language]) => ({
+                    sport: sport,
+                    language: language,
+                    // @ts-ignore
+                    athletes: sportCount[sport] || 0,
+                    // @ts-ignore
+                    repos: languages[language.toLowerCase()] || 0
+                }))
+                .sort((a, b) => b.athletes - a.athletes);
+            
+            console.log('\n✅ Datos combinados:', combinedData);
+            loading = false;
+            
+            setTimeout(() => {
+                initChart();
+            }, 200);
+            
+            const overlay = document.querySelector('.loading-overlay');
             // @ts-ignore
-            .filter(([sport]) => sportCount[sport] > 0)
-            .map(([sport, language]) => ({
-                sport: sport,
-                language: language,
-                // @ts-ignore
-                athletes: sportCount[sport] || 0,
-                // @ts-ignore
-                repos: languages[language] || 0
-            }))
-            .sort((a, b) => b.athletes - a.athletes);
-        
-        loading = false;
-        
-        setTimeout(() => {
-            initChart();
-        }, 200);
-        
-        const overlay = document.querySelector('.loading-overlay');
-        // @ts-ignore
-        if (overlay) overlay.style.display = 'none';
-        
-    } catch (e) {
-        console.error('Error:', e);
-        // @ts-ignore
-        error = e.message;
-        loading = false;
-        const overlay = document.querySelector('.loading-overlay');
-        // @ts-ignore
-        if (overlay) overlay.style.display = 'none';
+            if (overlay) overlay.style.display = 'none';
+            
+        } catch (e) {
+            console.error('❌ Error:', e);
+            // @ts-ignore
+            error = e.message;
+            loading = false;
+            const overlay = document.querySelector('.loading-overlay');
+            // @ts-ignore
+            if (overlay) overlay.style.display = 'none';
+        }
     }
-}
     
     async function initChart() {
-        if (combinedData.length === 0 || chartInitialized) return;
+        console.log('📊 Iniciando gráfico...');
         
-        const container = document.getElementById('chart-container');
-        if (!container) {
-            console.log('Esperando contenedor...');
-            setTimeout(() => initChart(), 100);
+        if (combinedData.length === 0) {
+            console.log('⚠️ No hay datos para el gráfico');
             return;
         }
         
-        const Highcharts = await import('highcharts');
-        const HC = Highcharts.default;
+        if (chartInitialized) {
+            console.log('⚠️ Gráfico ya inicializado');
+            return;
+        }
         
-        // @ts-ignore
-        HC.chart('chart-container', {
-            accessibility: { enabled: false },
-            chart: { type: 'scatter', zoomType: 'xy', height: 500 },
-            title: { text: 'Relación: Atletas Olímpicos vs Repositorios GitHub' },
-            xAxis: { title: { text: 'Número de Atletas' } },
-            yAxis: { 
-                title: { text: 'Repositorios GitHub' },
-                labels: { formatter: function() { 
-                    // @ts-ignore
-                    if (this.value > 1000000) return (this.value / 1000000).toFixed(1) + 'M';
-                    // @ts-ignore
-                    if (this.value > 1000) return (this.value / 1000).toFixed(1) + 'K';
-                    return this.value;
-                } }
-            },
-            tooltip: { pointFormat: '<b>{point.sport}</b><br/>Atletas: {point.x}<br/>Repositorios: {point.y:,.0f}' },
-            series: [{
-                name: 'Deportes',
-                data: combinedData.map(d => ({ 
-                    x: d.athletes, 
-                    y: d.repos, 
-                    sport: d.sport, 
-                    language: d.language 
-                })),
-                color: '#0284c7',
-                marker: { radius: 8, symbol: 'circle' }
-            }]
-        });
+        const container = document.getElementById('chart-container');
+        if (!container) {
+            console.log('⚠️ Contenedor no encontrado, reintentando...');
+            setTimeout(() => initChart(), 500);
+            return;
+        }
         
-        chartInitialized = true;
+        try {
+            // Preparar datos para el gráfico
+            const chartData = combinedData.map(d => ({ 
+                x: d.athletes, 
+                y: d.repos, 
+                name: d.sport,
+                language: d.language 
+            }));
+            
+            console.log('📊 Creando gráfico con datos:', chartData);
+            
+            // @ts-ignore
+            Highcharts.chart('chart-container', {
+                accessibility: { enabled: false },
+                chart: { 
+                    type: 'scatter', 
+                    zoomType: 'xy', 
+                    height: 500
+                },
+                title: { text: 'Relación: Atletas Olímpicos vs Repositorios GitHub' },
+                xAxis: { 
+                    title: { text: 'Número de Atletas' },
+                    labels: { format: '{value}' }
+                },
+                yAxis: { 
+                    title: { text: 'Repositorios GitHub' },
+                    labels: { 
+                        formatter: function() { 
+                            // @ts-ignore
+                            if (this.value >= 1000000) return (this.value / 1000000).toFixed(1) + 'M';
+                            // @ts-ignore
+                            if (this.value >= 1000) return (this.value / 1000).toFixed(1) + 'K';
+                            return this.value;
+                        } 
+                    }
+                },
+                tooltip: { 
+                    pointFormat: '<b>{point.name}</b><br/>Atletas: {point.x}<br/>Repositorios: {point.y:,.0f}' 
+                },
+                series: [{
+                    name: 'Deportes',
+                    data: chartData,
+                    color: '#0284c7',
+                    marker: { radius: 8, symbol: 'circle' }
+                }]
+            });
+            
+            chartInitialized = true;
+            console.log('✅ Gráfico inicializado correctamente');
+            
+        } catch (error) {
+            console.error('❌ Error inicializando el gráfico:', error);
+        }
     }
     
     // @ts-ignore
@@ -205,6 +242,7 @@
         <p><strong>API 1 (propia):</strong> Olympics Athlete Events - Número de atletas por deporte</p>
         <p><strong>API 2 (GitHub):</strong> GitHub API - Número de repositorios por lenguaje de programación</p>
         <p><strong>Proxy:</strong> Endpoint propio <code>/api/github</code></p>
+        <p><strong>Optimización:</strong> 5 grupos de lenguajes para evitar rate limit de GitHub</p>
     </div>
     
     <div class="loading-overlay">
@@ -245,7 +283,7 @@
                             </tr>
                         {/each}
                     </tbody>
-                </table>                
+                </table>
             </div>
         </div>
     {/if}
@@ -258,6 +296,7 @@
             <li><strong>Datos de GitHub:</strong> Repositorios por lenguaje de programación (vía proxy)</li>
             <li><strong>Proxy implementado:</strong> Endpoint <code>/api/github</code> que redirige a GitHub API</li>
             <li><strong>Gráfico:</strong> Scatter (dispersión) - No es tipo "line"</li>
+            <li><strong>Optimización:</strong> 5 grupos de lenguajes con delays de 5 segundos entre grupos</li>
         </ul>
     </div>
 </div>
