@@ -8,19 +8,22 @@
         try {
             const Highcharts = (await import('highcharts')).default;
 
-            // 1. Cargamos los datos de TU API
-            const response = await fetch('/api/v2/esportsearnings-stats');
-            if (!response.ok) throw new Error('No se pudo conectar con la API');
+            // ¡LA CLAVE ESTÁ AQUÍ! Usamos la v2 y añadimos el Date.now() para reventar la caché
+            const response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
+            
+            if (!response.ok) throw new Error('No se pudo conectar con la API v2');
             
             const data = await response.json();
+            
+            // Ordenamos por año
             data.sort((a, b) => a.year - b.year);
 
-            // 2. Preparamos los datos usando tus nombres de variable (total_money, tournament_no)
+            // Preparamos los datos
             const categories = data.map(d => `${d.country} (${d.year})`);
             const money = data.map(d => d.total_money);
             const tournaments = data.map(d => d.tournament_no);
 
-            // 3. Dibujamos el gráfico
+            // Dibujamos el gráfico
             Highcharts.chart(chartContainer, {
                 chart: {
                     type: 'bar', // Único en el grupo
@@ -63,7 +66,7 @@
 </svelte:head>
 
 <main class="container">
-    <h1>📊 Mi Análisis de eSports Earnings</h1>
+    <h1>📊 Mi Análisis de eSports Earnings (V2)</h1>
     
     <div class="nav">
         <a href="/analytics/esportsearnings-stats/map" class="btn">🌍 Ir al Mapa</a>
