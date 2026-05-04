@@ -2,8 +2,8 @@
     import { onMount } from 'svelte';
     import Chart from 'chart.js/auto';
 
-    let loading = true;
-    let error = null;
+   let loading = $state(true);
+   let error = $state(null);
 
     onMount(async () => {
         try {
