@@ -9,7 +9,7 @@
             const Highcharts = (await import('highcharts')).default;
 
             // 1. Cargamos los datos de TU API
-            const response = await fetch('/api/v1/esportsearnings-stats');
+            const response = await fetch('/api/v2/esportsearnings-stats');
             if (!response.ok) throw new Error('No se pudo conectar con la API');
             
             const data = await response.json();
