@@ -31,17 +31,17 @@
             <span class="badge">Gráfico de Radar</span>
         </a>
         
-        <a href="/integrations/cheaters-stats/dogs" class="card">
-            <div class="card-icon">🐶</div>
-            <h2>Dogs API</h2>
-            <p>API pública - Datos de perros</p>
-            <span class="badge">Gráfico de Donut</span>
+        <a href="/integrations/cheaters-stats/spotify" class="card">
+            <div class="card-icon">🎵</div>
+            <h2>Spotify API</h2>
+            <p>API pública - Datos de Spotify</p>
+            <span class="badge">Gráfico de Barras</span>
         </a>
         
-        <a href="/integrations/cheaters-stats/exchange" class="card">
-            <div class="card-icon">�</div>
-            <h2>ExchangeRate API</h2>
-            <p>API externa (datos de ejemplo)</p>
+        <a href="/integrations/cheaters-stats/twitch" class="card">
+            <div class="card-icon">🎮</div>
+            <h2>Twitch API</h2>
+            <p>API pública - Datos de Twitch</p>
             <span class="badge">Gráfico Radial</span>
         </a>
     </div>
