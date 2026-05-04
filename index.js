@@ -11,7 +11,7 @@
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
     import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
-
+    import loadCheatersStatsGithubOAuth from './src/backend/cheaters-stats-github-oauth.js';
 
 
 
@@ -30,6 +30,7 @@ const BASE_URL_API2 = "/api/v2";
 app.use(express.json());
 
 app.use('/api/github', githubGGGProxy);
+loadCheatersStatsGithubOAuth(app);
 
 loadBackendGGG(app);
 loadBackendFMGP(app);
