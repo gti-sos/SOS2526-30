@@ -1,8 +1,8 @@
 <script>
     import { onMount } from 'svelte';
     
-    let loading = true;
-    let error = null;
+    let loading = $state(true);
+    let error = $state(null);
     let combinedData = [];
     let chartContainer;
 
