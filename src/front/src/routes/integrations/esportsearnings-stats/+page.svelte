@@ -3,20 +3,20 @@
         {
             titulo: "Integración 1 - RestCountries",
             descripcion: "Cruce de ganancias en eSports con población mundial (API Externa)",
-            ruta: "/integrations/esportsearnings-stats/restcountries",
+            ruta: "/integrations/esportsearnings-stats/population",
             icono: "🌍"
         },
-        {
-            titulo: "Integración 2 - (Próximamente)",
-            descripcion: "API Externa 2",
-            ruta: "#",
-            icono: "🚀"
+       {
+            titulo: "Integración 2 - CoinCap",
+            descripcion: "Premios eSports vs Precio Criptomonedas (API Externa)",
+            ruta: "/integrations/esportsearnings-stats/coincap",
+            icono: "💰"
         },
-        {
-            titulo: "Integración 3 - (Próximamente)",
-            descripcion: "API Externa 3",
-            ruta: "#",
-            icono: "⚡"
+      {
+            titulo: "Integración 3 - Rick & Morty",
+            descripcion: "Géneros de eSports vs Especies de personajes (API Externa)",
+            ruta: "/integrations/esportsearnings-stats/rick-and-morty",
+            icono: "👽"
         },
         {
             titulo: "Integración 4 - (Próximamente)",
