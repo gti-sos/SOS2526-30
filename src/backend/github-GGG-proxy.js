@@ -12,9 +12,6 @@ const router = express.Router();
 
 const XITHUB_TOKEN = process.env.XITHUB_TOKEN;
 
-console.log('🔍 Valor de XITHUB_TOKEN:', XITHUB_TOKEN ? '✅ Cargado correctamente' : '❌ No cargado - undefined');
-console.log('🔍 Variable de entorno:', process.env.XITHUB_TOKEN);
-
 // Endpoint para verificar el token
 router.get('/check-token', async (req, res) => {
     if (!XITHUB_TOKEN) {
