@@ -1,13 +1,12 @@
 <script>
-// @ts-nocheck
-
     import { onMount } from 'svelte';
     
     let loading = true;
     let error = null;
-    let combinedData = [];
-    let selectedSubstance = 'hcfc';
     let chart = null;
+    let c3 = null;
+    let chartData = { decades: [], consumption: [], athletes: [] };
+    let selectedSubstance = 'hcfc';
     
     const substances = [
         { value: 'methyl_chloroform', label: 'Metil Cloroformo', color: '#ef4444' },
@@ -18,204 +17,206 @@
         { value: 'cfc', label: 'CFC', color: '#8b5cf6' }
     ];
     
-    onMount(() => {
-        fetchData();
+    onMount(async () => {
+        const c3Module = await import('c3');
+        c3 = c3Module.default || c3Module;
+        await import('c3/c3.css');
+        await fetchData();
     });
     
     async function fetchData() {
         try {
             loading = true;
             
-            // 1. Obtener datos de Olympics (tus datos) - atletas por año
+            // 1. Obtener datos de Olympics
             console.log('Obteniendo datos de Olympics...');
             const resOlympics = await fetch('/api/v1/olympics-athlete-events?limit=2000');
             const olympicsData = await resOlympics.json();
             const athletes = olympicsData.data || [];
             console.log('Atletas recibidos:', athletes.length);
             
-            // Contar atletas por año
-            const athletesByYear = {};
+            // Contar atletas por decada
+            const athletesByDecade = {};
             athletes.forEach(ath => {
                 const year = ath.year;
                 if (year && year >= 1900 && year <= 2020) {
-                    athletesByYear[year] = (athletesByYear[year] || 0) + 1;
+                    const decade = Math.floor(year / 10) * 10;
+                    athletesByDecade[decade] = (athletesByDecade[decade] || 0) + 1;
                 }
             });
-            console.log('Atletas por año:', athletesByYear);
+            console.log('Atletas por decada:', athletesByDecade);
             
-            // 2. Obtener datos de Ozone (compañera)
+            // 2. Obtener datos de Ozone
             console.log('Obteniendo datos de Ozone...');
             const resOzone = await fetch('https://sos2526-22.onrender.com/api/v1/ozone-depleting-substance-consumptions/loadInitialData');
             const ozoneData = await resOzone.json();
             console.log('Datos Ozone recibidos:', ozoneData.length);
             
-            // 3. Agrupar consumo por año
-            const substanceByYear = {};
+            // 3. Agrupar consumo por decada
+            const substanceByDecade = {};
             ozoneData.forEach(item => {
                 const year = item.year;
                 if (year) {
-                    if (!substanceByYear[year]) {
-                        substanceByYear[year] = {};
-                        substances.forEach(s => substanceByYear[year][s.value] = 0);
+                    const decade = Math.floor(year / 10) * 10;
+                    if (!substanceByDecade[decade]) {
+                        substanceByDecade[decade] = {};
+                        substances.forEach(s => substanceByDecade[decade][s.value] = 0);
                     }
                     substances.forEach(sub => {
                         const value = item[sub.value];
                         if (value !== undefined && value !== null && !isNaN(value)) {
-                            substanceByYear[year][sub.value] += value;
+                            substanceByDecade[decade][sub.value] += value;
                         }
                     });
                 }
             });
-            console.log('Sustancias por año:', substanceByYear);
             
-            // 4. Combinar datos por año
-            const allYears = new Set([...Object.keys(athletesByYear), ...Object.keys(substanceByYear)]);
-            combinedData = Array.from(allYears)
-                .map(year => ({
-                    year: parseInt(year),
-                    athletes: athletesByYear[year] || 0,
-                    substances: substanceByYear[year] || {}
-                }))
-                .sort((a, b) => a.year - b.year);
+            // 4. Preparar datos
+            const sortedDecades = Object.keys(substanceByDecade)
+                .map(Number)
+                .sort((a, b) => a - b);
             
-            console.log('Datos combinados:', combinedData);
+            chartData = {
+                decades: sortedDecades.map(d => `${d}s`),
+                consumption: sortedDecades.map(d => substanceByDecade[d][selectedSubstance] || 0),
+                athletes: sortedDecades.map(d => athletesByDecade[d] || 0)
+            };
+            
+            console.log('Datos:', chartData);
             
             await createChart();
             
-            // FORZAR CIERRE DEL OVERLAY
             loading = false;
             const overlay = document.querySelector('.loading-overlay');
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
+            if (overlay) overlay.style.display = 'none';
             
         } catch (e) {
             console.error('Error:', e);
             error = e.message;
             loading = false;
             const overlay = document.querySelector('.loading-overlay');
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
+            if (overlay) overlay.style.display = 'none';
         }
     }
     
     async function createChart() {
+        if (!c3 || chartData.decades.length === 0) return;
+        
         const currentSubstance = substances.find(s => s.value === selectedSubstance);
         
-        // Preparar datos para scatter - SOLO años que tienen datos de sustancias
-        const scatterData = combinedData
-            .filter(item => item.substances[selectedSubstance] !== undefined && 
-                   item.substances[selectedSubstance] !== null &&
-                   item.substances[selectedSubstance] !== 0)
-            .map(item => ({
-                x: item.year,
-                y: item.substances[selectedSubstance],
-                athletes: item.athletes,
-                year: item.year
-            }));
+        // Normalizar datos para mostrar ambos en misma escala
+        const maxConsumption = Math.max(...chartData.consumption, 1);
+        const maxAthletes = Math.max(...chartData.athletes, 1);
         
-        console.log('Datos para scatter:', scatterData);
-        
-        if (scatterData.length === 0) {
-            console.warn('No hay datos para mostrar');
-            return;
-        }
-        
-        const Highcharts = await import('highcharts');
-        const HC = Highcharts.default;
+        const consumptionPercent = chartData.consumption.map(v => (v / maxConsumption) * 100);
+        const athletesPercent = chartData.athletes.map(v => (v / maxAthletes) * 100);
         
         if (chart) {
             chart.destroy();
         }
         
-        chart = HC.chart('scatter-container', {
-            chart: {
-                type: 'scatter',
-                zoomType: 'xy',
-                height: 500,
-                backgroundColor: '#ffffff'
+        chart = c3.generate({
+            bindto: '#step-chart',
+            data: {
+                columns: [
+                    [`Consumo ${currentSubstance?.label} (%)`, ...consumptionPercent],
+                    ['Atletas Olimpicos (%)', ...athletesPercent]
+                ],
+                type: 'step',
+                colors: {
+                    [`Consumo ${currentSubstance?.label} (%)`]: currentSubstance?.color || '#eab308',
+                    'Atletas Olimpicos (%)': '#0284c7'
+                },
+                labels: false
             },
-            title: {
-                text: `Relación: Años vs Consumo de ${currentSubstance?.label}`,
-                style: { fontSize: '16px' }
-            },
-            subtitle: {
-                text: 'Cada punto representa un año | El tamaño del punto indica número de atletas',
-                style: { fontSize: '12px' }
-            },
-            xAxis: {
-                title: { text: 'Año' },
-                tickInterval: 10,
-                gridLineWidth: 1,
-                gridLineColor: '#e2e8f0'
-            },
-            yAxis: {
-                title: { text: `Consumo de ${currentSubstance?.label} (toneladas)` },
-                gridLineWidth: 1,
-                gridLineColor: '#e2e8f0'
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: chartData.decades,
+                    label: { text: 'Decada', position: 'outer-center' },
+                    tick: {
+                        rotate: 45,
+                        multiline: false,
+                        culling: { max: 10 }
+                    }
+                },
+                y: {
+                    label: { text: 'Porcentaje del valor maximo (%)', position: 'outer-middle' },
+                    min: 0,
+                    max: 110,
+                    padding: { top: 10, bottom: 0 }
+                }
             },
             tooltip: {
-                pointFormat: `
-                    <b>Año: {point.year}</b><br/>
-                    Consumo: {point.y} t<br/>
-                    Atletas Olímpicos: {point.athletes}
-                `
-            },
-            plotOptions: {
-                scatter: {
-                    marker: {
-                        radius: 8,
-                        symbol: 'circle',
-                        states: {
-                            hover: {
-                                enabled: true,
-                                lineColor: 'black',
-                                lineWidth: 2
-                            }
+                format: {
+                    title: function(x) { return `Decada: ${chartData.decades[x]}`; },
+                    value: function(value, ratio, id, index) {
+                        if (id.includes('Consumo')) {
+                            const realValue = chartData.consumption[index];
+                            return `${value.toFixed(1)}% (${realValue.toLocaleString()} t)`;
+                        } else {
+                            const realValue = chartData.athletes[index];
+                            return `${value.toFixed(1)}% (${realValue.toLocaleString()} atletas)`;
                         }
                     }
                 }
             },
-            series: [{
-                name: currentSubstance?.label,
-                data: scatterData,
-                color: currentSubstance?.color
-            }]
+            grid: {
+                y: { show: true }
+            },
+            legend: {
+                position: 'bottom'
+            },
+            size: {
+                height: 500
+            }
         });
     }
     
     async function updateChart() {
-        await createChart();
-    }
-    
-    function formatNumber(num) {
-        if (num === undefined || num === null) return 'N/A';
-        if (num > 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num > 1000) return (num / 1000).toFixed(1) + 'K';
-        return num.toLocaleString();
+        if (!chartData.decades.length || !c3) return;
+        
+        const currentSubstance = substances.find(s => s.value === selectedSubstance);
+        
+        const maxConsumption = Math.max(...chartData.consumption, 1);
+        const maxAthletes = Math.max(...chartData.athletes, 1);
+        
+        const consumptionPercent = chartData.consumption.map(v => (v / maxConsumption) * 100);
+        const athletesPercent = chartData.athletes.map(v => (v / maxAthletes) * 100);
+        
+        if (chart) {
+            chart.load({
+                columns: [
+                    [`Consumo ${currentSubstance?.label} (%)`, ...consumptionPercent],
+                    ['Atletas Olimpicos (%)', ...athletesPercent]
+                ],
+                colors: {
+                    [`Consumo ${currentSubstance?.label} (%)`]: currentSubstance?.color || '#eab308',
+                    'Atletas Olimpicos (%)': '#0284c7'
+                }
+            });
+        }
     }
 </script>
 
 <div class="integration-container">
-    <h1>🏅 Atletas Olímpicos vs 🌍 Sustancias Agotadoras de Ozono</h1>
-    <p class="subtitle">Relación por año entre consumo de sustancias contaminantes y número de atletas</p>
+    <h1>Atletas Olimpicos vs Sustancias Agotadoras de Ozono</h1>
+    <p class="subtitle">Step Chart: Evolucion escalonada del consumo por decada vs Numero de atletas</p>
     
     <div class="info-api">
-        <p><strong>API 1 (propia):</strong> Olympics Athlete Events - <code>/api/v2/olympics-athlete-events</code></p>
-        <p><strong>API 2 (compañera):</strong> Ozone Depleting Substance - <code>https://sos2526-22.onrender.com/api/v1/...</code></p>
-        <p><strong>Integración:</strong> Datos combinados por año</p>
+        <p><strong>API 1 (propia):</strong> Olympics Athlete Events - Numero de atletas por decada</p>
+        <p><strong>API 2 (companera):</strong> Ozone Depleting Substance - Grupo 22</p>
+        <p><strong>Widget:</strong> Step Chart con <strong>C3.js</strong></p>
     </div>
     
-    <!-- Overlay de carga -->
     <div class="loading-overlay">
         <div class="spinner"></div>
-        <p>Cargando y combinando datos...</p>
+        <p>Cargando datos...</p>
     </div>
     
     {#if error}
         <div class="error">
-            <p>❌ Error: {error}</p>
+            <p>Error: {error}</p>
         </div>
     {:else}
         <div class="selector">
@@ -232,49 +233,43 @@
             </div>
         </div>
         
-        <div id="scatter-container" style="height: 550px; width: 100%; margin-bottom: 2rem;"></div>
+        <div id="step-chart" style="min-height: 550px; width: 100%; margin-bottom: 2rem;"></div>
         
         <div class="table-container">
-            <h3>📋 Datos combinados por año</h3>
+            <h3>Datos combinados por decada</h3>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Año</th>
-                            <th>Atletas Olímpicos</th>
-                            <th>HCFC (t)</th>
-                            <th>CFC (t)</th>
-                            <th>Halón (t)</th>
-                            <th>Metil Cloroformo</th>
+                            <th>Decada</th>
+                            <th>Atletas Olimpicos</th>
+                            <th>Consumo ({substances.find(s => s.value === selectedSubstance)?.label})</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {#each combinedData as item}
+                        {#each chartData.decades as decade, i}
                             <tr>
-                                <td><strong>{item.year}</strong></td>
-                                <td>{item.athletes}</td>
-                                <td>{formatNumber(item.substances.hcfc)}</td>
-                                <td>{formatNumber(item.substances.cfc)}</td>
-                                <td>{formatNumber(item.substances.halon)}</td>
-                                <td>{formatNumber(item.substances.methyl_chloroform)}</td>
+                                <td><strong>{decade}</strong></td>
+                                <td>{chartData.athletes[i].toLocaleString()} </td>
+                                <td>{chartData.consumption[i].toLocaleString()} t</td>
                             </tr>
                         {/each}
                     </tbody>
                 </table>
             </div>
-            <p class="table-info">Total de años: {combinedData.length}</p>
         </div>
     {/if}
     
     <div class="info">
-        <h3>📖 Interpretación de la integración</h3>
+        <h3>Interpretacion</h3>
         <ul>
-            <li><strong>Tipo de gráfico:</strong> Scatter (dispersión) con <strong>Highcharts</strong></li>
-            <li><strong>Cada punto:</strong> Representa un año específico</li>
-            <li><strong>Eje X:</strong> Año (1900-2020)</li>
-            <li><strong>Eje Y:</strong> Consumo de sustancia contaminante (toneladas)</li>
-            <li><strong>Tooltip:</strong> Muestra también el número de atletas de ese año</li>
-            <li><strong>Datos combinados:</strong> Se agruparon por año desde ambas fuentes</li>
+            <li><strong>Tipo de grafico:</strong> Step Chart (escalonado) con <strong>C3.js</strong></li>
+            <li><strong>Linea naranja escalonada:</strong> Consumo de la sustancia (%)</li>
+            <li><strong>Linea azul escalonada:</strong> Numero de atletas olimpicos (%)</li>
+            <li><strong>Forma escalonada:</strong> Muestra cambios bruscos entre decadas</li>
+            <li><strong>Eje X:</strong> Decadas</li>
+            <li><strong>Eje Y:</strong> Porcentaje del valor maximo (%)</li>
+            <li><strong>Tooltip:</strong> Muestra valores reales (toneladas y atletas)</li>
         </ul>
     </div>
 </div>
@@ -432,13 +427,6 @@
     
     tr:hover {
         background: #f0f9ff;
-    }
-    
-    .table-info {
-        margin-top: 1rem;
-        font-size: 0.85rem;
-        color: #666;
-        text-align: right;
     }
     
     .info {
