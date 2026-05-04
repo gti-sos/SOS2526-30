@@ -1,7 +1,7 @@
 <script>
     const integraciones = [
         {
-            titulo: "Integración 1 - RestCountries",
+            titulo: "Integración 1 - Population",
             descripcion: "Cruce de ganancias en eSports con población mundial (API Externa)",
             ruta: "/integrations/esportsearnings-stats/population",
             icono: "🌍"
