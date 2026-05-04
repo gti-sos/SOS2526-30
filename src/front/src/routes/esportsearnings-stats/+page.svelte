@@ -67,12 +67,15 @@
             
             allResources = await res.json();
             
+            // SOLUCIÓN: Forzamos a Svelte a recalcular la vista de la página actual[cite: 12]
+            const start = (currentPage - 1) * itemsPerPage;
+            displayedResources = allResources.slice(start, start + itemsPerPage);
+            
             if (allResources.length === 0 && Array.from(params).length === 0) {
                 successMessage = 'La base de datos está vacía. Carga datos de ejemplo.';
             } else if (Array.from(params).length > 0) {
                 successMessage = `Búsqueda completada: ${allResources.length} resultados.`;
             }
-            currentPage = 1;
         } catch (e) {
             error = e.message;
         } finally {
@@ -88,6 +91,7 @@
             const res = await fetch('/api/v2/esportsearnings-stats/loadInitialData');
             if (res.status === 201) successMessage = 'Datos cargados con éxito.';
             else if (res.status === 200) successMessage = 'Los datos ya estaban cargados.';
+            currentPage = 1;
             await getResources();
         } catch (e) {
             error = 'Error al cargar datos.';
@@ -119,8 +123,12 @@
             }
             if (!res.ok) throw new Error('Error al guardar');
             
-            showCreateForm = false; resetForm();
+            showCreateForm = false; 
+            resetForm();
             successMessage = 'Registro añadido correctamente.';
+            
+            // SOLUCIÓN: Obligamos a la tabla a ir a la página 1 para ver el nuevo dato[cite: 12]
+            currentPage = 1;
             await getResources();
         } catch (e) {
             alert('No se pudo guardar el registro.');
@@ -145,6 +153,7 @@
             const res = await fetch('/api/v2/esportsearnings-stats', { method: 'DELETE' });
             if (!res.ok) throw new Error('Error al vaciar');
             successMessage = 'Todos los registros eliminados.';
+            currentPage = 1;
             await getResources();
         } catch (e) { alert('No se pudo vaciar la base de datos.'); }
     }
@@ -153,10 +162,16 @@
         formData = { game_name: '', year: new Date().getFullYear(), total_money: '', genre: '', player_no: '', tournament_no: '', country: '', top_country_earnings: '' };
     }
 
+    function applySearch() {
+        currentPage = 1;
+        getResources();
+    }
+
     function clearSearch() {
         searchGame = ''; searchYear = ''; searchGenre = ''; searchMoney = '';
         searchPlayers = ''; searchTournaments = ''; searchCountry = ''; 
         searchTopEarnings = ''; searchFrom = ''; searchTo = ''; 
+        currentPage = 1;
         getResources();
     }
 
@@ -214,7 +229,7 @@
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
             <button class="btn-gray" onclick={clearSearch}>Limpiar Filtros</button>
-            <button class="btn-purple" onclick={getResources}>Aplicar Búsqueda</button>
+            <button class="btn-purple" onclick={applySearch}>Aplicar Búsqueda</button>
         </div>
     </div>
 

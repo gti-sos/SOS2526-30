@@ -14,7 +14,7 @@
             const topology = await fetch('https://code.highcharts.com/mapdata/custom/world.topo.json').then(r => r.json());
 
             // Obtenemos los datos de TU API
-            const response = await fetch('/api/v1/esportsearnings-stats');
+            const response = await fetch('/api/v2/esportsearnings-stats');
             if (!response.ok) throw new Error('Error al cargar la API');
             const apiData = await response.json();
 
