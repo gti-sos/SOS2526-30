@@ -31,16 +31,16 @@
             <span class="badge">Gráfico de Radar</span>
         </a>
         
-        <a href="/integrations/cheaters-stats/lol-esports" class="card">
-            <div class="card-icon">🎮</div>
-            <h2>League of Legends Esports</h2>
-            <p>API externa (datos de ejemplo)</p>
+        <a href="/integrations/cheaters-stats/dogs" class="card">
+            <div class="card-icon">🐶</div>
+            <h2>Dogs API</h2>
+            <p>API pública - Datos de perros</p>
             <span class="badge">Gráfico de Donut</span>
         </a>
         
-        <a href="/integrations/cheaters-stats/minecraft-server" class="card">
-            <div class="card-icon">⛏️</div>
-            <h2>Minecraft Server Status</h2>
+        <a href="/integrations/cheaters-stats/exchange" class="card">
+            <div class="card-icon">�</div>
+            <h2>ExchangeRate API</h2>
             <p>API externa (datos de ejemplo)</p>
             <span class="badge">Gráfico Radial</span>
         </a>
