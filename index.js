@@ -1,16 +1,28 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import { handler } from './src/front/build/handler.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import util from 'util';
-util.isDate = function(d) { return d instanceof Date; };
-import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
-import loadCheatersStatsGithubOAuth from './src/backend/cheaters-stats-github-oauth.js';
+    import dotenv from 'dotenv';
+    import path from 'path';
+    import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+    console.log('Token desde .env:', process.env.XITHUB_TOKEN);
+        
+    import express from 'express';
+    import cors from 'cors';
+    import { handler } from './src/front/build/handler.js';
+   
+    
+    import util from 'util';
+    util.isDate = function(d) { return d instanceof Date; };
+    import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
+
+
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
 
 import loadBackendGGG from './src/backend/olympics-athlete-events.js';
 import loadBackendFMGP from './src/backend/cheaters-stats.js';

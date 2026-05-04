@@ -11,18 +11,23 @@
             ruta: "/integrations/olympics-athlete-events/average-monthly-wages",
         },
         {
-            titulo: "Integracion 3 - SpaceX",
+            titulo: "Integracion 3 - Average Annual Temperatures",
+            descripcion: "Integracion con api G25-average-annual-temperatures",
+            ruta: "/integrations/olympics-athlete-events/average-annual-temperatures",
+        },
+        {
+            titulo: "Integracion 4 - SpaceX",
             descripcion: "Integracion con api SpaceX",
             ruta: "/integrations/olympics-athlete-events/SpaceX",
             
         },
         {
-            titulo: "Integracion 4 - GitHub API",
+            titulo: "Integracion 5 - GitHub API",
             descripcion: "Integracion con api GitHub",
             ruta: "/integrations/olympics-athlete-events/github",
         },
         {
-            titulo: "Integracion 5 - ",
+            titulo: "Integracion 6 - ",
             descripcion: "...", 
             ruta: "/integrations/olympics-athlete-events"            
         },

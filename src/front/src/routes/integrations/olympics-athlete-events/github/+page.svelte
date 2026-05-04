@@ -7,7 +7,6 @@
     let combinedData = $state([]);
     let chartInitialized = false;
     
-    // Relación deporte → lenguaje de programación
     const sportToLanguage = {
         'Basketball': 'JavaScript',
         'Swimming': 'Python', 
@@ -26,84 +25,127 @@
     });
     
     async function fetchCombinedData() {
-        try {
-            loading = true;
-            
-            // 1. Obtener datos de Olympics
-            const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=1000');
-            const olympicsData = await olympicsRes.json();
-            const athletes = olympicsData.data || [];
-            
-            // Contar atletas por deporte
-            const sportCount = {};
-            // @ts-ignore
-            athletes.forEach(ath => {
-                const sport = ath.sport;
-                if (sport && sport !== 'NA') {
-                    // @ts-ignore
-                    sportCount[sport] = (sportCount[sport] || 0) + 1;
-                }
-            });
-            
-            // 2. Obtener datos de GitHub
-            const languages = {};
-            
-            // @ts-ignore
-            for (const [sport, language] of Object.entries(sportToLanguage)) {
-                if (language) {
-                    try {
-                        const repoRes = await fetch(`/api/github/search/repositories?q=language:${language.toLowerCase()}&per_page=1`);
-                        const repoData = await repoRes.json();
-                        // @ts-ignore
-                        languages[language] = repoData.total_count || 0;
-                    } catch (e) {
-                        // @ts-ignore
-                        languages[language] = 0;
-                    }
-                    await new Promise(r => setTimeout(r, 100));
-                }
-            }
-            
-            // 3. Combinar datos
-            combinedData = Object.entries(sportToLanguage)
+    try {
+        loading = true;
+        
+        // 1. Obtener datos de Olympics
+        const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=1000');
+        const olympicsData = await olympicsRes.json();
+        const athletes = olympicsData.data || [];
+        
+        const sportCount = {};
+        // @ts-ignore
+        athletes.forEach(ath => {
+            const sport = ath.sport;
+            if (sport && sport !== 'NA') {
                 // @ts-ignore
-                .filter(([sport]) => sportCount[sport] > 0)
-                .map(([sport, language]) => ({
-                    sport: sport,
-                    language: language,
+                sportCount[sport] = (sportCount[sport] || 0) + 1;
+            }
+        });
+        
+        // 2. Obtener datos de GitHub CON DELAY DE 6 SEGUNDOS
+        const languages = {};
+        let index = 0;
+        const entries = Object.entries(sportToLanguage);
+        
+        for (const [sport, language] of entries) {
+            if (language) {
+                // Esperar 6 segundos entre peticiones (excepto la primera)
+                if (index > 0) {
+                    console.log(`⏳ Esperando 6 segundos antes de consultar ${language} (${index + 1}/${entries.length})...`);
+                    await new Promise(r => setTimeout(r, 6000));
+                }
+                
+                let success = false;
+                let retries = 0;
+                
+                while (!success && retries < 3) {
+                    try {
+                        const timestamp = Date.now();
+                        console.log(`📡 Consultando ${language} (intento ${retries + 1})...`);
+                        
+                        const repoRes = await fetch(`/api/github/search/repositories?q=language:${language.toLowerCase()}&per_page=1&_=${timestamp}`);
+                        
+                        if (repoRes.ok) {
+                            const repoData = await repoRes.json();
+                            // @ts-ignore
+                            languages[language] = repoData.total_count || 0;
+                            // @ts-ignore
+                            console.log(`✅ ${sport} (${language}): ${languages[language]} repos`);
+                            success = true;
+                        } else if (repoRes.status === 403) {
+                            const errorData = await repoRes.json();
+                            if (errorData.message && errorData.message.includes('secondary rate limit')) {
+                                console.warn(`⚠️ Secondary rate limit para ${language}, esperando 10 segundos...`);
+                                await new Promise(r => setTimeout(r, 10000));
+                                retries++;
+                            } else {
+                                console.warn(`⚠️ ${language} - Error ${repoRes.status}`);
+                                // @ts-ignore
+                                languages[language] = 0;
+                                success = true;
+                            }
+                        } else {
+                            console.warn(`⚠️ ${language} - Status ${repoRes.status}`);
+                            // @ts-ignore
+                            languages[language] = 0;
+                            success = true;
+                        }
+                    } catch (e) {
+                        console.error(`❌ Error con ${language}:`, e);
+                        retries++;
+                        await new Promise(r => setTimeout(r, 5000));
+                    }
+                }
+                
+                if (!success) {
+                    console.log(`❌ ${sport} (${language}): 0 repos después de reintentos`);
                     // @ts-ignore
-                    athletes: sportCount[sport] || 0,
-                    // @ts-ignore
-                    repos: languages[language] || 0
-                }))
-                .sort((a, b) => b.athletes - a.athletes);
-            
-            loading = false;
-            
-            // Pequeño retraso para asegurar que el DOM se actualizó
-            setTimeout(() => {
-                initChart();
-            }, 200);
-            
-            const overlay = document.querySelector('.loading-overlay');
-            // @ts-ignore
-            if (overlay) overlay.style.display = 'none';
-            
-        } catch (e) {
-            console.error('Error:', e);
-            // @ts-ignore
-            error = e.message;
-            loading = false;
-            const overlay = document.querySelector('.loading-overlay');
-            // @ts-ignore
-            if (overlay) overlay.style.display = 'none';
+                    languages[language] = 0;
+                }
+                
+                index++;
+            }
         }
+        
+        // 3. Combinar datos
+        combinedData = Object.entries(sportToLanguage)
+            // @ts-ignore
+            .filter(([sport]) => sportCount[sport] > 0)
+            .map(([sport, language]) => ({
+                sport: sport,
+                language: language,
+                // @ts-ignore
+                athletes: sportCount[sport] || 0,
+                // @ts-ignore
+                repos: languages[language] || 0
+            }))
+            .sort((a, b) => b.athletes - a.athletes);
+        
+        loading = false;
+        
+        setTimeout(() => {
+            initChart();
+        }, 200);
+        
+        const overlay = document.querySelector('.loading-overlay');
+        // @ts-ignore
+        if (overlay) overlay.style.display = 'none';
+        
+    } catch (e) {
+        console.error('Error:', e);
+        // @ts-ignore
+        error = e.message;
+        loading = false;
+        const overlay = document.querySelector('.loading-overlay');
+        // @ts-ignore
+        if (overlay) overlay.style.display = 'none';
     }
+}
     
     async function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
-        // Esperar a que el elemento exista en el DOM
         const container = document.getElementById('chart-container');
         if (!container) {
             console.log('Esperando contenedor...');
@@ -116,6 +158,7 @@
         
         // @ts-ignore
         HC.chart('chart-container', {
+            accessibility: { enabled: false },
             chart: { type: 'scatter', zoomType: 'xy', height: 500 },
             title: { text: 'Relación: Atletas Olímpicos vs Repositorios GitHub' },
             xAxis: { title: { text: 'Número de Atletas' } },

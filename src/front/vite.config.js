@@ -13,6 +13,6 @@ export default defineConfig({
         }
     },
     define: {
-        'process.env.GITHUB_TOKEN': JSON.stringify(process.env.GITHUB_TOKEN)
+        'process.env.XITHUB_TOKEN': JSON.stringify(process.env.XITHUB_TOKEN)
     }
 });
