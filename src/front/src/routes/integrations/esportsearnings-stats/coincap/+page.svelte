@@ -1,71 +1,53 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, tick } from 'svelte';
     import Chart from 'chart.js/auto';
 
-    let loading = $state(true);
-    let error = $state(null);
+    let loading = true;
 
     onMount(async () => {
+        await tick();
         try {
-            // 1. CARGAMOS TUS DATOS (Auto-llenado)
-            let resEsports = await fetch('/api/v2/esportsearnings-stats');
-            let esportsData = await resEsports.json();
-            
+            let res = await fetch('/api/v2/esportsearnings-stats');
+            let esportsData = await res.json();
             if (!esportsData || esportsData.length === 0) {
                 await fetch('/api/v2/esportsearnings-stats/loadInitialData');
-                resEsports = await fetch('/api/v2/esportsearnings-stats');
-                esportsData = await resEsports.json();
+                res = await fetch('/api/v2/esportsearnings-stats');
+                esportsData = await res.json();
             }
 
-            // 2. API EXTERNA (Con proxy para saltar AdBlockers)
-            const resCoin = await fetch('https://corsproxy.io/?https://api.coincap.io/v2/assets?limit=10');
-            if (!resCoin.ok) throw new Error('Bloqueado por el navegador (Desactiva AdBlock)');
-            const coinData = await resCoin.json();
+            const resC = await fetch('https://corsproxy.io/?https://api.coincap.io/v2/assets?limit=10');
+            const coinData = await resC.json();
 
-            const moneyByGame = {};
-            esportsData.forEach(item => {
-                if(item.game_name) moneyByGame[item.game_name] = (moneyByGame[item.game_name] || 0) + item.total_money;
-            });
-            
-            const sortedGames = Object.entries(moneyByGame).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const gameNames = sortedGames.map(g => g[0]);
-            const gameMoney = sortedGames.map(g => g[1] / 1000000); 
-
-            const cryptoNames = coinData.data.map(c => c.name);
-            const cryptoPrices = coinData.data.map(c => parseFloat(c.priceUsd));
+            const games = esportsData.slice(0,10).map(d => d.game_name);
+            const money = esportsData.slice(0,10).map(d => d.total_money / 1000000);
+            const cryptos = coinData.data.map(c => parseFloat(c.priceUsd));
 
             loading = false;
-
             setTimeout(() => {
-                const ctx = document.getElementById('myChart');
-                new Chart(ctx, {
+                new Chart(document.getElementById('chart-crypto'), {
                     type: 'bar',
                     data: {
-                        labels: ['Top 1', 'Top 2', 'Top 3', 'Top 4', 'Top 5', 'Top 6', 'Top 7', 'Top 8', 'Top 9', 'Top 10'],
+                        labels: coinData.data.map(c => c.symbol),
                         datasets: [
-                            { label: 'Premios eSports (Millones $)', data: gameMoney, backgroundColor: 'rgba(147, 51, 234, 0.7)' },
-                            { label: 'Precio Criptomoneda ($)', data: cryptoPrices, backgroundColor: 'rgba(16, 185, 129, 0.7)' }
+                            { label: 'Premios eSports (M$)', data: money, backgroundColor: '#a855f7' },
+                            { label: 'Precio Crypto ($)', data: cryptos, backgroundColor: '#10b981' }
                         ]
                     },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    afterLabel: function(context) {
-                                        return context.datasetIndex === 0 ? 'Juego: ' + gameNames[context.dataIndex] : 'Cripto: ' + cryptoNames[context.dataIndex];
-                                    }
-                                }
-                            }
-                        },
-                        scales: { y: { type: 'logarithmic' } }
-                    }
+                    options: { scales: { y: { type: 'logarithmic' } } }
                 });
             }, 100);
-
-        } catch (err) {
-            error = err.message;
-            loading = false;
-        }
+        } catch (e) { loading = false; }
     });
 </script>
+
+<div class="container">
+    <a href="/integrations/esportsearnings-stats" class="back-link">← Volver</a>
+    <div style="height: 500px;"><canvas id="chart-crypto"></canvas></div>
+    {#if loading}<p class="loading">Cargando criptomonedas...</p>{/if}
+</div>
+
+<style>
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #e9d5ff; }
+    .back-link { color: #7e22ce; text-decoration: none; font-weight: bold; }
+    .loading { text-align: center; color: #7e22ce; }
+</style>
