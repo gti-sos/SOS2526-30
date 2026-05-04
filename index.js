@@ -39,7 +39,7 @@ app.use('/api/github', githubGGGProxy);
 
 loadBackendGGG(app);
 loadBackendFMGP(app);
-loadCheatersStatsGithubOAuth(app);
+
 
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
