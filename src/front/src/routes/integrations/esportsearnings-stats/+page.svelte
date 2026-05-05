@@ -25,6 +25,12 @@
             ruta: "/integrations/esportsearnings-stats/citys-stats",
             icono: "🏙️"
         }
+        {
+            titulo: "Integración 5 - Presas de Agua (G27)",
+            descripcion: "Jugadores de eSports vs Presas de Agua (ApexCharts - Radar)",
+            ruta: "/integrations/esportsearnings-stats/water-dams",
+            icono: "💧"
+        }
     ];
 </script>
 
