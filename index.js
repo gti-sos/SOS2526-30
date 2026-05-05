@@ -1,4 +1,4 @@
-    import dotenv from 'dotenv';
+import dotenv from 'dotenv';
     import path from 'path';
     import { fileURLToPath } from 'url';
     const __filename = fileURLToPath(import.meta.url);
@@ -11,6 +11,8 @@
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
     import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
+    import  loadCitysStatsProxy  from './src/backend/citys-stats-proxy.js';
+    import loadGithubEsportsProxy from './src/backend/programadores-proxy.js';
     import dogProxy from './src/backend/dog-proxy.js';
     import openweatherProxy from './src/backend/openweather-proxy.js';
     import sportsdbProxy from './src/backend/sportsdb-proxy.js';
@@ -29,12 +31,13 @@ const BASE_URL_API2 = "/api/v2";
 app.use(express.json());
 
 app.use('/api/github', githubGGGProxy);
-
 app.use('/api/dog', dogProxy);
 app.use('/api/weather', openweatherProxy);
 app.use('/api/sports', sportsdbProxy);
 
 
+
+loadCitysStatsProxy(app);
 loadBackendGGG(app);
 loadBackendFMGP(app);
 loadGithubEsportsProxy(app);

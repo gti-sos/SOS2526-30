@@ -8,8 +8,9 @@
     let currentWeather = null;
     let forecast = [];
     let patStatus = null;
-    let selectedCity = 'Madrid';
-    let cities = ['Madrid', 'London', 'Paris', 'Berlin', 'Rome', 'New York', 'Tokyo'];
+    // Eliminado: let cities = [...]
+    // Usamos una sola ciudad fija obtenida desde la API o por defecto
+    let currentCity = 'Madrid'; // Ciudad por defecto, pero se puede cambiar dinámicamente
     
     async function loadInitialData() {
         console.log('🌤️ Verificando OpenWeather API...');
@@ -94,7 +95,6 @@
     }
     
     function prepareCirclePackData(cheatersByYear, yearlyTemps, forecastDays) {
-        // Estructura jerárquica para circle packing
         const root = {
             name: '🌍 Clima y Reportes',
             children: [
@@ -110,7 +110,7 @@
                     name: '🌡️ Temperaturas Globales',
                     children: Object.entries(yearlyTemps).map(([year, temp]) => ({
                         name: `Año ${year}`,
-                        value: temp * 10, // Escalar para visualización
+                        value: temp * 10,
                         type: 'temperature',
                         originalValue: temp
                     }))
@@ -132,7 +132,7 @@
         return root;
     }
     
-    function renderCirclePack(chartData, currentWeatherData) {
+    function renderCirclePack(chartData, currentWeatherData, cityName) {
         const container = document.getElementById('chart');
         if (!container) return;
         container.innerHTML = '';
@@ -140,12 +140,10 @@
         const width = 1000;
         const height = 700;
         
-        // Crear jerarquía
         const root = d3.hierarchy(chartData)
             .sum(d => d.value || 1)
             .sort((a, b) => b.value - a.value);
         
-        // Algoritmo de circle packing
         const pack = d3.pack()
             .size([width, height])
             .padding(5);
@@ -160,7 +158,6 @@
             .style('background', '#f0fdf4')
             .style('border-radius', '16px');
         
-        // Colores por tipo
         const colorMap = {
             '📊 Reportes Cheaters': '#7e22ce',
             '🌡️ Temperaturas Globales': '#ef4444',
@@ -170,7 +167,6 @@
             'forecast': '#93c5fd'
         };
         
-        // Tooltip
         const tooltip = d3.select(container)
             .append('div')
             .style('position', 'absolute')
@@ -184,7 +180,6 @@
             .style('z-index', '1000')
             .style('max-width', '250px');
         
-        // Dibujar círculos
         const circle = svg.selectAll('circle')
             .data(nodes)
             .enter()
@@ -211,7 +206,7 @@
                 if (d.data.type === 'reports') {
                     tooltipHtml += `📊 Reportes: ${d.data.value.toLocaleString()}`;
                 } else if (d.data.type === 'temperature') {
-                    tooltipHtml += `🌡️ Temperatura: ${d.data.originalValue?.toFixed(1)}°C<br/>📊 Valor visual: ${d.data.value}`;
+                    tooltipHtml += `🌡️ Temperatura: ${d.data.originalValue?.toFixed(1)}°C`;
                 } else if (d.data.type === 'forecast') {
                     tooltipHtml += `🌡️ Máx: ${d.data.tempMax}°C / Mín: ${d.data.tempMin}°C<br/>${d.data.description || ''}`;
                 } else if (d.depth === 1) {
@@ -230,8 +225,7 @@
                 tooltip.style('opacity', 0);
             });
         
-        // Etiquetas
-        const labels = svg.selectAll('text')
+        svg.selectAll('text')
             .data(nodes.filter(d => d.depth >= 2 && d.r > 15))
             .enter()
             .append('text')
@@ -250,7 +244,6 @@
                 return name;
             });
         
-        // Título
         svg.append('text')
             .attr('x', width / 2)
             .attr('y', 30)
@@ -258,18 +251,16 @@
             .style('font-size', '18px')
             .style('font-weight', 'bold')
             .style('fill', '#15803d')
-            .text('🌤️ Reportes de Tramposos vs Clima - Circle Packing');
+            .text(`🌤️ Reportes de Tramposos vs Clima - ${cityName}`);
         
-        // Subtítulo
         svg.append('text')
             .attr('x', width / 2)
             .attr('y', 55)
             .attr('text-anchor', 'middle')
             .style('font-size', '11px')
             .style('fill', '#666')
-            .text('El tamaño de cada círculo es proporcional al valor (reportes, temperatura, etc.)');
+            .text('El tamaño de cada círculo es proporcional al valor');
         
-        // Clima actual
         if (currentWeatherData) {
             svg.append('text')
                 .attr('x', width - 20)
@@ -277,7 +268,7 @@
                 .attr('text-anchor', 'end')
                 .style('font-size', '11px')
                 .style('fill', '#666')
-                .html(`🌍 ${currentWeatherData.city}: ${Math.round(currentWeatherData.temperature)}°C`);
+                .html(`🌡️ ${Math.round(currentWeatherData.temperature)}°C | 💧 ${currentWeatherData.humidity}%`);
         }
     }
     
@@ -291,8 +282,8 @@
             const [cheatersData, yearlyTemps, weatherData, forecastData] = await Promise.all([
                 fetchCheatersData(),
                 fetchYearlyTemperatures(),
-                fetchCurrentWeather(selectedCity),
-                fetchForecast(selectedCity)
+                fetchCurrentWeather(currentCity),
+                fetchForecast(currentCity)
             ]);
             
             currentWeather = weatherData;
@@ -308,7 +299,7 @@
             console.log('📅 Pronóstico:', forecast.length);
             console.log('🌤️ Clima actual:', currentWeather?.city, currentWeather?.temperature);
             
-            renderCirclePack(chartData, currentWeather);
+            renderCirclePack(chartData, currentWeather, currentCity);
             
             loading = false;
             
@@ -317,10 +308,6 @@
             error = err.message;
             loading = false;
         }
-    }
-    
-    async function changeCity() {
-        await loadWeatherIntegration();
     }
     
     onMount(async () => {
@@ -340,15 +327,6 @@
         Reportes (morado) | Temperaturas (rojo) | Pronóstico (azul)
     </div>
     
-    <div class="controls">
-        <label>🌍 Ciudad:</label>
-        <select bind:value={selectedCity} on:change={changeCity}>
-            {#each cities as city}
-                <option value={city}>{city}</option>
-            {/each}
-        </select>
-    </div>
-    
     <div style="min-height: 750px; width: 100%; overflow-x: auto; display: flex; justify-content: center;">
         <div id="chart"></div>
     </div>
@@ -358,7 +336,6 @@
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
-        <!-- Clima actual -->
         {#if currentWeather}
         <div class="current-weather">
             <h3>🌤️ Clima actual en {currentWeather.city}</h3>
@@ -373,7 +350,6 @@
         </div>
         {/if}
         
-        <!-- Pronóstico -->
         {#if forecast.length > 0}
         <div class="forecast">
             <h3>📅 Pronóstico 5 días</h3>
@@ -392,14 +368,15 @@
         <div class="info-note">
             <p><strong>📌 Circle Packing (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Círculos morados:</strong> Reportes de tramposos por año</li>
-                <li><strong>🔴 Círculos rojos:</strong> Temperaturas globales promedio</li>
-                <li><strong>🔵 Círculos azules:</strong> Pronóstico de temperatura por día</li>
+                <li><strong>🟣 Círculos morados:</strong> Reportes de tramposos por año (desde Cheaters Stats API)</li>
+                <li><strong>🔴 Círculos rojos:</strong> Temperaturas globales promedio (desde endpoint NOAA/NASA)</li>
+                <li><strong>🔵 Círculos azules:</strong> Pronóstico de temperatura por día (desde OpenWeather API)</li>
                 <li><strong>📏 Tamaño:</strong> Proporcional al valor (mayor círculo = mayor valor)</li>
                 <li><strong>🔘 Hover:</strong> Muestra el valor exacto</li>
             </ul>
             <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
             <p><strong>🔗 API:</strong> OpenWeather (con PAT) + Cheaters Stats</p>
+            <p><strong>✅ Sin datos precargados:</strong> Todo se obtiene mediante fetch() a las APIs</p>
         </div>
     {/if}
 </div>
@@ -413,9 +390,6 @@
     .loading { text-align: center; padding: 2rem; color: #16a34a; }
     .error { text-align: center; padding: 3rem; color: #dc2626; }
     .info-note-top { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-size: 0.85rem; color: #166534; }
-    
-    .controls { text-align: center; margin-bottom: 1.5rem; }
-    .controls select { padding: 0.5rem 1rem; font-size: 1rem; border-radius: 8px; border: 1px solid #86efac; background: #f0fdf4; font-family: inherit; cursor: pointer; }
     
     .current-weather { background: #f0fdf4; border-radius: 12px; padding: 1rem; text-align: center; margin-bottom: 1.5rem; }
     .weather-temp { font-size: 3rem; font-weight: bold; color: #16a34a; }
