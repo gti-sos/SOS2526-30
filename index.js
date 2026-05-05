@@ -14,7 +14,7 @@
     import loadCheatersStatsGithubOAuth from './src/backend/cheaters-stats-github-oauth.js';
     import loadTwitchProxy from './src/backend/twitch-proxy.js';
     import loadSpotifyProxy from './src/backend/spotify-proxy.js';
-    import { loadCitysStatsProxy } from './src/backend/citys-stats-proxy.js';
+//    import { loadCitysStatsProxy } from './src/backend/citys-stats-proxy.js';
 
 
 import loadBackendGGG from './src/backend/olympics-athlete-events.js';
@@ -38,7 +38,7 @@ loadSpotifyProxy(app);
 loadBackendGGG(app);
 loadBackendFMGP(app);
 
-loadCitysStatsProxy(app);
+//loadCitysStatsProxy(app); 
 
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
