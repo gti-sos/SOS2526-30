@@ -1,4 +1,3 @@
-<!-- Archivo: src/routes/integrations/TU_CARPETA/sos-api-1/+page.svelte -->
 <script>
     import { onMount } from 'svelte';
 
@@ -9,7 +8,7 @@
         setTimeout(async () => {
             try {
                 const res = await fetch('https://sos2526-27.onrender.com/api/v1/world-hydroelectric-plants');
-                if (!res.ok) throw new Error("Error al contactar con la API");
+                if (!res.ok) throw new Error("Error al contactar con la API del Grupo 27");
                 const data = await res.json();
 
                 let labels = [];
@@ -47,12 +46,12 @@
 </script>
 
 <svelte:head>
-    <title>API Grupo 27 - Integraciones</title>
+    <title>Treemap - API Grupo 27</title>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </svelte:head>
 
 <div class="page-container">
-    <a href="../" class="back-btn">⬅ Volver al Menú</a>
+    <a href="/integrations/esportsgrowth-stats" class="back-btn">⬅ Volver al Menú Principal</a>
     
     <div class="content-card">
         <h2>Plantas Hidroeléctricas Mundiales</h2>
@@ -61,17 +60,17 @@
             <span class="badge lib">ApexCharts | Treemap</span>
         </div>
 
-        {#if loading}<p class="status">Cargando datos...</p>{/if}
+        {#if loading}<p class="status">Conectando con la API y cargando datos...</p>{/if}
         {#if error}<p class="status error">❌ {error}</p>{/if}
         
-        <div id="treemap-chart" class="chart-box"></div>
+        <div id="treemap-chart" class="chart-box" style="display: {loading ? 'none' : 'block'}"></div>
     </div>
 </div>
 
 <style>
     .page-container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; font-family: sans-serif; }
-    .back-btn { display: inline-block; margin-bottom: 2rem; color: #7e22ce; text-decoration: none; font-weight: bold; }
-    .back-btn:hover { text-decoration: underline; }
+    .back-btn { display: inline-block; margin-bottom: 2rem; color: #7e22ce; text-decoration: none; font-weight: bold; background: #f3e8ff; padding: 0.5rem 1rem; border-radius: 8px;}
+    .back-btn:hover { background: #e9d5ff; }
     .content-card { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e9d5ff; }
     h2 { color: #334155; margin-top: 0; }
     .badges { margin-bottom: 2rem; }
@@ -80,5 +79,5 @@
     .badge.lib { background: #f3e8ff; color: #7e22ce; }
     .chart-box { height: 450px; width: 100%; }
     .status { text-align: center; padding: 2rem; color: #64748b; }
-    .status.error { color: #dc2626; background: #fee2e2; border-radius: 8px; }
+    .status.error { color: #dc2626; background: #fee2e2; border-radius: 8px; font-weight: bold;}
 </style>
