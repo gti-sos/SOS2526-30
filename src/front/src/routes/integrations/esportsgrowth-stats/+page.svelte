@@ -39,11 +39,12 @@
             <span class="badge">ApexCharts | Radial Bar</span>
         </a>
 
-        <!-- BOTÓN 5: API EXTERNA 3 - AÚN PENDIENTE -->
-        <div class="integration-card ext-card placeholder">
-            <h3>🚀 API Externa 3</h3>
-            <p>Pendiente...</p>
-        </div>
+        <!-- BOTÓN 5: API EXTERNA 3 (GitHub OAuth) - ¡ACTIVADO! -->
+        <a href="/integrations/esportsgrowth-stats/externa-github" class="integration-card ext-card active-ext">
+            <h3>🚀 API Externa 3 (OAuth)</h3>
+            <p>GitHub Devs vs eSports</p>
+            <span class="badge">ECharts | Scatter</span>
+        </a>
     </div>
 </div>
 

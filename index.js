@@ -14,6 +14,7 @@
     import loadCheatersStatsGithubOAuth from './src/backend/cheaters-stats-github-oauth.js';
     import loadTwitchProxy from './src/backend/twitch-proxy.js';
     import loadSpotifyProxy from './src/backend/spotify-proxy.js';
+    import loadGithubEsportsProxy from './src/backend/programadores-proxy.js'; 
 //    import { loadCitysStatsProxy } from './src/backend/citys-stats-proxy.js';
 
 
@@ -34,6 +35,7 @@ app.use('/api/github', githubGGGProxy);
 loadCheatersStatsGithubOAuth(app);
 loadTwitchProxy(app);
 loadSpotifyProxy(app);
+loadGithubEsportsProxy(app);
 
 loadBackendGGG(app);
 loadBackendFMGP(app);
