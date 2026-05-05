@@ -11,10 +11,9 @@
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
     import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
-    import loadCheatersStatsGithubOAuth from './src/backend/cheaters-stats-github-oauth.js';
-    import loadTwitchProxy from './src/backend/twitch-proxy.js';
-    import loadSpotifyProxy from './src/backend/spotify-proxy.js';
-
+    import dogProxy from './src/backend/dog-proxy.js';
+    import openweatherProxy from './src/backend/openweather-proxy.js';
+    import sportsdbProxy from './src/backend/sportsdb-proxy.js';
 
 import loadBackendGGG from './src/backend/olympics-athlete-events.js';
 import loadBackendFMGP from './src/backend/cheaters-stats.js';
@@ -30,9 +29,11 @@ const BASE_URL_API2 = "/api/v2";
 app.use(express.json());
 
 app.use('/api/github', githubGGGProxy);
-loadCheatersStatsGithubOAuth(app);
-loadTwitchProxy(app);
-loadSpotifyProxy(app);
+
+app.use('/api/dog', dogProxy);
+app.use('/api/weather', openweatherProxy);
+app.use('/api/sports', sportsdbProxy);
+
 
 loadBackendGGG(app);
 loadBackendFMGP(app);

@@ -7,12 +7,12 @@
     let chart = null;
     let yearsList = [];
     
-    // Función para inicializar datos en la API externa (Construction)
+    // Función para inicializar datos en la API externa (Deaths)
     async function loadInitialData() {
-        console.log('🏗️ Inicializando datos en Construction API...');
+        console.log('💀 Inicializando datos en Deaths API...');
         
         try {
-            const response = await fetch('https://sos2526-24.onrender.com/api/v1/international-construction-costs/LoadInitialData');
+            const response = await fetch('https://sos2526-10.onrender.com/api/v2/deaths-by-risk-factors/LoadInitialData');
             
             // 400 significa que ya estaba inicializado (no es un error real)
             if (response.status === 400) {
@@ -35,13 +35,13 @@
         }
     }
     
-    // Función para obtener datos de construcción después de inicializar
-    async function fetchConstructionData() {
-        console.log('🏗️ Obteniendo datos de construcción...');
+    // Función para obtener datos de deaths después de inicializar
+    async function fetchDeathsData() {
+        console.log('💀 Obteniendo datos de muertes...');
         
-        const response = await fetch('https://sos2526-24.onrender.com/api/v1/international-construction-costs?limit=200');
+        const response = await fetch('https://sos2526-10.onrender.com/api/v2/deaths-by-risk-factors?limit=200');
         const data = await response.json();
-        console.log(`✅ Construction: ${data.length} registros`);
+        console.log(`✅ Deaths: ${data.length} registros`);
         
         return data;
     }
@@ -58,27 +58,56 @@
         return data;
     }
     
-    // Función para procesar datos de Construcción
-    function processConstructionData(constructionData) {
-        const costByYear = {};
-        const countByYear = {};
+    // Función para procesar datos de Deaths
+    function processDeathsData(deathsData) {
+        const deathsByYear = {};
         
-        constructionData.forEach(item => {
-            const year = item.year;
-            if (year && item.cost_usd_per_m2 !== undefined) {
-                costByYear[year] = (costByYear[year] || 0) + item.cost_usd_per_m2;
-                countByYear[year] = (countByYear[year] || 0) + 1;
+        deathsData.forEach(item => {
+            let year = null;
+            let deaths = null;
+            
+            // Buscar campo de año
+            const possibleYearFields = ['year', 'Year', 'YEAR', 'ano', 'Año', 'date', 'Date', 'fecha', 'period', 'year_id'];
+            for (const field of possibleYearFields) {
+                if (item[field] !== undefined && item[field] !== null) {
+                    year = item[field];
+                    break;
+                }
+            }
+            
+            // Si es una fecha, extraer año
+            if (year && typeof year === 'string' && year.includes('-')) {
+                year = year.split('-')[0];
+            }
+            
+            // Buscar campo de muertes
+            const possibleDeathFields = ['deaths', 'Deaths', 'value', 'Value', 'total', 'Total', 'count', 'Count', 'deaths_count', 'risk_deaths'];
+            for (const field of possibleDeathFields) {
+                if (item[field] !== undefined && item[field] !== null) {
+                    deaths = item[field];
+                    break;
+                }
+            }
+            
+            // Si no encontró campo específico, tomar el primer valor numérico
+            if (!deaths) {
+                for (let key in item) {
+                    const value = item[key];
+                    if (typeof value === 'number' && value !== year && value > 0) {
+                        deaths = value;
+                        break;
+                    }
+                }
+            }
+            
+            if (year && deaths) {
+                const yearStr = year.toString();
+                deathsByYear[yearStr] = (deathsByYear[yearStr] || 0) + (typeof deaths === 'number' ? deaths : parseFloat(deaths) || 0);
             }
         });
         
-        // Calcular promedio por año
-        const avgCostByYear = {};
-        Object.keys(costByYear).forEach(year => {
-            avgCostByYear[year] = costByYear[year] / countByYear[year];
-        });
-        
-        console.log('🏗️ Coste promedio por año (USD/m²):', avgCostByYear);
-        return avgCostByYear;
+        console.log('💀 Muertes por año:', deathsByYear);
+        return deathsByYear;
     }
     
     // Función para procesar datos de Cheaters
@@ -95,29 +124,28 @@
     }
     
     // Función para preparar datos del gráfico
-    function prepareChartData(cheatersByYear, avgCostByYear) {
-        // Unión de todos los años de ambas APIs
-        const allYearsSet = new Set([...Object.keys(cheatersByYear), ...Object.keys(avgCostByYear)]);
+    function prepareChartData(cheatersByYear, deathsByYear) {
+        const allYearsSet = new Set([...Object.keys(cheatersByYear), ...Object.keys(deathsByYear)]);
         const allYears = Array.from(allYearsSet).sort((a, b) => a - b);
         
         const years = allYears.map(y => y.toString());
         const reportsData = allYears.map(y => cheatersByYear[y] || 0);
-        const costData = allYears.map(y => avgCostByYear[y] || 0);
+        const deathsDataMapped = allYears.map(y => deathsByYear[y] || 0);
         
         const maxReports = Math.max(...reportsData);
-        const maxCost = Math.max(...costData);
+        const maxDeaths = Math.max(...deathsDataMapped);
         
         const normalizedReports = reportsData.map(r => maxReports > 0 ? (r / maxReports) * 100 : 0);
-        const normalizedCost = costData.map(c => maxCost > 0 ? (c / maxCost) * 100 : 0);
+        const normalizedDeaths = deathsDataMapped.map(d => maxDeaths > 0 ? (d / maxDeaths) * 100 : 0);
         
         return {
             years,
             reportsData,
-            costData,
+            deathsData: deathsDataMapped,
             normalizedReports,
-            normalizedCost,
+            normalizedDeaths,
             maxReports,
-            maxCost
+            maxDeaths
         };
     }
     
@@ -153,18 +181,18 @@
                         fill: true
                     },
                     {
-                        label: '🏗️ Coste Construcción (USD/m²)',
-                        data: chartData.normalizedCost,
-                        backgroundColor: 'rgba(220,38,38,0.2)',
-                        borderColor: '#dc2626',
+                        label: '💀 Muertes por Factores de Riesgo',
+                        data: chartData.normalizedDeaths,
+                        backgroundColor: 'rgba(239,68,68,0.2)',
+                        borderColor: '#ef4444',
                         borderWidth: 3,
                         pointBackgroundColor: (ctx) => {
-                            const value = chartData.normalizedCost[ctx.dataIndex];
-                            return value > 0 ? '#dc2626' : '#f87171';
+                            const value = chartData.normalizedDeaths[ctx.dataIndex];
+                            return value > 0 ? '#ef4444' : '#fca5a5';
                         },
                         pointBorderColor: 'white',
                         pointRadius: (ctx) => {
-                            const value = chartData.normalizedCost[ctx.dataIndex];
+                            const value = chartData.normalizedDeaths[ctx.dataIndex];
                             return value > 0 ? 6 : 3;
                         },
                         pointHoverRadius: 8,
@@ -178,13 +206,13 @@
                 plugins: {
                     title: { 
                         display: true, 
-                        text: '📊 Evolución Temporal: Reportes vs Coste Construcción', 
-                        color: '#7e22ce', 
+                        text: '💀 Reportes de Tramposos vs Muertes por Factores de Riesgo', 
+                        color: '#991b1b', 
                         font: { size: 16, weight: 'bold' } 
                     },
                     subtitle: { 
                         display: true, 
-                        text: 'Gráfico de Radar - Normalizado a escala 0-100 (puntos pequeños = datos solo en una API)' 
+                        text: chartData.maxDeaths === 0 ? '⚠️ No se encontraron años con datos de muertes' : 'Gráfico de Radar - Normalizado a escala 0-100' 
                     },
                     tooltip: { 
                         callbacks: { 
@@ -192,33 +220,19 @@
                                 const index = ctx.dataIndex;
                                 const year = chartData.years[index];
                                 const reportsReal = chartData.reportsData[index];
-                                const costReal = chartData.costData[index];
+                                const deathsReal = chartData.deathsData[index];
                                 
                                 if (ctx.dataset.label.includes('Reportes')) {
                                     if (reportsReal > 0) {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `📊 Reportes reales: ${reportsReal.toLocaleString()}`,
-                                            `📈 Valor normalizado: ${ctx.raw.toFixed(1)}%`
-                                        ];
+                                        return `📊 Reportes ${year}: ${reportsReal.toLocaleString()}`;
                                     } else {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `⚠️ Sin datos de reportes de tramposos`
-                                        ];
+                                        return `📅 ${year}: Sin datos de reportes`;
                                     }
                                 } else {
-                                    if (costReal > 0) {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `🏗️ Coste real: $${costReal.toFixed(0)}/m²`,
-                                            `📈 Valor normalizado: ${ctx.raw.toFixed(1)}%`
-                                        ];
+                                    if (deathsReal > 0) {
+                                        return `💀 Muertes ${year}: ${deathsReal.toLocaleString()}`;
                                     } else {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `⚠️ Sin datos de coste de construcción`
-                                        ];
+                                        return `📅 ${year}: Sin datos de muertes`;
                                     }
                                 }
                             }
@@ -238,7 +252,7 @@
                             backdropColor: 'transparent',
                             callback: (val) => `${val}%`
                         },
-                        grid: { color: '#e9d5ff' },
+                        grid: { color: '#fee2e2' },
                         title: { display: true, text: 'Valor normalizado (%)', font: { size: 11 } }
                     }
                 }
@@ -250,7 +264,7 @@
         await tick();
         
         try {
-            console.log('🚀 Iniciando proceso para Construction Costs...');
+            console.log('🚀 Iniciando proceso para Deaths by Risk Factors...');
             
             // PASO 1: Llamar a LoadInitialData en la API externa
             const initResult = await loadInitialData();
@@ -259,22 +273,22 @@
             // Pequeña pausa para asegurar que los datos se inicializaron
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // PASO 2: Obtener datos de construcción (ya inicializados)
-            const constructionData = await fetchConstructionData();
+            // PASO 2: Obtener datos de muertes (ya inicializados)
+            const deathsData = await fetchDeathsData();
             
             // PASO 3: Obtener datos de Cheaters Stats
             const cheatersData = await fetchCheatersData();
             
             // PASO 4: Procesar datos
-            const avgCostByYear = processConstructionData(constructionData);
+            const deathsByYear = processDeathsData(deathsData);
             const cheatersByYear = processCheatersData(cheatersData);
             
             // PASO 5: Preparar datos para el gráfico
-            const chartData = prepareChartData(cheatersByYear, avgCostByYear);
+            const chartData = prepareChartData(cheatersByYear, deathsByYear);
             yearsList = chartData.years;
             console.log('📅 Años a mostrar:', yearsList);
             console.log('📊 Reportes:', chartData.reportsData);
-            console.log('🏗️ Costes:', chartData.costData);
+            console.log('💀 Muertes:', chartData.deathsData);
             
             // PASO 6: Renderizar gráfico
             renderChart(chartData);
@@ -292,15 +306,15 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🏗️ Construction Costs + Cheaters Stats</h1>
-    <p class="subtitle">Gráfico de Radar: Evolución anual de reportes vs coste de construcción</p>
+    <h1>💀 Deaths by Risk Factors + Cheaters Stats</h1>
+    <p class="subtitle">Gráfico de Radar: Evolución anual de reportes vs muertes por factores de riesgo</p>
     
     <div style="height: 600px; width: 100%;">
         <canvas id="chart" style="width: 100%; height: 100%;"></canvas>
     </div>
     
     {#if loading}
-        <div class="loading">🏗️ Cargando datos de las APIs... (LoadInitialData → Fetch datos → Procesamiento → Gráfico)</div>
+        <div class="loading">💀 Cargando datos de las APIs... (LoadInitialData → Fetch datos → Procesamiento → Gráfico)</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
@@ -308,30 +322,28 @@
             <p><strong>📌 Interpretación del gráfico de Radar:</strong></p>
             <ul>
                 <li><strong>🟣 Línea morada:</strong> Reportes de tramposos (Cheaters Stats)</li>
-                <li><strong>🔴 Línea roja:</strong> Coste de construcción (Construction Costs API)</li>
-                <li><strong>📅 Eje radial:</strong> Años disponibles en las APIs (todos los años)</li>
-                <li><strong>📈 Valores normalizados:</strong> Ambos datasets escalados a 0-100% para compararlos</li>
-                <li><strong>🔘 Puntos pequeños:</strong> Indican que solo hay datos en una de las dos APIs ese año</li>
-                <li><strong>🔍 Tooltip:</strong> Muestra los valores reales al pasar el ratón</li>
+                <li><strong>🔴 Línea roja:</strong> Muertes por factores de riesgo (Deaths API)</li>
+                <li><strong>📅 Eje radial:</strong> Años disponibles en las APIs</li>
+                <li><strong>📈 Valores normalizados:</strong> Ambos datasets escalados a 0-100%</li>
+                <li><strong>🔘 Puntos pequeños:</strong> Indican datos solo en una API ese año</li>
             </ul>
             <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
-            <p><strong>🔗 API de Construcción:</strong> Isaac Rodríguez Godino (Grupo 24) - <code>https://sos2526-24.onrender.com/api/v1/international-construction-costs</code></p>
-            <p><strong>🔄 Flujo de datos:</strong> LoadInitialData (inicializa API Construction) → Fetch Construction → Fetch Cheaters → Procesamiento → Renderizado</p>
-            <p><strong>💡 Correlación:</strong> Si ambas líneas tienen forma similar, puede haber relación entre costes de construcción y reportes de tramposos</p>
+            <p><strong>🔗 API de Muertes:</strong> <code>https://sos2526-10.onrender.com/api/v2/deaths-by-risk-factors</code></p>
+            <p><strong>🔄 Flujo de datos:</strong> LoadInitialData (inicializa API Deaths) → Fetch Deaths → Fetch Cheaters → Procesamiento → Renderizado</p>
         </div>
     {/if}
 </div>
 
 <style>
-    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #e9d5ff; }
-    .back-link { color: #7e22ce; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #fee2e2; }
+    .back-link { color: #dc2626; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     .back-link:hover { text-decoration: underline; }
-    h1 { color: #7e22ce; margin: 0; }
+    h1 { color: #991b1b; margin: 0; }
     .subtitle { color: #666; margin-bottom: 1.5rem; }
-    .loading { text-align: center; padding: 2rem; color: #7e22ce; }
+    .loading { text-align: center; padding: 2rem; color: #dc2626; }
     .error { text-align: center; padding: 3rem; color: #dc2626; }
-    .info-note { margin-top: 2rem; padding: 1rem; background: #faf5ff; border-radius: 8px; font-size: 0.85rem; color: #666; border-left: 4px solid #7e22ce; }
+    .info-note { margin-top: 2rem; padding: 1rem; background: #fef2f2; border-radius: 8px; font-size: 0.85rem; color: #991b1b; border-left: 4px solid #ef4444; }
     .info-note ul { margin: 0.5rem 0; padding-left: 1.5rem; }
     .info-note li { margin: 0.3rem 0; }
-    .info-note code { background: #e9d5ff; padding: 0.1rem 0.3rem; border-radius: 4px; }
+    .info-note code { background: #fecaca; padding: 0.1rem 0.3rem; border-radius: 4px; }
 </style>
