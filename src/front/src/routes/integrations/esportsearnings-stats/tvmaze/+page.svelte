@@ -32,7 +32,7 @@
                 tempData.push({
                     rank: i + 1,
                     game: esportsData[i].game_name || 'Desconocido',
-                    players: esportsData[i].total_players || 0,
+                    players: esportsData[i].player_no || 0,
                     show: tvData[i].name || 'Desconocida',
                     rating: tvData[i].rating?.average || 'N/A'
                 });
