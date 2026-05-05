@@ -1,24 +1,23 @@
-import fetch from 'node-fetch'; // O como lo tengáis importado en vuestro proyecto
+import axios from 'axios';
 
-const loadCitysStatsProxy = (app) => {
-    // Cuando tu frontend llame a /proxy/citys-stats, este código interceptará la llamada
+export default function loadCitysStatsProxy(app) {
+    
+    console.log('=== CARGANDO PROXY DE CITYS STATS (GRUPO 29) ===');
+    
     app.get('/proxy/citys-stats', async (req, res) => {
         try {
-            // Tu servidor hace la petición a la API del Grupo 29
-            const response = await fetch('https://sos2526-29.onrender.com/api/v2/citys-stats');
+            // Usamos axios exactamente igual que tus compañeros
+            const response = await axios.get('https://sos2526-29.onrender.com/api/v2/citys-stats');
             
-            if (!response.ok) {
-                return res.status(response.status).json({ error: 'Error al contactar con la API del G29' });
-            }
-            
-            const data = await response.json();
-            // Le devolvemos los datos limpios a tu frontend
-            res.status(200).json(data);
+            // Con axios, los datos ya vienen en response.data (no hace falta .json())
+            res.status(200).json(response.data);
             
         } catch (error) {
-            console.error("Error en el proxy de Citys Stats:", error);
-            res.status(500).json({ error: error.message });
+            console.error('❌ Error en el proxy de Citys Stats:', error.message);
+            
+            // Si el error viene de la API, devolvemos su código. Si no, un 500.
+            const statusCode = error.response ? error.response.status : 500;
+            res.status(statusCode).json({ error: error.message });
         }
     });
-};
-export default loadCitysStatsProxy;
+}
