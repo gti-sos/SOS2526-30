@@ -12,29 +12,34 @@
     </div>
 
     <div class="buttons-grid">
-        <!-- BOTÓN 1: API SOS 27 (Treemap) -->
+        <!-- BOTÓN 1: API SOS 27 -->
         <a href="/integrations/esportsgrowth-stats/world-hydroelectric-plants" class="integration-card sos-card">
             <h3>🎓 API Grupo 27 (SOS)</h3>
             <p>Plantas Hidroeléctricas Mundiales</p>
             <span class="badge">ApexCharts | Treemap</span>
         </a>
         
-        <!-- BOTÓN 2: API SOS 24 (Funnel) -->
+        <!-- BOTÓN 2: API SOS 24 -->
         <a href="/integrations/esportsgrowth-stats/recreation-culture-expenditure" class="integration-card sos-card">
             <h3>🎭 API Grupo 24 (SOS)</h3>
             <p>Gasto en Cultura y Recreación</p>
             <span class="badge">ECharts | Funnel</span>
         </a>
 
-        <!-- HUECOS PARA LAS 3 EXTERNAS (Que haremos luego) -->
+        <!-- BOTÓN 3: API EXTERNA 1 (Proxy) - AÚN PENDIENTE -->
         <div class="integration-card ext-card placeholder">
             <h3>🌍 API Externa 1 (Con Proxy)</h3>
             <p>Pendiente...</p>
         </div>
-        <div class="integration-card ext-card placeholder">
-            <h3>🌤️ API Externa 2</h3>
-            <p>Pendiente...</p>
-        </div>
+
+        <!-- BOTÓN 4: API EXTERNA 2 (Población REST Countries) - ¡ACTIVADO! -->
+        <a href="/integrations/esportsgrowth-stats/externa-poblacion" class="integration-card ext-card active-ext">
+            <h3>🌍 API Externa 2</h3>
+            <p>REST Countries - Población vs eSports</p>
+            <span class="badge">ApexCharts | Radial Bar</span>
+        </a>
+
+        <!-- BOTÓN 5: API EXTERNA 3 - AÚN PENDIENTE -->
         <div class="integration-card ext-card placeholder">
             <h3>🚀 API Externa 3</h3>
             <p>Pendiente...</p>
@@ -63,7 +68,15 @@
     a.sos-card:hover { box-shadow: 0 10px 20px -5px rgba(126, 34, 206, 0.2); border-color: #a855f7; }
     .sos-card p { color: #7e22ce; }
 
+    /* Estilos para las tarjetas externas */
     .ext-card { background: #f8fafc; border-color: #e2e8f0; color: #334155; }
     .ext-card.placeholder { opacity: 0.6; cursor: not-allowed; }
+    
+    /* Estilos para las tarjetas externas activadas */
+    a.active-ext { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    a.active-ext:hover { box-shadow: 0 10px 20px -5px rgba(22, 101, 52, 0.15); border-color: #4ade80; }
+    a.active-ext p { color: #15803d; }
+    a.active-ext .badge { background: white; color: #166534; border-color: #86efac; }
+
     .badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.8rem; font-weight: bold; background: white; color: #7e22ce; border: 1px solid #d8b4fe; }
 </style>
