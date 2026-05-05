@@ -26,16 +26,16 @@
                 const country = stat.country;
                 if (country) {
                     // Supongamos que active_player_no viene en millones, lo pasamos a valor real
-                    // Si ya viene en valor real, quita el * 1000000. Ajusta esto según tu base de datos.
                     const players = stat.active_player_no * 1000000; 
                     // @ts-ignore
                     playersByCountry[country] = (playersByCountry[country] || 0) + players;
                 }
             });
             
-            // 2. Obtener datos de la API pública Externa: REST Countries
-            const countriesRes = await fetch('https://restcountries.com/v3.1/all');
-            if (!countriesRes.ok) throw new Error("No se pudo contactar con la API de REST Countries");
+            // 2. Obtener datos de la API Externa (¡CORREGIDO CON TU CAPTURA!)
+            // Solo pedimos los campos 'name' y 'population' para que no nos bloqueen
+            const countriesRes = await fetch('https://restcountries.com/v3.1/all?fields=name,population');
+            if (!countriesRes.ok) throw new Error(`Error de REST Countries. Código: ${countriesRes.status}`);
             const countriesData = await countriesRes.json();
             
             const populationByCountry = {};
@@ -73,7 +73,7 @@
                 .filter(item => item !== null) // Quitamos los que no cruzaron
                 // @ts-ignore
                 .sort((a, b) => b.percentage - a.percentage) // Ordenamos por mayor porcentaje
-                .slice(0, 5); // Cogemos el TOP 5 para que el gráfico circular quede limpio
+                .slice(0, 5); // Cogemos el TOP 5
             
             loading = false;
             
@@ -96,7 +96,7 @@
         }
     }
     
-    // USAMOS APEXCHARTS TIPO "RADIAL BAR" (Totalmente legal y espectacular para porcentajes)
+    // USAMOS APEXCHARTS TIPO "RADIAL BAR"
     function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
@@ -175,7 +175,6 @@
 
 <svelte:head>
     <title>API Externa - Población Mundial</title>
-    <!-- Importamos ApexCharts por CDN -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </svelte:head>
 
@@ -203,7 +202,6 @@
                 <p>⚠️ No hay datos suficientes para calcular los porcentajes.</p>
             </div>
         {/if}
-        <!-- Contenedor de la gráfica, sin tabla debajo -->
         <div id="chart-container" style="height: 550px; width: 100%; display: {combinedData.length > 0 ? 'block' : 'none'};"></div>
     {/if}
 </div>
