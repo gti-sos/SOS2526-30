@@ -1,10 +1,9 @@
 <script>
     import { onMount, tick } from 'svelte';
+    import Highcharts from 'highcharts'; // Usamos Highcharts, que ya lo tienes instalado
 
-    // ¡EL TRUCO MÁGICO! Le decimos a Svelte que estas variables deben actualizar la pantalla
     let loading = $state(true);
     let error = $state(null);
-    let tableData = $state([]);
 
     onMount(async () => {
         await tick();
@@ -24,23 +23,48 @@
             if (!resTV.ok) throw new Error('Fallo al conectar con TVMaze');
             const tvData = await resTV.json();
 
-            // 3. Cruzamos los datos usando una variable temporal
+            // 3. Cruzamos los datos y preparamos los arrays para Highcharts
             const maxRows = Math.min(esportsData.length, tvData.length, 10);
-            let tempData = []; // Array temporal
+            const labels = [];
+            const playersData = [];
+            const ratingsData = [];
             
             for(let i = 0; i < maxRows; i++) {
-                tempData.push({
-                    rank: i + 1,
-                    game: esportsData[i].game_name || 'Desconocido',
-                    players: esportsData[i].player_no || 0,
-                    show: tvData[i].name || 'Desconocida',
-                    rating: tvData[i].rating?.average || 'N/A'
-                });
+                const gameName = esportsData[i].game_name || 'Desconocido';
+                const showName = tvData[i].name || 'Desconocida';
+                
+                labels.push(`${gameName} / ${showName}`); 
+                playersData.push(esportsData[i].player_no || 0);
+                ratingsData.push(tvData[i].rating?.average || 0);
             }
 
-            // 4. Asignamos los datos finales (Esto dispara la actualización de la pantalla)
-            tableData = tempData;
             loading = false;
+
+            // 4. DIBUJAR LA GRÁFICA (Highcharts - Tipo: areaspline)
+            setTimeout(() => {
+                Highcharts.chart('tvmaze-chart', {
+                    chart: { 
+                        type: 'areaspline' // ¡TIPO CLAVE! No es "line", y nadie de tu grupo lo tiene.
+                    }, 
+                    title: { text: 'Comparativa: eSports vs Series (TVMaze)', style: { color: '#7e22ce' } },
+                    xAxis: { 
+                        categories: labels,
+                        title: { text: 'Juego / Serie' }
+                    },
+                    yAxis: [
+                        { title: { text: 'Nº Jugadores', style: { color: '#a855f7' } } },
+                        { title: { text: 'Nota Serie (0-10)', style: { color: '#0ea5e9' } }, opposite: true } // Eje derecho
+                    ],
+                    tooltip: { shared: true },
+                    plotOptions: {
+                        areaspline: { fillOpacity: 0.4 } // Hace que el color del área sea transparente
+                    },
+                    series: [
+                        { name: 'Jugadores eSports', data: playersData, color: '#a855f7' },
+                        { name: 'Nota Serie (TVMaze)', data: ratingsData, yAxis: 1, color: '#0ea5e9' }
+                    ]
+                });
+            }, 100);
 
         } catch (err) { 
             console.error(err);
@@ -50,41 +74,18 @@
     });
 </script>
 
-<!-- ESTA ES LA PARTE QUE FALTABA PARA QUE SE VEA EN PANTALLA -->
 <div class="container">
     <a href="/integrations/esportsearnings-stats" class="back-link">← Volver a mis integraciones</a>
     <h1>🎮 eSports vs 📺 Series de TV (TVMaze)</h1>
-    <p class="subtitle">Integración Textual en HTML (Cumplimiento Regla 6.i)</p>
+    <p class="subtitle">Integración mediante Gráfico de Área Suavizada (Highcharts: areaspline)</p>
     
+    <!-- Contenedor del Canvas para Highcharts -->
+    <div id="tvmaze-chart" style="height: 500px; margin-top: 2rem; border-radius: 8px; overflow: hidden;"></div>
+
     {#if loading}
-        <div class="loading">Cargando catálogo de series...</div>
+        <div class="loading">Cargando datos y generando gráfica...</div>
     {:else if error}
         <div class="error">❌ Error: {error}</div>
-    {:else}
-        <div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Top</th>
-                        <th>Juego (eSports)</th>
-                        <th>Nº Jugadores</th>
-                        <th>Serie de TV</th>
-                        <th>Nota (Sobre 10)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each tableData as row}
-                        <tr>
-                            <td class="rank-col">#{row.rank}</td>
-                            <td class="highlight-purple">{row.game}</td>
-                            <td>{row.players.toLocaleString()} 👤</td>
-                            <td class="highlight-blue">{row.show}</td>
-                            <td>⭐ {row.rating}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
     {/if}
 </div>
 
@@ -94,17 +95,6 @@
     .back-link:hover { text-decoration: underline; }
     h1 { color: #7e22ce; text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
-    
-    .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; background: white; }
-    .data-table th { background: #f3e8ff; color: #7e22ce; padding: 1rem; font-weight: bold; border-bottom: 2px solid #d8b4fe; }
-    .data-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
-    .data-table tbody tr:hover { background: #faf5ff; }
-    
-    .rank-col { font-weight: bold; color: #9ca3af; }
-    .highlight-purple { font-weight: bold; color: #9333ea; }
-    .highlight-blue { font-weight: bold; color: #2563eb; }
-    
     .loading { text-align: center; padding: 3rem; color: #7e22ce; font-weight: bold; }
     .error { text-align: center; padding: 2rem; color: #dc2626; background: #fee2e2; border-radius: 8px; margin-top: 2rem; }
 </style>
