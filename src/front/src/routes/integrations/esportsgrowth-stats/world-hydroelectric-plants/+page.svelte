@@ -15,28 +15,23 @@
         try {
             loading = true;
             
-            // 0. Intentar cargar datos iniciales del compañero
             try {
                 const loadRes = await fetch('https://sos2526-27.onrender.com/api/v1/world-hydroelectric-plants/loadInitialData');
-                if (!loadRes.ok) {
-                    console.log('loadInitialData responded with status:', loadRes.status);
-                }
             } catch (e) {
-                // @ts-ignore
-                console.log('loadInitialData error:', e.message);
+                console.log('loadInitialData error (ignorar):', e.message);
             }
             
             // 1. Obtener tus datos: eSports Growth
             const esportsRes = await fetch('/api/v1/esportsgrowth-stats?limit=1000');
             const esportsData = await esportsRes.json();
             
-            const playersByCountry = {};
+            const playersByYear = {};
             // @ts-ignore
             esportsData.forEach(stat => {
-                const country = stat.country;
-                if (country) {
+                const year = stat.year;
+                if (year) {
                     // @ts-ignore
-                    playersByCountry[country] = (playersByCountry[country] || 0) + (stat.active_player_no || 0);
+                    playersByYear[year] = (playersByYear[year] || 0) + (stat.active_player_no || 0);
                 }
             });
             
@@ -44,42 +39,57 @@
             const hydroRes = await fetch('https://sos2526-27.onrender.com/api/v1/world-hydroelectric-plants');
             const hydroData = await hydroRes.json();
             
-            // 3. Combinar datos por país
-            const hydroByCountry = {};
+            const hydroByYear = {};
             // @ts-ignore
             hydroData.forEach(item => {
-                const country = item.country;
-                // @ts-ignore
-                if (country && !hydroByCountry[country]) {
+                const year = item.year;
+                if (year) {
                     // @ts-ignore
-                    hydroByCountry[country] = {
-                        capacity: item.capacity_mw,
-                        generation: item.generation_gwh,
-                        plants: item.number_of_plants,
-                        year: item.year
-                    };
+                    if (!hydroByYear[year]) hydroByYear[year] = { capacity: 0, generation: 0, plants: 0 };
+                    // @ts-ignore
+                    hydroByYear[year].capacity += (item.capacity_mw || 0);
+                    // @ts-ignore
+                    hydroByYear[year].generation += (item.generation_gwh || 0);
+                    // @ts-ignore
+                    hydroByYear[year].plants += (item.number_of_plants || 0);
                 }
             });
             
-            // 4. Preparar datos combinados
-            combinedData = Object.keys(playersByCountry)
-                // @ts-ignore
-                .filter(country => hydroByCountry[country])
-                .map(country => ({
-                    country: country,
+            // 3. UNIÓN COMPLETA: Coger todos los años de ambas APIs
+            let uniqueYears = Array.from(new Set([...Object.keys(playersByYear), ...Object.keys(hydroByYear)]))
+                .map(Number)
+                .sort((a, b) => a - b); // Ordenar de menor a mayor
+
+            if (uniqueYears.length > 0) {
+                let maxYear = uniqueYears[uniqueYears.length - 1];
+                let minYear = uniqueYears[0];
+                
+                // 4. GARANTIZAR AL MENOS 10 AÑOS EN LA GRÁFICA
+                if (maxYear - minYear < 9) {
+                    minYear = maxYear - 9; // Forzamos a que empiece 9 años antes del máximo (total 10 años)
+                }
+
+                // Generamos la lista de años continuada
+                let fullYearsRange = [];
+                for (let y = minYear; y <= maxYear; y++) {
+                    fullYearsRange.push(y.toString());
+                }
+
+                // 5. Mapear los datos, poniendo 0 si alguna API no tiene datos ese año
+                combinedData = fullYearsRange.map(year => ({
+                    year: year,
                     // @ts-ignore
-                    players: playersByCountry[country] || 0,
+                    players: playersByYear[year] || 0,
                     // @ts-ignore
-                    capacity: hydroByCountry[country].capacity || 0,
+                    capacity: hydroByYear[year] ? hydroByYear[year].capacity : 0,
                     // @ts-ignore
-                    generation: hydroByCountry[country].generation || 0,
+                    generation: hydroByYear[year] ? hydroByYear[year].generation : 0,
                     // @ts-ignore
-                    plants: hydroByCountry[country].plants || 0,
-                    // @ts-ignore
-                    year: hydroByCountry[country].year
-                }))
-                .sort((a, b) => b.players - a.players)
-                .slice(0, 10); 
+                    plants: hydroByYear[year] ? hydroByYear[year].plants : 0
+                }));
+            } else {
+                combinedData = [];
+            }
             
             loading = false;
             
@@ -102,79 +112,81 @@
         }
     }
     
-    // USAMOS ECHARTS PERO TIPO SCATTER (DISPERSIÓN) PARA NO REPETIR BARRAS
     function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
-        const container = document.getElementById('chart-container');
+        const container = document.querySelector('#chart-container');
         if (!container) return;
         
-        // @ts-ignore
-        const chart = window.echarts.init(container);
+        const categories = combinedData.map(d => d.year);
+        const playersData = combinedData.map(d => d.players);
+        const capacityData = combinedData.map(d => d.capacity);
         
-        // Formato para scatter: [ejeX, ejeY, nombre_pais]
-        const scatterData = combinedData.map(d => [d.players, d.capacity, d.country]);
-        
-        const option = {
-            tooltip: {
-                trigger: 'item',
-                formatter: function (params) {
-                    return `<strong>${params.data[2]}</strong><br/>Jugadores eSports: ${params.data[0].toLocaleString()} M<br/>Capacidad Hidro: ${params.data[1].toLocaleString()} MW`;
-                }
-            },
-            grid: { left: '8%', right: '10%', bottom: '15%', containLabel: true },
-            xAxis: {
-                type: 'value',
-                name: 'Jugadores Activos (M)',
-                nameLocation: 'middle',
-                nameGap: 30,
-                splitLine: { lineStyle: { type: 'dashed' } }
-            },
-            yAxis: {
-                type: 'value',
-                name: 'Capacidad Hidroeléctrica (MW)',
-                nameLocation: 'middle',
-                nameGap: 50,
-                splitLine: { lineStyle: { type: 'dashed' } }
-            },
+        const options = {
             series: [{
-                name: 'Países',
-                type: 'scatter',
-                symbolSize: 22, // Tamaño de las bolas
-                itemStyle: {
-                    color: '#3b82f6',
-                    opacity: 0.8,
-                    borderColor: '#1d4ed8',
-                    borderWidth: 2
+                name: 'Total Jugadores eSports (M)',
+                data: playersData
+            }, {
+                name: 'Capacidad Hidro. Mundial (MW)',
+                data: capacityData
+            }],
+            chart: {
+                height: 500,
+                type: 'area', // Evolución temporal en área
+                toolbar: { show: false }
+            },
+            colors: ['#7e22ce', '#3b82f6'],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 3 },
+            fill: {
+                type: 'gradient',
+                gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] }
+            },
+            xaxis: {
+                categories: categories,
+                title: { text: 'Año' }
+            },
+            yaxis: [
+                {
+                    title: { text: 'Jugadores Activos (Millones)' },
+                    labels: { style: { colors: '#7e22ce' } }
                 },
-                data: scatterData
-            }]
+                {
+                    opposite: true,
+                    title: { text: 'Capacidad Total (MW)' },
+                    labels: { style: { colors: '#3b82f6' } }
+                }
+            ],
+            tooltip: { shared: true, intersect: false }
         };
         
-        chart.setOption(option);
+        // @ts-ignore
+        const chart = new window.ApexCharts(container, options);
+        chart.render();
+        
         chartInitialized = true;
     }
 </script>
 
 <svelte:head>
     <title>API Grupo 27 - Integraciones</title>
-    <!-- Mantenemos ECharts por CDN igual que en la otra -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- Importamos ApexCharts por CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </svelte:head>
 
 <div class="integration-container">
-    <h1>🎮 eSports vs ⚡ Capacidad Hidroeléctrica</h1>
-    <p class="subtitle">Relación entre jugadores activos y capacidad hidroeléctrica (datos combinados)</p>
+    <h1>🎮 eSports vs ⚡ Energía Hidroeléctrica</h1>
+    <p class="subtitle">Evolución global a 10 años: Jugadores vs Capacidad instalada (Total Mundial)</p>
     
     <div class="info-api">
-        <p><strong>API 1 (propia):</strong> eSports Growth Stats - Jugadores activos por país</p>
-        <p><strong>API 2 (compañero):</strong> World Hydroelectric Plants - Capacidad instalada por país</p>
+        <p><strong>API 1 (propia):</strong> eSports Growth Stats - Agrupado por Año</p>
+        <p><strong>API 2 (compañero):</strong> World Hydroelectric Plants - Agrupado por Año</p>
         <p><strong>Fuente:</strong> Grupo 27 - SOS</p>
     </div>
     
     <div class="loading-overlay">
         <div class="spinner"></div>
-        <p>Cargando datos combinados...</p>
+        <p>Procesando y cruzando años...</p>
     </div>
     
     {#if error}
@@ -182,45 +194,68 @@
             <p>❌ Error: {error}</p>
         </div>
     {:else}
-        <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem;"></div>
+        {#if combinedData.length === 0 && !loading}
+            <div class="error" style="background: #fffbeb; color: #d97706;">
+                <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
+            </div>
+        {/if}
+        <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem; display: {combinedData.length > 0 ? 'block' : 'none'};"></div>
         
+        {#if combinedData.length > 0}
         <div class="table-container">
-            <h3>📋 Datos combinados</h3>
+            <h3>📋 Totales Globales por Año</h3>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>País</th>
-                            <th>Jugadores eSports (M)</th>
-                            <th>Capacidad Hidroeléctrica (MW)</th>
-                            <th>Generación (GWh)</th>
-                            <th>Nº Plantas</th>
-                            <th>Año dato</th>
+                            <th>Año</th>
+                            <th>Total Jugadores eSports (M)</th>
+                            <th>Capacidad Hidro. (MW)</th>
+                            <th>Generación Total (GWh)</th>
+                            <th>Nº Plantas Registradas</th>
                         </tr>
                     </thead>
                     <tbody>
                         {#each combinedData as item}
                             <tr>
-                                <td><strong>{item.country}</strong></td>
-                                <td>{item.players.toLocaleString()}</td>
-                                <td>{item.capacity.toLocaleString()} MW</td>
-                                <td>{item.generation.toLocaleString()} GWh</td>
-                                <td>{item.plants}</td>
-                                <td>{item.year}</td>
+                                <td><strong>{item.year}</strong></td>
+                                <td>
+                                    {#if item.players === 0}
+                                        <span class="no-data">-</span>
+                                    {:else}
+                                        {item.players.toLocaleString()}
+                                    {/if}
+                                </td>
+                                <td>
+                                    {#if item.capacity === 0}
+                                        <span class="no-data">-</span>
+                                    {:else}
+                                        {item.capacity.toLocaleString()} MW
+                                    {/if}
+                                </td>
+                                <td>
+                                    {#if item.generation === 0}
+                                        <span class="no-data">-</span>
+                                    {:else}
+                                        {item.generation.toLocaleString()} GWh
+                                    {/if}
+                                </td>
+                                <td>{item.plants === 0 ? '-' : item.plants}</td>
                             </tr>
                         {/each}
                     </tbody>
                 </table>
             </div>
         </div>
+        {/if}
     {/if}
     
     <div class="info">
         <h3>📖 Interpretación</h3>
         <ul>
-            <li><strong>Objetivo:</strong> Comparar el volumen de jugadores de eSports con la infraestructura hidroeléctrica por país.</li>
-            <li><strong>Gráfico:</strong> Dispersión (scatter) usando la librería <strong>Apache ECharts</strong>.</li>
-            <li><strong>Relación:</strong> Permite ver en un plano XY dónde se sitúan los países (a más arriba, más capacidad hidroeléctrica; a más a la derecha, más jugadores).</li>
+            <li><strong>Objetivo:</strong> Ver cómo han evolucionado globalmente los eSports en paralelo con la infraestructura energética mundial.</li>
+            <li><strong>Gráfico:</strong> Área de evolución (area) usando <strong>ApexCharts</strong>.</li>
+            <li><strong>Manejo de Datos:</strong> Se garantizan al menos 10 años en el eje temporal, combinando todos los años disponibles en ambas APIs y rellenando con valor nulo (0) cuando la información no existe.</li>
         </ul>
     </div>
 </div>
@@ -237,9 +272,10 @@
     .table-container { margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
     .table-wrapper { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #faf5ff; font-weight: 600; color: #7e22ce; }
+    th, td { padding: 0.75rem; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    th { background: #faf5ff; font-weight: 600; color: #7e22ce; text-align: center; }
     tr:hover { background: #faf5ff; }
+    .no-data { color: #94a3b8; font-style: italic; }
     .info { margin-top: 2rem; padding: 1rem; background: #faf5ff; border-radius: 12px; border: 1px solid #e9d5ff; }
     .info h3 { color: #7e22ce; margin-top: 0; }
 </style>
