@@ -47,7 +47,7 @@
             // 4. DIBUJAR (Usando setTimeout como en vuestros ejemplos)
             setTimeout(() => {
                 Highcharts.chart('chart-div', {
-                    chart: { type: 'pie', backgroundColor: 'transparent' },
+                    chart: { type: 'polarArea', backgroundColor: 'transparent' },
                     title: { text: 'eSports vs Rick & Morty', style: { color: '#7e22ce' } },
                     series: [{ name: 'Registros', data: finalData }]
                 });
