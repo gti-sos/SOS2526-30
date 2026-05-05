@@ -40,7 +40,7 @@
         </a>
 
         <!-- BOTÓN 5: API EXTERNA 3 (GitHub OAuth) - ¡ACTIVADO! -->
-        <a href="/integrations/esportsgrowth-stats/externa-github" class="integration-card ext-card active-ext">
+        <a href="/integrations/esportsgrowth-stats/programadores-stats" class="integration-card ext-card active-ext">
             <h3>🚀 API Externa 3 (OAuth)</h3>
             <p>GitHub Devs vs eSports</p>
             <span class="badge">ECharts | Scatter</span>
