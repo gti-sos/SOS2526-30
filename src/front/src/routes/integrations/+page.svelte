@@ -1,5 +1,5 @@
 <script>
-    // Lista de miembros y sus integraciones
+    // Lista de miembros y sus integracione
     const miembros = [
         {
             nombre: "Gonzalo García Gómez",
