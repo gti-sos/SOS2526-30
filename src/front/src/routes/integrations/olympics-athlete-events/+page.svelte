@@ -27,9 +27,9 @@
             ruta: "/integrations/olympics-athlete-events/github",
         },
         {
-            titulo: "Integracion 6 - ",
-            descripcion: "...", 
-            ruta: "/integrations/olympics-athlete-events"            
+            titulo: "Integracion 6 - The Cat API",
+            descripcion: "Integracion con api The Cat API", 
+            ruta: "/integrations/olympics-athlete-events/theCatsApi",            
         },
     ];
 </script>

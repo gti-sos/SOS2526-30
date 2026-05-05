@@ -26,6 +26,7 @@ jobs:
       - name: Build frontend
         run: npm run build
         env:
+          VITE_CAT_API_KEY: ${{ secrets.VITE_CAT_API_KEY }}
           VITE_GITHUB_TOKEN: ${{ secrets.VITE_GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.XITHUB_TOKEN }}
         
@@ -35,6 +36,7 @@ jobs:
       - name: Run API tests (Newman)
         run: npm test
         env:
+          VITE_CAT_API_KEY: ${{ secrets.VITE_CAT_API_KEY }}
           VITE_GITHUB_TOKEN: ${{ secrets.VITE_GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.XITHUB_TOKEN }}
         

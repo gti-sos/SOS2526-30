@@ -1,92 +1,81 @@
 <script>
     import { onMount, tick } from 'svelte';
-    import Chart from 'chart.js/auto';
+    import * as d3 from 'd3';
     
     let loading = true;
     let error = null;
-    let chart = null;
     let yearsList = [];
-    let touristByYear = {};
     
-    // Función para inicializar datos en la API externa (Tourist Arrivals)
     async function loadInitialData() {
         console.log('✈️ Inicializando datos en Tourist Arrivals API...');
         
         try {
             const response = await fetch('https://sos2526-25.onrender.com/api/v1/international-tourist-arrivals/LoadInitialData');
             
-            // 400 significa que ya estaba inicializado (no es un error real)
-            if (response.status === 400) {
-                const data = await response.json();
-                console.log('ℹ️', data.message);
-                return { alreadyInitialized: true, message: data.message };
+            if (response.status === 409 || response.status === 400) {
+                console.log('ℹ️ Base de datos ya inicializada');
+                return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
                 console.log('✅', data.message);
-                return { initialized: true, message: data.message };
+                return { initialized: true };
             }
-            
-            throw new Error(`HTTP ${response.status}`);
-            
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar (puede que ya lo esté):', err.message);
+            console.warn('⚠️ No se pudo inicializar:', err.message);
             return null;
         }
     }
     
-    // Función para obtener datos de turistas después de inicializar
     async function fetchTouristData() {
-        console.log('✈️ Obteniendo datos de llegadas turísticas...');
-        
         const response = await fetch('https://sos2526-25.onrender.com/api/v1/international-tourist-arrivals?limit=200');
-        const data = await response.json();
-        console.log(`✅ Tourist Arrivals: ${data.length} registros`);
-        
-        // Mostrar estructura
-        if (data.length > 0) {
-            console.log('Estructura de datos:', Object.keys(data[0]));
+        return await response.json();
+    }
+    
+    async function fetchCheatersData() {
+        try {
+            const response = await fetch('http://localhost:3000/api/v2/cheaters-stats?limit=200');
+            if (response.ok) {
+                const json = await response.json();
+                return json.data || [];
+            }
+        } catch (err) {
+            console.warn('No se pudo conectar al backend:', err.message);
         }
         
-        return data;
+        try {
+            const response = await fetch('/api/v2/cheaters-stats?limit=200');
+            if (response.ok) {
+                const json = await response.json();
+                return json.data || [];
+            }
+        } catch (err) {
+            console.warn('No se pudo conectar al proxy:', err.message);
+        }
+        
+        return [];
     }
     
-    // Función para cargar datos de Cheaters Stats
-    async function fetchCheatersData() {
-        console.log('📊 Cargando datos de Cheaters Stats...');
-        
-        const response = await fetch('/api/v2/cheaters-stats?limit=200');
-        const json = await response.json();
-        const data = json.data || [];
-        console.log(`✅ Cheaters: ${data.length} registros`);
-        
-        return data;
-    }
-    
-    // Función para procesar datos de Turistas
     function processTouristData(touristData) {
-        const touristByYearTemp = {};
+        const touristByYear = {};
         
         touristData.forEach(item => {
             const year = item.year;
             if (year) {
-                // Sumar todos los tipos de llegada para cada país
                 const totalArrivals = (item.air_arrival || 0) + 
                                      (item.water_arrival || 0) + 
                                      (item.land_arrival || 0);
                 
                 if (totalArrivals > 0) {
-                    touristByYearTemp[year] = (touristByYearTemp[year] || 0) + totalArrivals;
+                    touristByYear[year] = (touristByYear[year] || 0) + totalArrivals;
                 }
             }
         });
         
-        console.log('✈️ Turistas por año:', touristByYearTemp);
-        return touristByYearTemp;
+        return touristByYear;
     }
     
-    // Función para procesar datos de Cheaters
     function processCheatersData(cheatersData) {
         const cheatersByYear = {};
         cheatersData.forEach(item => {
@@ -95,186 +84,230 @@
                 cheatersByYear[year] = (cheatersByYear[year] || 0) + (item.cheater_report || 0);
             }
         });
-        console.log('📊 Cheaters por año:', cheatersByYear);
         return cheatersByYear;
     }
     
-    // Función para preparar datos del gráfico
-    function prepareChartData(cheatersByYear, touristByYearTemp) {
-        const allYearsSet = new Set([...Object.keys(cheatersByYear), ...Object.keys(touristByYearTemp)]);
+    function prepareChartData(cheatersByYear, touristByYear) {
+        const allYearsSet = new Set([...Object.keys(cheatersByYear), ...Object.keys(touristByYear)]);
         const allYears = Array.from(allYearsSet).sort((a, b) => a - b);
         
         const years = allYears.map(y => y.toString());
         const reportsData = allYears.map(y => cheatersByYear[y] || 0);
-        const touristDataMapped = allYears.map(y => touristByYearTemp[y] || 0);
+        const touristData = allYears.map(y => touristByYear[y] || 0);
         
-        const maxReports = Math.max(...reportsData);
-        const maxTourist = Math.max(...touristDataMapped);
-        
-        const normalizedReports = reportsData.map(r => maxReports > 0 ? (r / maxReports) * 100 : 0);
-        const normalizedTourist = touristDataMapped.map(t => maxTourist > 0 ? (t / maxTourist) * 100 : 0);
-        
-        return {
-            years,
-            reportsData,
-            touristData: touristDataMapped,
-            normalizedReports,
-            normalizedTourist,
-            maxReports,
-            maxTourist
-        };
+        return { years, reportsData, touristData };
     }
     
-    // Función para renderizar el gráfico de radar
-    function renderChart(chartData) {
-        const canvas = document.getElementById('chart');
-        if (!canvas) throw new Error('Canvas no encontrado');
+    function renderTreemap(chartData) {
+        const container = document.getElementById('chart');
+        if (!container) return;
+        container.innerHTML = '';
         
-        const ctx = canvas.getContext('2d');
-        if (chart) chart.destroy();
+        const width = 900;
+        const height = 600;
         
-        chart = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: chartData.years,
-                datasets: [
-                    {
-                        label: '📊 Reportes de Tramposos (Cheaters)',
-                        data: chartData.normalizedReports,
-                        backgroundColor: 'rgba(124,58,237,0.2)',
-                        borderColor: '#7e22ce',
-                        borderWidth: 3,
-                        pointBackgroundColor: (ctx) => {
-                            const value = chartData.normalizedReports[ctx.dataIndex];
-                            return value > 0 ? '#7e22ce' : '#c084fc';
-                        },
-                        pointBorderColor: 'white',
-                        pointRadius: (ctx) => {
-                            const value = chartData.normalizedReports[ctx.dataIndex];
-                            return value > 0 ? 6 : 3;
-                        },
-                        pointHoverRadius: 8,
-                        fill: true
-                    },
-                    {
-                        label: '✈️ Llegadas Turistas Internacionales',
-                        data: chartData.normalizedTourist,
-                        backgroundColor: 'rgba(34,197,94,0.2)',
-                        borderColor: '#22c55e',
-                        borderWidth: 3,
-                        pointBackgroundColor: (ctx) => {
-                            const value = chartData.normalizedTourist[ctx.dataIndex];
-                            return value > 0 ? '#22c55e' : '#86efac';
-                        },
-                        pointBorderColor: 'white',
-                        pointRadius: (ctx) => {
-                            const value = chartData.normalizedTourist[ctx.dataIndex];
-                            return value > 0 ? 6 : 3;
-                        },
-                        pointHoverRadius: 8,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: { 
-                        display: true, 
-                        text: '✈️ Reportes de Tramposos vs Llegadas Turísticas Internacionales', 
-                        color: '#15803d', 
-                        font: { size: 16, weight: 'bold' } 
-                    },
-                    subtitle: { 
-                        display: true, 
-                        text: 'Gráfico de Radar - Normalizado a escala 0-100 (suma de llegadas aéreas, marítimas y terrestres)' 
-                    },
-                    tooltip: { 
-                        callbacks: { 
-                            label: (ctx) => {
-                                const index = ctx.dataIndex;
-                                const year = chartData.years[index];
-                                const reportsReal = chartData.reportsData[index];
-                                const touristReal = chartData.touristData[index];
-                                
-                                if (ctx.dataset.label.includes('Reportes')) {
-                                    if (reportsReal > 0) {
-                                        return `📊 Reportes ${year}: ${reportsReal.toLocaleString()}`;
-                                    } else {
-                                        return `📅 ${year}: Sin datos de reportes de tramposos`;
-                                    }
-                                } else {
-                                    if (touristReal > 0) {
-                                        return [
-                                            `✈️ Llegadas totales ${year}: ${touristReal.toLocaleString()}`,
-                                            `📊 Basado en datos de múltiples países`
-                                        ];
-                                    } else {
-                                        return `📅 ${year}: Sin datos de llegadas turísticas`;
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    legend: { 
-                        position: 'bottom',
-                        labels: { usePointStyle: true, boxWidth: 15, font: { size: 12 } }
-                    }
+        // Preparar datos para el treemap - estructura jerárquica
+        // Creamos un nodo raíz con dos categorías: Reportes y Turistas
+        const rootData = {
+            name: 'root',
+            children: [
+                {
+                    name: '📊 Reportes de Tramposos',
+                    children: chartData.years.map((year, i) => ({
+                        name: `${year}`,
+                        value: chartData.reportsData[i],
+                        type: 'reports',
+                        originalValue: chartData.reportsData[i]
+                    })).filter(d => d.value > 0)
                 },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: { 
-                            stepSize: 20,
-                            backdropColor: 'transparent',
-                            callback: (val) => `${val}%`
-                        },
-                        grid: { color: '#dcfce7' },
-                        title: { display: true, text: 'Valor normalizado (%)', font: { size: 11 } }
-                    }
+                {
+                    name: '✈️ Llegadas Turísticas',
+                    children: chartData.years.map((year, i) => ({
+                        name: `${year}`,
+                        value: chartData.touristData[i],
+                        type: 'tourist',
+                        originalValue: chartData.touristData[i]
+                    })).filter(d => d.value > 0)
                 }
-            }
-        });
+            ].filter(category => category.children.length > 0)
+        };
+        
+        // Si no hay datos, mostrar mensaje
+        if (rootData.children.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:50px; color:#666;">No hay datos disponibles</div>';
+            return;
+        }
+        
+        const root = d3.hierarchy(rootData)
+            .sum(d => d.value)
+            .sort((a, b) => b.value - a.value);
+        
+        d3.treemap()
+            .size([width, height])
+            .padding(2)
+            .round(true)(root);
+        
+        const svg = d3.select(container)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr('transform', 'translate(0,0)');
+        
+        // Colores por categoría
+        const categoryColors = {
+            '📊 Reportes de Tramposos': '#7e22ce',
+            '✈️ Llegadas Turísticas': '#22c55e'
+        };
+        
+        // Tooltip
+        const tooltip = d3.select(container)
+            .append('div')
+            .style('position', 'absolute')
+            .style('background', 'rgba(0,0,0,0.85)')
+            .style('color', 'white')
+            .style('padding', '10px')
+            .style('border-radius', '8px')
+            .style('font-size', '12px')
+            .style('pointer-events', 'none')
+            .style('opacity', 0)
+            .style('z-index', '1000');
+        
+        // Dibujar rectángulos
+        const cell = svg.selectAll('g')
+            .data(root.leaves())
+            .enter()
+            .append('g')
+            .attr('transform', d => `translate(${d.x0},${d.y0})`);
+        
+        cell.append('rect')
+            .attr('width', d => d.x1 - d.x0)
+            .attr('height', d => d.y1 - d.y0)
+            .attr('fill', d => categoryColors[d.parent.data.name] || '#888')
+            .attr('stroke', 'white')
+            .attr('stroke-width', 2)
+            .style('cursor', 'pointer')
+            .style('transition', 'opacity 0.2s')
+            .on('mouseover', function(event, d) {
+                d3.select(this).attr('opacity', 0.8);
+                const category = d.parent.data.name;
+                const value = d.data.originalValue;
+                let formattedValue = '';
+                if (category.includes('Reportes')) {
+                    formattedValue = value.toLocaleString() + ' reportes';
+                } else {
+                    formattedValue = value.toLocaleString() + ' llegadas';
+                }
+                tooltip.style('opacity', 1)
+                    .html(`<strong>${category}</strong><br/>📅 Año: ${d.data.name}<br/>📊 Valor: ${formattedValue}`)
+                    .style('left', (event.pageX + 15) + 'px')
+                    .style('top', (event.pageY - 30) + 'px');
+            })
+            .on('mouseout', function() {
+                d3.select(this).attr('opacity', 1);
+                tooltip.style('opacity', 0);
+            });
+        
+        // Añadir texto dentro de los rectángulos
+        cell.append('text')
+            .attr('x', 5)
+            .attr('y', 20)
+            .attr('fill', 'white')
+            .attr('font-size', '11px')
+            .attr('font-weight', 'bold')
+            .text(d => d.data.name)
+            .style('pointer-events', 'none');
+        
+        cell.append('text')
+            .attr('x', 5)
+            .attr('y', 38)
+            .attr('fill', 'rgba(255,255,255,0.8)')
+            .attr('font-size', '9px')
+            .text(d => {
+                const val = d.data.originalValue;
+                if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+                if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
+                return val.toString();
+            })
+            .style('pointer-events', 'none');
+        
+        // Título
+        svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', 25)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '18px')
+            .style('font-weight', 'bold')
+            .style('fill', '#15803d')
+            .text('✈️ Reportes de Tramposos vs Llegadas Turísticas Internacionales');
+        
+        // Subtítulo
+        svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', 48)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '12px')
+            .style('fill', '#666')
+            .text('Treemap - El tamaño de cada rectángulo representa la magnitud (mayor área = mayor valor)');
+        
+        // Leyenda
+        const legend = svg.append('g')
+            .attr('transform', `translate(${width - 200}, 70)`);
+        
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', 14)
+            .attr('height', 14)
+            .attr('fill', categoryColors['📊 Reportes de Tramposos'])
+            .attr('rx', 3);
+        
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 11)
+            .style('font-size', '11px')
+            .style('fill', '#666')
+            .text('📊 Reportes');
+        
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 22)
+            .attr('width', 14)
+            .attr('height', 14)
+            .attr('fill', categoryColors['✈️ Llegadas Turísticas'])
+            .attr('rx', 3);
+        
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 33)
+            .style('font-size', '11px')
+            .style('fill', '#666')
+            .text('✈️ Llegadas Turísticas');
     }
     
     onMount(async () => {
         await tick();
         
         try {
-            console.log('🚀 Iniciando proceso para International Tourist Arrivals...');
-            
-            // PASO 1: Llamar a LoadInitialData en la API externa
-            const initResult = await loadInitialData();
-            console.log('📦 Inicialización completada:', initResult);
-            
-            // Pequeña pausa para asegurar que los datos se inicializaron
+            await loadInitialData();
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // PASO 2: Obtener datos de turistas (ya inicializados)
             const touristData = await fetchTouristData();
-            
-            // PASO 3: Obtener datos de Cheaters Stats
             const cheatersData = await fetchCheatersData();
             
-            // PASO 4: Procesar datos
-            const touristByYearTemp = processTouristData(touristData);
-            touristByYear = touristByYearTemp; // Guardar para mostrar en el HTML
+            const touristByYear = processTouristData(touristData);
             const cheatersByYear = processCheatersData(cheatersData);
             
-            // PASO 5: Preparar datos para el gráfico
-            const chartData = prepareChartData(cheatersByYear, touristByYearTemp);
+            const chartData = prepareChartData(cheatersByYear, touristByYear);
             yearsList = chartData.years;
-            console.log('📅 Años a mostrar:', yearsList);
+            
+            console.log('📅 Años:', yearsList);
             console.log('📊 Reportes:', chartData.reportsData);
             console.log('✈️ Turistas:', chartData.touristData);
             
-            // PASO 6: Renderizar gráfico
-            renderChart(chartData);
+            renderTreemap(chartData);
             
             loading = false;
-            console.log('✅ Gráfico de Radar creado correctamente con datos de turistas');
             
         } catch (err) {
             console.error('❌ Error:', err);
@@ -287,36 +320,35 @@
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
     <h1>✈️ International Tourist Arrivals + Cheaters Stats</h1>
-    <p class="subtitle">Gráfico de Radar: Evolución anual de reportes vs llegadas de turistas internacionales</p>
+    <p class="subtitle">Treemap (D3.js): Visualización de proporciones - reportes vs llegadas turísticas</p>
     
-    <div style="height: 600px; width: 100%;">
-        <canvas id="chart" style="width: 100%; height: 100%;"></canvas>
+    <div class="info-note-top">
+        📌 <strong>Interpretación del Treemap:</strong> Cada rectángulo representa un año. 
+        El <strong>tamaño</strong> del rectángulo es proporcional al valor (reportes o llegadas). 
+        A mayor área, mayor magnitud. Los colores distinguen entre reportes (morado) y turistas (verde).
+    </div>
+    
+    <div style="min-height: 650px; width: 100%; overflow-x: auto; display: flex; justify-content: center;">
+        <div id="chart"></div>
     </div>
     
     {#if loading}
-        <div class="loading">✈️ Cargando datos de las APIs... (LoadInitialData → Fetch datos → Procesamiento → Gráfico)</div>
+        <div class="loading">✈️ Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Interpretación del gráfico de Radar:</strong></p>
+            <p><strong>📌 Treemap (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Línea morada:</strong> Reportes de tramposos (Cheaters Stats)</li>
-                <li><strong>🟢 Línea verde:</strong> Llegadas de turistas internacionales (Tourist Arrivals API)</li>
-                <li><strong>📅 Eje radial:</strong> Años disponibles en las APIs</li>
-                <li><strong>📈 Valores normalizados:</strong> Ambos datasets escalados a 0-100% para compararlos</li>
-                <li><strong>🔘 Puntos pequeños:</strong> Indican que solo hay datos en una de las dos APIs ese año</li>
-                <li><strong>🌍 Datos:</strong> Suma de llegadas aéreas, marítimas y terrestres de todos los países</li>
+                <li><strong>🟣 Rectángulos morados:</strong> Reportes de tramposos por año</li>
+                <li><strong>🟢 Rectángulos verdes:</strong> Llegadas turísticas internacionales por año</li>
+                <li><strong>📏 Tamaño:</strong> Proporcional al valor (más grande = mayor cantidad)</li>
+                <li><strong>🔢 Números:</strong> Muestra valores abreviados (K = miles, M = millones)</li>
+                <li><strong>🔘 Hover:</strong> Muestra el valor exacto al pasar el ratón</li>
             </ul>
-            <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
-            <p><strong>🔗 API de Turistas:</strong> Aimar García Borrego - <code>https://sos2526-25.onrender.com/api/v1/international-tourist-arrivals</code></p>
-            <p><strong>🔄 Flujo de datos:</strong> LoadInitialData (inicializa API Turistas) → Fetch Turistas → Fetch Cheaters → Procesamiento → Renderizado</p>
-            <p><strong>📊 Total llegadas por año:</strong></p>
-            <ul>
-                {#each Object.entries(touristByYear) as [year, total]}
-                    <li><strong>{year}:</strong> {total.toLocaleString()} llegadas</li>
-                {/each}
-            </ul>
+            <p><strong>📐 Años representados:</strong> {yearsList.length} años</p>
+            <p><strong>📊 Total reportes:</strong> {chartData?.reportsData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
+            <p><strong>✈️ Total llegadas:</strong> {chartData?.touristData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
         </div>
     {/if}
 </div>
@@ -326,9 +358,10 @@
     .back-link { color: #16a34a; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     .back-link:hover { text-decoration: underline; }
     h1 { color: #15803d; margin: 0; }
-    .subtitle { color: #666; margin-bottom: 1.5rem; }
+    .subtitle { color: #666; margin-bottom: 1rem; }
     .loading { text-align: center; padding: 2rem; color: #16a34a; }
     .error { text-align: center; padding: 3rem; color: #dc2626; }
+    .info-note-top { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-size: 0.85rem; color: #166534; }
     .info-note { margin-top: 2rem; padding: 1rem; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; border-left: 4px solid #22c55e; }
     .info-note ul { margin: 0.5rem 0; padding-left: 1.5rem; }
     .info-note li { margin: 0.3rem 0; }

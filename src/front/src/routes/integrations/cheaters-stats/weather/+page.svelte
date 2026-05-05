@@ -1,166 +1,316 @@
 <script>
     import { onMount, tick } from 'svelte';
-    import Chart from 'chart.js/auto';
+    import * as d3 from 'd3';
     
     let loading = true;
     let error = null;
-    let chart = null;
     let yearsList = [];
-    let patStatus = null;
-    let cheatersDataRaw = [];
     let currentWeather = null;
     let forecast = [];
-    let yearlyTemps = {};
+    let patStatus = null;
     let selectedCity = 'Madrid';
     let cities = ['Madrid', 'London', 'Paris', 'Berlin', 'Rome', 'New York', 'Tokyo'];
     
-    onMount(async () => {
-        await tick();
-        await loadWeatherIntegration();
-    });
+    async function loadInitialData() {
+        console.log('🌤️ Verificando OpenWeather API...');
+        
+        try {
+            const response = await fetch('/api/weather/status');
+            patStatus = await response.json();
+            console.log('Estado PAT OpenWeather:', patStatus);
+            return patStatus;
+        } catch (err) {
+            console.warn('⚠️ No se pudo conectar:', err.message);
+            return null;
+        }
+    }
+    
+    async function fetchCurrentWeather(city) {
+        console.log(`🌤️ Obteniendo clima actual para ${city}...`);
+        try {
+            const response = await fetch(`/api/weather/weather?city=${city}`);
+            const data = await response.json();
+            if (data.success) {
+                console.log(`✅ Clima: ${data.temperature}°C, ${data.description}`);
+                return data;
+            }
+        } catch (err) {
+            console.warn('Error fetching weather:', err);
+        }
+        return null;
+    }
+    
+    async function fetchForecast(city) {
+        console.log(`📅 Obteniendo pronóstico para ${city}...`);
+        try {
+            const response = await fetch(`/api/weather/forecast?city=${city}&limit=40`);
+            const data = await response.json();
+            if (data.success) {
+                console.log(`✅ Pronóstico: ${data.forecast?.length || 0} días`);
+                return data.forecast || [];
+            }
+        } catch (err) {
+            console.warn('Error fetching forecast:', err);
+        }
+        return [];
+    }
+    
+    async function fetchYearlyTemperatures() {
+        console.log('🌡️ Obteniendo temperaturas anuales...');
+        try {
+            const response = await fetch('/api/weather/yearly-temperatures');
+            const data = await response.json();
+            if (data.success) {
+                console.log(`✅ Temperaturas anuales: ${Object.keys(data.years).length} años`);
+                return data.years;
+            }
+        } catch (err) {
+            console.warn('Error fetching yearly temps:', err);
+        }
+        return {};
+    }
+    
+    async function fetchCheatersData() {
+        console.log('📊 Cargando datos de Cheaters Stats...');
+        try {
+            const response = await fetch('/api/v2/cheaters-stats?limit=200');
+            const json = await response.json();
+            return json.data || [];
+        } catch (err) {
+            console.warn('Error fetching cheaters:', err);
+            return [];
+        }
+    }
+    
+    function processCheatersData(cheatersData) {
+        const cheatersByYear = {};
+        cheatersData.forEach(item => {
+            const year = item.year;
+            if (year) {
+                cheatersByYear[year] = (cheatersByYear[year] || 0) + (item.cheater_report || 0);
+            }
+        });
+        return cheatersByYear;
+    }
+    
+    function prepareCirclePackData(cheatersByYear, yearlyTemps, forecastDays) {
+        // Estructura jerárquica para circle packing
+        const root = {
+            name: '🌍 Clima y Reportes',
+            children: [
+                {
+                    name: '📊 Reportes Cheaters',
+                    children: Object.entries(cheatersByYear).map(([year, reports]) => ({
+                        name: `Año ${year}`,
+                        value: reports,
+                        type: 'reports'
+                    }))
+                },
+                {
+                    name: '🌡️ Temperaturas Globales',
+                    children: Object.entries(yearlyTemps).map(([year, temp]) => ({
+                        name: `Año ${year}`,
+                        value: temp * 10, // Escalar para visualización
+                        type: 'temperature',
+                        originalValue: temp
+                    }))
+                },
+                {
+                    name: '📅 Pronóstico 5 días',
+                    children: (forecastDays || []).map((day, i) => ({
+                        name: day.date || `Día ${i+1}`,
+                        value: day.temp_max || 20,
+                        type: 'forecast',
+                        tempMin: day.temp_min,
+                        tempMax: day.temp_max,
+                        description: day.description
+                    }))
+                }
+            ]
+        };
+        
+        return root;
+    }
+    
+    function renderCirclePack(chartData, currentWeatherData) {
+        const container = document.getElementById('chart');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        const width = 1000;
+        const height = 700;
+        
+        // Crear jerarquía
+        const root = d3.hierarchy(chartData)
+            .sum(d => d.value || 1)
+            .sort((a, b) => b.value - a.value);
+        
+        // Algoritmo de circle packing
+        const pack = d3.pack()
+            .size([width, height])
+            .padding(5);
+        
+        const nodes = pack(root).descendants();
+        
+        const svg = d3.select(container)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', `0 0 ${width} ${height}`)
+            .style('background', '#f0fdf4')
+            .style('border-radius', '16px');
+        
+        // Colores por tipo
+        const colorMap = {
+            '📊 Reportes Cheaters': '#7e22ce',
+            '🌡️ Temperaturas Globales': '#ef4444',
+            '📅 Pronóstico 5 días': '#3b82f6',
+            'reports': '#c084fc',
+            'temperature': '#fca5a5',
+            'forecast': '#93c5fd'
+        };
+        
+        // Tooltip
+        const tooltip = d3.select(container)
+            .append('div')
+            .style('position', 'absolute')
+            .style('background', 'rgba(0,0,0,0.85)')
+            .style('color', 'white')
+            .style('padding', '12px')
+            .style('border-radius', '8px')
+            .style('font-size', '12px')
+            .style('pointer-events', 'none')
+            .style('opacity', 0)
+            .style('z-index', '1000')
+            .style('max-width', '250px');
+        
+        // Dibujar círculos
+        const circle = svg.selectAll('circle')
+            .data(nodes)
+            .enter()
+            .append('circle')
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('r', d => d.r)
+            .attr('fill', d => {
+                if (d.depth === 0) return '#fef3c7';
+                if (d.depth === 1) return colorMap[d.data.name] || '#ccc';
+                if (d.data.type === 'reports') return colorMap.reports;
+                if (d.data.type === 'temperature') return colorMap.temperature;
+                if (d.data.type === 'forecast') return colorMap.forecast;
+                return '#e5e7eb';
+            })
+            .attr('stroke', 'white')
+            .attr('stroke-width', 2)
+            .attr('opacity', 0.9)
+            .style('cursor', 'pointer')
+            .on('mouseover', function(event, d) {
+                d3.select(this).attr('opacity', 0.7);
+                
+                let tooltipHtml = `<strong>${d.data.name}</strong><br/>`;
+                if (d.data.type === 'reports') {
+                    tooltipHtml += `📊 Reportes: ${d.data.value.toLocaleString()}`;
+                } else if (d.data.type === 'temperature') {
+                    tooltipHtml += `🌡️ Temperatura: ${d.data.originalValue?.toFixed(1)}°C<br/>📊 Valor visual: ${d.data.value}`;
+                } else if (d.data.type === 'forecast') {
+                    tooltipHtml += `🌡️ Máx: ${d.data.tempMax}°C / Mín: ${d.data.tempMin}°C<br/>${d.data.description || ''}`;
+                } else if (d.depth === 1) {
+                    tooltipHtml += `📂 Categoría principal`;
+                } else {
+                    tooltipHtml += `📊 Valor: ${d.data.value || d.r}`;
+                }
+                
+                tooltip.style('opacity', 1)
+                    .html(tooltipHtml)
+                    .style('left', (event.pageX + 15) + 'px')
+                    .style('top', (event.pageY - 30) + 'px');
+            })
+            .on('mouseout', function() {
+                d3.select(this).attr('opacity', 0.9);
+                tooltip.style('opacity', 0);
+            });
+        
+        // Etiquetas
+        const labels = svg.selectAll('text')
+            .data(nodes.filter(d => d.depth >= 2 && d.r > 15))
+            .enter()
+            .append('text')
+            .attr('x', d => d.x)
+            .attr('y', d => d.y)
+            .attr('text-anchor', 'middle')
+            .attr('dy', '0.35em')
+            .style('font-size', d => Math.min(12, d.r / 6) + 'px')
+            .style('fill', 'white')
+            .style('font-weight', 'bold')
+            .style('pointer-events', 'none')
+            .text(d => {
+                let name = d.data.name;
+                if (name.includes('Año')) name = name.replace('Año ', '');
+                if (name.length > 10) name = name.substring(0, 8) + '...';
+                return name;
+            });
+        
+        // Título
+        svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', 30)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '18px')
+            .style('font-weight', 'bold')
+            .style('fill', '#15803d')
+            .text('🌤️ Reportes de Tramposos vs Clima - Circle Packing');
+        
+        // Subtítulo
+        svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', 55)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '11px')
+            .style('fill', '#666')
+            .text('El tamaño de cada círculo es proporcional al valor (reportes, temperatura, etc.)');
+        
+        // Clima actual
+        if (currentWeatherData) {
+            svg.append('text')
+                .attr('x', width - 20)
+                .attr('y', 30)
+                .attr('text-anchor', 'end')
+                .style('font-size', '11px')
+                .style('fill', '#666')
+                .html(`🌍 ${currentWeatherData.city}: ${Math.round(currentWeatherData.temperature)}°C`);
+        }
+    }
     
     async function loadWeatherIntegration() {
         try {
             loading = true;
-            console.log('🌤️ Cargando integración: Cheaters Stats + OpenWeather API (con PAT)...');
+            console.log('🌤️ Cargando integración: Cheaters Stats + OpenWeather API...');
             
-            // 1. Verificar estado del PAT
-            const patStatusRes = await fetch('/api/weather/status');
-            patStatus = await patStatusRes.json();
-            console.log('Estado PAT OpenWeather:', patStatus);
+            await loadInitialData();
             
-            // 2. FETCH Cheaters Stats
-            const cheatersRes = await fetch('/api/v2/cheaters-stats?limit=200');
-            const cheatersJson = await cheatersRes.json();
-            const cheatersData = cheatersJson.data || [];
-            cheatersDataRaw = cheatersData;
-            console.log(`Cheaters: ${cheatersData.length} registros`);
+            const [cheatersData, yearlyTemps, weatherData, forecastData] = await Promise.all([
+                fetchCheatersData(),
+                fetchYearlyTemperatures(),
+                fetchCurrentWeather(selectedCity),
+                fetchForecast(selectedCity)
+            ]);
             
-            // 3. FETCH clima actual
-            const weatherRes = await fetch(`/api/weather/weather?city=${selectedCity}`);
-            const weatherJson = await weatherRes.json();
-            if (weatherJson.success) {
-                currentWeather = weatherJson;
-            }
+            currentWeather = weatherData;
+            forecast = forecastData;
             
-            // 4. FETCH temperaturas anuales
-            const tempsRes = await fetch('/api/weather/yearly-temperatures');
-            const tempsJson = await tempsRes.json();
-            if (tempsJson.success) {
-                yearlyTemps = tempsJson.years;
-            }
+            const cheatersByYear = processCheatersData(cheatersData);
+            yearsList = Object.keys(cheatersByYear).sort();
             
-            // 5. FETCH pronóstico
-            const forecastRes = await fetch(`/api/weather/forecast?city=${selectedCity}&limit=40`);
-            const forecastJson = await forecastRes.json();
-            if (forecastJson.success) {
-                forecast = forecastJson.forecast.slice(0, 5);
-            }
+            const chartData = prepareCirclePackData(cheatersByYear, yearlyTemps, forecast);
             
-            // 6. Agrupar Cheaters por AÑO
-            const cheatersByYear = {};
-            cheatersData.forEach(item => {
-                const year = item.year;
-                if (year) {
-                    cheatersByYear[year] = (cheatersByYear[year] || 0) + (item.cheater_report || 0);
-                }
-            });
+            console.log('📅 Años:', yearsList);
+            console.log('🌡️ Temperaturas:', Object.keys(yearlyTemps).length);
+            console.log('📅 Pronóstico:', forecast.length);
+            console.log('🌤️ Clima actual:', currentWeather?.city, currentWeather?.temperature);
             
-            const years = Object.keys(cheatersByYear).sort();
-            yearsList = years;
-            
-            const reportsData = years.map(y => cheatersByYear[y] || 0);
-            
-            // 7. Obtener temperaturas para los mismos años
-            const tempData = years.map(y => yearlyTemps[y] || 14.5);
-            
-            // Normalizar datos
-            const maxReports = Math.max(...reportsData);
-            const maxTemp = Math.max(...tempData);
-            const minTemp = Math.min(...tempData);
-            
-            const normalizedReports = reportsData.map(r => maxReports > 0 ? (r / maxReports) * 100 : 0);
-            const normalizedTemps = tempData.map(t => ((t - minTemp) / (maxTemp - minTemp)) * 100);
-            
-            // 8. Renderizar gráfico
-            const canvas = document.getElementById('chart');
-            if (!canvas) throw new Error('Canvas no encontrado');
-            
-            const ctx = canvas.getContext('2d');
-            if (chart) chart.destroy();
-            
-            chart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: years,
-                    datasets: [
-                        {
-                            label: '📊 Reportes de Tramposos (Cheaters)',
-                            data: normalizedReports,
-                            backgroundColor: 'rgba(124,58,237,0.2)',
-                            borderColor: '#7e22ce',
-                            borderWidth: 3,
-                            pointBackgroundColor: '#7e22ce',
-                            pointBorderColor: 'white',
-                            pointRadius: 5,
-                            fill: true
-                        },
-                        {
-                            label: '🌡️ Temperatura Global Promedio (°C)',
-                            data: normalizedTemps,
-                            backgroundColor: 'rgba(239,68,68,0.2)',
-                            borderColor: '#ef4444',
-                            borderWidth: 3,
-                            pointBackgroundColor: '#ef4444',
-                            pointBorderColor: 'white',
-                            pointRadius: 5,
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: { 
-                            display: true, 
-                            text: '🌡️ Reportes de Tramposos vs Temperatura Global', 
-                            color: '#991b1b', 
-                            font: { size: 16, weight: 'bold' } 
-                        },
-                        subtitle: { 
-                            display: true, 
-                            text: 'Gráfico de Radar - Datos de OpenWeather API con PAT' 
-                        },
-                        tooltip: { 
-                            callbacks: { 
-                                label: (ctx) => {
-                                    const index = ctx.dataIndex;
-                                    const year = years[index];
-                                    const reportsReal = reportsData[index];
-                                    const tempReal = tempData[index];
-                                    
-                                    if (ctx.dataset.label.includes('Reportes')) {
-                                        return `📊 Reportes ${year}: ${reportsReal.toLocaleString()}`;
-                                    } else {
-                                        return `🌡️ Temperatura ${year}: ${tempReal.toFixed(2)}°C`;
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { stepSize: 20, callback: (val) => `${val}%` }
-                        }
-                    }
-                }
-            });
+            renderCirclePack(chartData, currentWeather);
             
             loading = false;
-            console.log('✅ Gráfico creado correctamente');
             
         } catch (err) {
             console.error('❌ Error:', err);
@@ -172,37 +322,42 @@
     async function changeCity() {
         await loadWeatherIntegration();
     }
+    
+    onMount(async () => {
+        await tick();
+        await loadWeatherIntegration();
+    });
 </script>
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🌡️ OpenWeather API + Cheaters Stats</h1>
-    <p class="subtitle">Gráfico de Radar: Evolución anual de reportes vs temperatura global</p>
+    <h1>🌤️ OpenWeather API + Cheaters Stats</h1>
+    <p class="subtitle">Circle Packing (D3.js): Proporciones de reportes, temperaturas y pronóstico</p>
     
-    <div style="height: 500px; width: 100%; margin-bottom: 2rem;">
-        <canvas id="chart" style="width: 100%; height: 100%;"></canvas>
+    <div class="info-note-top">
+        📌 <strong>Interpretación del Circle Packing:</strong> Cada círculo representa un dato. 
+        El <strong>tamaño</strong> es proporcional al valor. Los colores distinguen categorías: 
+        Reportes (morado) | Temperaturas (rojo) | Pronóstico (azul)
+    </div>
+    
+    <div class="controls">
+        <label>🌍 Ciudad:</label>
+        <select bind:value={selectedCity} on:change={changeCity}>
+            {#each cities as city}
+                <option value={city}>{city}</option>
+            {/each}
+        </select>
+    </div>
+    
+    <div style="min-height: 750px; width: 100%; overflow-x: auto; display: flex; justify-content: center;">
+        <div id="chart"></div>
     </div>
     
     {#if loading}
-        <div class="loading">🌤️ Cargando datos de OpenWeather API con PAT...</div>
+        <div class="loading">🌤️ Cargando datos de las APIs...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
-        <div class="pat-status {patStatus?.authenticated ? 'success' : 'error'}">
-            <strong>🔐 Estado PAT:</strong> 
-            {patStatus?.authenticated ? '✅ Autenticado' : '❌ No autenticado'}
-        </div>
-        
-        <!-- Selector de ciudad -->
-        <div class="city-selector">
-            <label>🌍 Ciudad:</label>
-            <select bind:value={selectedCity} on:change={changeCity}>
-                {#each cities as city}
-                    <option value={city}>{city}</option>
-                {/each}
-            </select>
-        </div>
-        
         <!-- Clima actual -->
         {#if currentWeather}
         <div class="current-weather">
@@ -223,7 +378,7 @@
         <div class="forecast">
             <h3>📅 Pronóstico 5 días</h3>
             <div class="forecast-grid">
-                {#each forecast as day}
+                {#each forecast.slice(0, 5) as day}
                 <div class="forecast-card">
                     <div class="forecast-date">{day.date}</div>
                     <div class="forecast-temp">🌡️ {Math.round(day.temp_max)}°/{Math.round(day.temp_min)}°</div>
@@ -235,39 +390,46 @@
         {/if}
         
         <div class="info-note">
-            <p><strong>📌 Interpretación del gráfico:</strong></p>
+            <p><strong>📌 Circle Packing (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Línea morada:</strong> Reportes de tramposos (Cheaters Stats API)</li>
-                <li><strong>🔴 Línea roja:</strong> Temperatura global promedio (OpenWeather API)</li>
-                <li><strong>🔐 PAT:</strong> API Key desde variable de entorno .env</li>
+                <li><strong>🟣 Círculos morados:</strong> Reportes de tramposos por año</li>
+                <li><strong>🔴 Círculos rojos:</strong> Temperaturas globales promedio</li>
+                <li><strong>🔵 Círculos azules:</strong> Pronóstico de temperatura por día</li>
+                <li><strong>📏 Tamaño:</strong> Proporcional al valor (mayor círculo = mayor valor)</li>
+                <li><strong>🔘 Hover:</strong> Muestra el valor exacto</li>
             </ul>
-            <p><strong>📊 Fuente de datos:</strong> Todos los datos obtenidos en tiempo real mediante fetch a ambas APIs</p>
+            <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
+            <p><strong>🔗 API:</strong> OpenWeather (con PAT) + Cheaters Stats</p>
         </div>
     {/if}
 </div>
 
 <style>
-    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #fee2e2; }
-    .back-link { color: #dc2626; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
-    h1 { color: #991b1b; margin: 0; }
-    .subtitle { color: #666; margin-bottom: 1.5rem; }
-    .pat-status { padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; text-align: center; }
-    .pat-status.success { background: #f0fdf4; color: #166534; }
-    .pat-status.error { background: #fef2f2; color: #991b1b; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #dcfce7; }
+    .back-link { color: #16a34a; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+    .back-link:hover { text-decoration: underline; }
+    h1 { color: #15803d; margin: 0; }
+    .subtitle { color: #666; margin-bottom: 1rem; }
+    .loading { text-align: center; padding: 2rem; color: #16a34a; }
+    .error { text-align: center; padding: 3rem; color: #dc2626; }
+    .info-note-top { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-size: 0.85rem; color: #166534; }
     
-    .city-selector { text-align: center; margin-bottom: 1.5rem; }
-    .city-selector select { padding: 0.5rem 1rem; font-size: 1rem; border-radius: 8px; border: 1px solid #f87171; background: #fef2f2; }
+    .controls { text-align: center; margin-bottom: 1.5rem; }
+    .controls select { padding: 0.5rem 1rem; font-size: 1rem; border-radius: 8px; border: 1px solid #86efac; background: #f0fdf4; font-family: inherit; cursor: pointer; }
     
-    .current-weather { background: #fef2f2; border-radius: 12px; padding: 1rem; text-align: center; margin-bottom: 1.5rem; }
-    .weather-temp { font-size: 3rem; font-weight: bold; color: #dc2626; }
+    .current-weather { background: #f0fdf4; border-radius: 12px; padding: 1rem; text-align: center; margin-bottom: 1.5rem; }
+    .weather-temp { font-size: 3rem; font-weight: bold; color: #16a34a; }
     .weather-desc { font-size: 1.2rem; color: #666; }
     .weather-details { display: flex; justify-content: center; gap: 1rem; margin-top: 0.5rem; }
     
     .forecast { margin-bottom: 1.5rem; }
     .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; }
-    .forecast-card { background: #fef2f2; padding: 0.5rem; border-radius: 8px; text-align: center; }
+    .forecast-card { background: #f0fdf4; padding: 0.5rem; border-radius: 8px; text-align: center; }
     .forecast-date { font-weight: bold; font-size: 0.8rem; }
-    .forecast-temp { font-size: 0.9rem; color: #dc2626; }
+    .forecast-temp { font-size: 0.9rem; color: #16a34a; }
     
-    .info-note { margin-top: 1rem; padding: 1rem; background: #fef2f2; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid #dc2626; }
+    .info-note { margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; border-left: 4px solid #22c55e; }
+    .info-note ul { margin: 0.5rem 0; padding-left: 1.5rem; }
+    .info-note li { margin: 0.3rem 0; }
+    .info-note code { background: #bbf7d0; padding: 0.1rem 0.3rem; border-radius: 4px; }
 </style>

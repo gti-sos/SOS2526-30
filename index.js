@@ -37,7 +37,7 @@ app.use('/api/sports', sportsdbProxy);
 
 loadBackendGGG(app);
 loadBackendFMGP(app);
-
+loadGithubEsportsProxy(app);
 
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);

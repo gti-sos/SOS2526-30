@@ -1,64 +1,64 @@
 <script>
     import { onMount, tick } from 'svelte';
-    import Chart from 'chart.js/auto';
+    import { Chart } from 'frappe-charts';
     
     let loading = true;
     let error = null;
     let chart = null;
     let yearsList = [];
     
-    // Función para inicializar datos en la API externa (Construction)
     async function loadInitialData() {
         console.log('🏗️ Inicializando datos en Construction API...');
         
         try {
             const response = await fetch('https://sos2526-24.onrender.com/api/v1/international-construction-costs/LoadInitialData');
             
-            // 400 significa que ya estaba inicializado (no es un error real)
             if (response.status === 400) {
                 const data = await response.json();
                 console.log('ℹ️', data.message);
-                return { alreadyInitialized: true, message: data.message };
+                return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
                 console.log('✅', data.message);
-                return { initialized: true, message: data.message };
+                return { initialized: true };
             }
-            
-            throw new Error(`HTTP ${response.status}`);
-            
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar (puede que ya lo esté):', err.message);
+            console.warn('⚠️ No se pudo inicializar:', err.message);
             return null;
         }
     }
     
-    // Función para obtener datos de construcción después de inicializar
     async function fetchConstructionData() {
-        console.log('🏗️ Obteniendo datos de construcción...');
-        
         const response = await fetch('https://sos2526-24.onrender.com/api/v1/international-construction-costs?limit=200');
-        const data = await response.json();
-        console.log(`✅ Construction: ${data.length} registros`);
-        
-        return data;
+        return await response.json();
     }
     
-    // Función para cargar datos de Cheaters Stats
     async function fetchCheatersData() {
-        console.log('📊 Cargando datos de Cheaters Stats...');
+        try {
+            const response = await fetch('http://localhost:3000/api/v2/cheaters-stats?limit=200');
+            if (response.ok) {
+                const json = await response.json();
+                return json.data || [];
+            }
+        } catch (err) {
+            console.warn('No se pudo conectar al backend:', err.message);
+        }
         
-        const response = await fetch('/api/v2/cheaters-stats?limit=200');
-        const json = await response.json();
-        const data = json.data || [];
-        console.log(`✅ Cheaters: ${data.length} registros`);
+        try {
+            const response = await fetch('/api/v2/cheaters-stats?limit=200');
+            if (response.ok) {
+                const json = await response.json();
+                return json.data || [];
+            }
+        } catch (err) {
+            console.warn('No se pudo conectar al proxy:', err.message);
+        }
         
-        return data;
+        return [];
     }
     
-    // Función para procesar datos de Construcción
     function processConstructionData(constructionData) {
         const costByYear = {};
         const countByYear = {};
@@ -71,17 +71,14 @@
             }
         });
         
-        // Calcular promedio por año
         const avgCostByYear = {};
         Object.keys(costByYear).forEach(year => {
             avgCostByYear[year] = costByYear[year] / countByYear[year];
         });
         
-        console.log('🏗️ Coste promedio por año (USD/m²):', avgCostByYear);
         return avgCostByYear;
     }
     
-    // Función para procesar datos de Cheaters
     function processCheatersData(cheatersData) {
         const cheatersByYear = {};
         cheatersData.forEach(item => {
@@ -90,13 +87,10 @@
                 cheatersByYear[year] = (cheatersByYear[year] || 0) + (item.cheater_report || 0);
             }
         });
-        console.log('📊 Cheaters por año:', cheatersByYear);
         return cheatersByYear;
     }
     
-    // Función para preparar datos del gráfico
     function prepareChartData(cheatersByYear, avgCostByYear) {
-        // Unión de todos los años de ambas APIs
         const allYearsSet = new Set([...Object.keys(cheatersByYear), ...Object.keys(avgCostByYear)]);
         const allYears = Array.from(allYearsSet).sort((a, b) => a - b);
         
@@ -104,142 +98,46 @@
         const reportsData = allYears.map(y => cheatersByYear[y] || 0);
         const costData = allYears.map(y => avgCostByYear[y] || 0);
         
-        const maxReports = Math.max(...reportsData);
-        const maxCost = Math.max(...costData);
-        
-        const normalizedReports = reportsData.map(r => maxReports > 0 ? (r / maxReports) * 100 : 0);
-        const normalizedCost = costData.map(c => maxCost > 0 ? (c / maxCost) * 100 : 0);
-        
-        return {
-            years,
-            reportsData,
-            costData,
-            normalizedReports,
-            normalizedCost,
-            maxReports,
-            maxCost
-        };
+        return { years, reportsData, costData };
     }
     
-    // Función para renderizar el gráfico de radar
-    function renderChart(chartData) {
-        const canvas = document.getElementById('chart');
-        if (!canvas) throw new Error('Canvas no encontrado');
+    function renderBarChart(chartData) {
+        const element = document.getElementById('chart');
+        if (!element) return;
         
-        const ctx = canvas.getContext('2d');
         if (chart) chart.destroy();
         
-        chart = new Chart(ctx, {
-            type: 'radar',
+        chart = new Chart(element, {
+            title: '🏗️ Reportes de Tramposos vs Coste de Construcción',
             data: {
                 labels: chartData.years,
                 datasets: [
                     {
-                        label: '📊 Reportes de Tramposos (Cheaters)',
-                        data: chartData.normalizedReports,
-                        backgroundColor: 'rgba(124,58,237,0.2)',
-                        borderColor: '#7e22ce',
-                        borderWidth: 3,
-                        pointBackgroundColor: (ctx) => {
-                            const value = chartData.normalizedReports[ctx.dataIndex];
-                            return value > 0 ? '#7e22ce' : '#c084fc';
-                        },
-                        pointBorderColor: 'white',
-                        pointRadius: (ctx) => {
-                            const value = chartData.normalizedReports[ctx.dataIndex];
-                            return value > 0 ? 6 : 3;
-                        },
-                        pointHoverRadius: 8,
-                        fill: true
+                        name: '📊 Reportes de Tramposos',
+                        values: chartData.reportsData,
+                        chartType: 'bar',
+                        color: '#7e22ce'
                     },
                     {
-                        label: '🏗️ Coste Construcción (USD/m²)',
-                        data: chartData.normalizedCost,
-                        backgroundColor: 'rgba(220,38,38,0.2)',
-                        borderColor: '#dc2626',
-                        borderWidth: 3,
-                        pointBackgroundColor: (ctx) => {
-                            const value = chartData.normalizedCost[ctx.dataIndex];
-                            return value > 0 ? '#dc2626' : '#f87171';
-                        },
-                        pointBorderColor: 'white',
-                        pointRadius: (ctx) => {
-                            const value = chartData.normalizedCost[ctx.dataIndex];
-                            return value > 0 ? 6 : 3;
-                        },
-                        pointHoverRadius: 8,
-                        fill: true
+                        name: '💰 Coste Construcción (USD/m²)',
+                        values: chartData.costData,
+                        chartType: 'bar',
+                        color: '#dc2626'
                     }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: { 
-                        display: true, 
-                        text: '📊 Evolución Temporal: Reportes vs Coste Construcción', 
-                        color: '#7e22ce', 
-                        font: { size: 16, weight: 'bold' } 
-                    },
-                    subtitle: { 
-                        display: true, 
-                        text: 'Gráfico de Radar - Normalizado a escala 0-100 (puntos pequeños = datos solo en una API)' 
-                    },
-                    tooltip: { 
-                        callbacks: { 
-                            label: (ctx) => {
-                                const index = ctx.dataIndex;
-                                const year = chartData.years[index];
-                                const reportsReal = chartData.reportsData[index];
-                                const costReal = chartData.costData[index];
-                                
-                                if (ctx.dataset.label.includes('Reportes')) {
-                                    if (reportsReal > 0) {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `📊 Reportes reales: ${reportsReal.toLocaleString()}`,
-                                            `📈 Valor normalizado: ${ctx.raw.toFixed(1)}%`
-                                        ];
-                                    } else {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `⚠️ Sin datos de reportes de tramposos`
-                                        ];
-                                    }
-                                } else {
-                                    if (costReal > 0) {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `🏗️ Coste real: $${costReal.toFixed(0)}/m²`,
-                                            `📈 Valor normalizado: ${ctx.raw.toFixed(1)}%`
-                                        ];
-                                    } else {
-                                        return [
-                                            `📅 Año: ${year}`,
-                                            `⚠️ Sin datos de coste de construcción`
-                                        ];
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    legend: { 
-                        position: 'bottom',
-                        labels: { usePointStyle: true, boxWidth: 15, font: { size: 12 } }
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: { 
-                            stepSize: 20,
-                            backdropColor: 'transparent',
-                            callback: (val) => `${val}%`
-                        },
-                        grid: { color: '#e9d5ff' },
-                        title: { display: true, text: 'Valor normalizado (%)', font: { size: 11 } }
+            type: 'bar',
+            height: 500,
+            axisOptions: {
+                xAxisMode: 'tick',
+                yAxisMode: 'tick'
+            },
+            tooltipOptions: {
+                formatTooltip: (x, y, datasetName) => {
+                    if (datasetName.includes('Reportes')) {
+                        return `📊 ${datasetName}: ${y.toLocaleString()}`;
+                    } else {
+                        return `💰 ${datasetName}: $${y.toFixed(0)}/m²`;
                     }
                 }
             }
@@ -250,37 +148,25 @@
         await tick();
         
         try {
-            console.log('🚀 Iniciando proceso para Construction Costs...');
-            
-            // PASO 1: Llamar a LoadInitialData en la API externa
-            const initResult = await loadInitialData();
-            console.log('📦 Inicialización completada:', initResult);
-            
-            // Pequeña pausa para asegurar que los datos se inicializaron
+            await loadInitialData();
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // PASO 2: Obtener datos de construcción (ya inicializados)
             const constructionData = await fetchConstructionData();
-            
-            // PASO 3: Obtener datos de Cheaters Stats
             const cheatersData = await fetchCheatersData();
             
-            // PASO 4: Procesar datos
             const avgCostByYear = processConstructionData(constructionData);
             const cheatersByYear = processCheatersData(cheatersData);
             
-            // PASO 5: Preparar datos para el gráfico
             const chartData = prepareChartData(cheatersByYear, avgCostByYear);
             yearsList = chartData.years;
-            console.log('📅 Años a mostrar:', yearsList);
-            console.log('📊 Reportes:', chartData.reportsData);
-            console.log('🏗️ Costes:', chartData.costData);
             
-            // PASO 6: Renderizar gráfico
-            renderChart(chartData);
+            console.log('📅 Años:', yearsList);
+            console.log('📊 Reportes:', chartData.reportsData);
+            console.log('💰 Costes:', chartData.costData);
+            
+            renderBarChart(chartData);
             
             loading = false;
-            console.log('✅ Gráfico de Radar creado exitosamente');
             
         } catch (err) {
             console.error('❌ Error:', err);
@@ -293,45 +179,42 @@
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
     <h1>🏗️ Construction Costs + Cheaters Stats</h1>
-    <p class="subtitle">Gráfico de Radar: Evolución anual de reportes vs coste de construcción</p>
+    <p class="subtitle">Bar Chart (Frappe Charts): Comparación de reportes vs coste de construcción por año</p>
     
-    <div style="height: 600px; width: 100%;">
-        <canvas id="chart" style="width: 100%; height: 100%;"></canvas>
+    <div style="height: 550px; width: 100%;">
+        <div id="chart"></div>
     </div>
     
     {#if loading}
-        <div class="loading">🏗️ Cargando datos de las APIs... (LoadInitialData → Fetch datos → Procesamiento → Gráfico)</div>
+        <div class="loading">🏗️ Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Interpretación del gráfico de Radar:</strong></p>
+            <p><strong>📌 Bar Chart (Frappe Charts):</strong></p>
             <ul>
-                <li><strong>🟣 Línea morada:</strong> Reportes de tramposos (Cheaters Stats)</li>
-                <li><strong>🔴 Línea roja:</strong> Coste de construcción (Construction Costs API)</li>
-                <li><strong>📅 Eje radial:</strong> Años disponibles en las APIs (todos los años)</li>
-                <li><strong>📈 Valores normalizados:</strong> Ambos datasets escalados a 0-100% para compararlos</li>
-                <li><strong>🔘 Puntos pequeños:</strong> Indican que solo hay datos en una de las dos APIs ese año</li>
-                <li><strong>🔍 Tooltip:</strong> Muestra los valores reales al pasar el ratón</li>
+                <li><strong>🟣 Barras moradas:</strong> Reportes de tramposos</li>
+                <li><strong>🔴 Barras rojas:</strong> Coste de construcción (USD/m²)</li>
+                <li><strong>📅 Eje X:</strong> Año</li>
+                <li><strong>📊 Eje Y:</strong> Cantidad de reportes / USD por m²</li>
             </ul>
-            <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
-            <p><strong>🔗 API de Construcción:</strong> Isaac Rodríguez Godino (Grupo 24) - <code>https://sos2526-24.onrender.com/api/v1/international-construction-costs</code></p>
-            <p><strong>🔄 Flujo de datos:</strong> LoadInitialData (inicializa API Construction) → Fetch Construction → Fetch Cheaters → Procesamiento → Renderizado</p>
-            <p><strong>💡 Correlación:</strong> Si ambas líneas tienen forma similar, puede haber relación entre costes de construcción y reportes de tramposos</p>
+            <p><strong>📐 Años:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
+            <p><strong>💰 Coste máximo:</strong> ${Math.max(...(chartData?.costData || [0])).toFixed(0)}/m²</p>
+            <p><strong>📊 Reportes máximos:</strong> {Math.max(...(chartData?.reportsData || [0])).toLocaleString()}</p>
         </div>
     {/if}
 </div>
 
 <style>
-    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #e9d5ff; }
-    .back-link { color: #7e22ce; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #fee2e2; }
+    .back-link { color: #dc2626; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     .back-link:hover { text-decoration: underline; }
-    h1 { color: #7e22ce; margin: 0; }
+    h1 { color: #991b1b; margin: 0; }
     .subtitle { color: #666; margin-bottom: 1.5rem; }
-    .loading { text-align: center; padding: 2rem; color: #7e22ce; }
+    .loading { text-align: center; padding: 2rem; color: #dc2626; }
     .error { text-align: center; padding: 3rem; color: #dc2626; }
-    .info-note { margin-top: 2rem; padding: 1rem; background: #faf5ff; border-radius: 8px; font-size: 0.85rem; color: #666; border-left: 4px solid #7e22ce; }
+    .info-note { margin-top: 2rem; padding: 1rem; background: #fef2f2; border-radius: 8px; font-size: 0.85rem; color: #991b1b; border-left: 4px solid #dc2626; }
     .info-note ul { margin: 0.5rem 0; padding-left: 1.5rem; }
     .info-note li { margin: 0.3rem 0; }
-    .info-note code { background: #e9d5ff; padding: 0.1rem 0.3rem; border-radius: 4px; }
+    .info-note code { background: #fecaca; padding: 0.1rem 0.3rem; border-radius: 4px; }
 </style>

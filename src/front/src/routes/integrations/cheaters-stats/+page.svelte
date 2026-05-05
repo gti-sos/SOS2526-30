@@ -53,9 +53,9 @@
         </a>
         
         <a href="/integrations/cheaters-stats/dog" class="card">
-            <div class="card-icon">🎵</div>
-            <h2>Spotify API</h2>
-            <p>API pública - Datos de Spotify</p>
+            <div class="card-icon">🐕</div>
+            <h2>Dog API</h2>
+            <p>API pública - Datos de perros</p>
             <span class="badge">Gráfico de Barras</span>
         </a>
         
