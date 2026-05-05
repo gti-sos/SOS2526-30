@@ -66,7 +66,7 @@
                 
                 // 4. GARANTIZAR AL MENOS 10 AÑOS EN LA GRÁFICA
                 if (maxYear - minYear < 9) {
-                    minYear = maxYear - 9; // Forzamos a que empiece 9 años antes del máximo (total 10 años)
+                    minYear = maxYear - 9; // Forzamos a que empiece 9 años antes del máximo
                 }
 
                 // Generamos la lista de años continuada
@@ -81,11 +81,7 @@
                     // @ts-ignore
                     players: playersByYear[year] || 0,
                     // @ts-ignore
-                    capacity: hydroByYear[year] ? hydroByYear[year].capacity : 0,
-                    // @ts-ignore
-                    generation: hydroByYear[year] ? hydroByYear[year].generation : 0,
-                    // @ts-ignore
-                    plants: hydroByYear[year] ? hydroByYear[year].plants : 0
+                    capacity: hydroByYear[year] ? hydroByYear[year].capacity : 0
                 }));
             } else {
                 combinedData = [];
@@ -132,7 +128,7 @@
             }],
             chart: {
                 height: 500,
-                type: 'area', // Evolución temporal en área
+                type: 'area', 
                 toolbar: { show: false }
             },
             colors: ['#7e22ce', '#3b82f6'],
@@ -199,65 +195,9 @@
                 <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
             </div>
         {/if}
+        <!-- Contenedor único de la gráfica -->
         <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem; display: {combinedData.length > 0 ? 'block' : 'none'};"></div>
-        
-        {#if combinedData.length > 0}
-        <div class="table-container">
-            <h3>📋 Totales Globales por Año</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Año</th>
-                            <th>Total Jugadores eSports (M)</th>
-                            <th>Capacidad Hidro. (MW)</th>
-                            <th>Generación Total (GWh)</th>
-                            <th>Nº Plantas Registradas</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each combinedData as item}
-                            <tr>
-                                <td><strong>{item.year}</strong></td>
-                                <td>
-                                    {#if item.players === 0}
-                                        <span class="no-data">-</span>
-                                    {:else}
-                                        {item.players.toLocaleString()}
-                                    {/if}
-                                </td>
-                                <td>
-                                    {#if item.capacity === 0}
-                                        <span class="no-data">-</span>
-                                    {:else}
-                                        {item.capacity.toLocaleString()} MW
-                                    {/if}
-                                </td>
-                                <td>
-                                    {#if item.generation === 0}
-                                        <span class="no-data">-</span>
-                                    {:else}
-                                        {item.generation.toLocaleString()} GWh
-                                    {/if}
-                                </td>
-                                <td>{item.plants === 0 ? '-' : item.plants}</td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {/if}
     {/if}
-    
-    <div class="info">
-        <h3>📖 Interpretación</h3>
-        <ul>
-            <li><strong>Objetivo:</strong> Ver cómo han evolucionado globalmente los eSports en paralelo con la infraestructura energética mundial.</li>
-            <li><strong>Gráfico:</strong> Área de evolución (area) usando <strong>ApexCharts</strong>.</li>
-            <li><strong>Manejo de Datos:</strong> Se garantizan al menos 10 años en el eje temporal, combinando todos los años disponibles en ambas APIs y rellenando con valor nulo (0) cuando la información no existe.</li>
-        </ul>
-    </div>
 </div>
 
 <style>
@@ -269,13 +209,4 @@
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #7e22ce; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .error { text-align: center; padding: 2rem; margin-top: 1rem; color: #dc2626; background: #fee2e2; border-radius: 8px; }
-    .table-container { margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 0.75rem; text-align: center; border-bottom: 1px solid #e2e8f0; }
-    th { background: #faf5ff; font-weight: 600; color: #7e22ce; text-align: center; }
-    tr:hover { background: #faf5ff; }
-    .no-data { color: #94a3b8; font-style: italic; }
-    .info { margin-top: 2rem; padding: 1rem; background: #faf5ff; border-radius: 12px; border: 1px solid #e9d5ff; }
-    .info h3 { color: #7e22ce; margin-top: 0; }
 </style>

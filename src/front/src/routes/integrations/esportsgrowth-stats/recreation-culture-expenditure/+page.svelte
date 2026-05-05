@@ -27,14 +27,13 @@
             const esportsRes = await fetch('/api/v1/esportsgrowth-stats?limit=1000');
             const esportsData = await esportsRes.json();
             
-            // AGRUPAR POR AÑO (Sumando jugadores)
-            const playersByYear = {};
+            const playersByCountry = {};
             // @ts-ignore
             esportsData.forEach(stat => {
-                const year = stat.year;
-                if (year) {
+                const country = stat.country;
+                if (country) {
                     // @ts-ignore
-                    playersByYear[year] = (playersByYear[year] || 0) + (stat.active_player_no || 0);
+                    playersByCountry[country] = (playersByCountry[country] || 0) + (stat.active_player_no || 0);
                 }
             });
             
@@ -42,59 +41,55 @@
             const recRes = await fetch('https://sos2526-24.onrender.com/api/v2/recreation-culture-expenditure');
             const recData = await recRes.json();
             
-            // Detectar nombre de la columna de gasto dinámicamente
+            // Detectar nombre de la columna dinámicamente
             let nKey = 'value';
             if (recData && recData.length > 0) {
                 nKey = Object.keys(recData[0]).find(k => typeof recData[0][k] === 'number' && k !== 'year' && k !== 'id') || Object.keys(recData[0])[1];
                 expColumnName = nKey;
             }
 
-            // AGRUPAR POR AÑO (Sumando el gasto)
-            const recByYear = {};
+            const recByCountry = {};
             // @ts-ignore
             recData.forEach(item => {
-                const year = item.year;
-                if (year) {
-                    // @ts-ignore
-                    recByYear[year] = (recByYear[year] || 0) + (item[nKey] || 0);
+                const country = item.country || item.territory || item.name; 
+                if (country && !recByCountry[country]) {
+                    recByCountry[country] = {
+                        expenditure: item[nKey] || 0,
+                        year: item.year || 'N/A'
+                    };
                 }
             });
             
-            // 3. UNIÓN COMPLETA: Coger todos los años de ambas APIs
-            let uniqueYears = Array.from(new Set([...Object.keys(playersByYear), ...Object.keys(recByYear)]))
-                .map(Number)
-                .sort((a, b) => a - b); // Ordenar de menor a mayor
-
-            if (uniqueYears.length > 0) {
-                let maxYear = uniqueYears[uniqueYears.length - 1];
-                let minYear = uniqueYears[0];
-                
-                // 4. GARANTIZAR AL MENOS 10 AÑOS EN LA GRÁFICA
-                if (maxYear - minYear < 9) {
-                    minYear = maxYear - 9; // Forzamos 10 años en el eje
-                }
-
-                // Generamos la lista de años continuada
-                let fullYearsRange = [];
-                for (let y = minYear; y <= maxYear; y++) {
-                    fullYearsRange.push(y.toString());
-                }
-
-                // 5. Mapear los datos, poniendo 0 si alguna API no tiene datos ese año
-                combinedData = fullYearsRange.map(year => ({
-                    year: year,
-                    // @ts-ignore
-                    players: playersByYear[year] || 0,
-                    // @ts-ignore
-                    expenditure: recByYear[year] || 0
-                }));
-            } else {
-                combinedData = [];
-            }
+            // 3. Cruce inteligente por países (ignorando mayúsculas/minúsculas y espacios)
+            combinedData = Object.keys(playersByCountry)
+                .filter(myCountry => {
+                    // Buscamos si hay match
+                    const match = Object.keys(recByCountry).find(
+                        theirCountry => theirCountry.toLowerCase().trim() === myCountry.toLowerCase().trim()
+                    );
+                    return match !== undefined;
+                })
+                .map(myCountry => {
+                    // Recuperamos el nombre exacto de la otra API
+                    const theirCountry = Object.keys(recByCountry).find(
+                        c => c.toLowerCase().trim() === myCountry.toLowerCase().trim()
+                    );
+                    
+                    return {
+                        country: myCountry,
+                        // @ts-ignore
+                        players: playersByCountry[myCountry] || 0,
+                        // @ts-ignore
+                        expenditure: recByCountry[theirCountry].expenditure || 0,
+                        // @ts-ignore
+                        year: recByCountry[theirCountry].year
+                    };
+                })
+                .sort((a, b) => b.players - a.players) // Ordenar por los que más jugadores tienen
+                .slice(0, 10); // Nos quedamos el Top 10 para que la gráfica no se sature
             
             loading = false;
             
-            // Damos un pequeño margen para que el div se renderice
             setTimeout(() => {
                 initChart();
             }, 500);
@@ -114,7 +109,7 @@
         }
     }
     
-    // USAMOS APACHE ECHARTS TIPO "BAR"
+    // USAMOS ECHARTS CON BARRAS PARA LOS PAÍSES
     function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
@@ -124,7 +119,7 @@
         // @ts-ignore
         const chart = window.echarts.init(container);
         
-        const categories = combinedData.map(d => d.year);
+        const categories = combinedData.map(d => d.country);
         const playersData = combinedData.map(d => d.players);
         const expenditureData = combinedData.map(d => d.expenditure);
         
@@ -134,14 +129,14 @@
                 axisPointer: { type: 'shadow' }
             },
             legend: {
-                data: ['Total Jugadores eSports', `Gasto Mundial (${expColumnName})`],
+                data: ['Jugadores Activos', `Gasto (${expColumnName})`],
                 bottom: 0
             },
-            grid: { left: '5%', right: '5%', bottom: '15%', containLabel: true },
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
             xAxis: {
                 type: 'category',
                 data: categories,
-                axisLabel: { interval: 0, rotate: 45 }
+                axisLabel: { interval: 0, rotate: 30 }
             },
             yAxis: [
                 {
@@ -160,14 +155,14 @@
             ],
             series: [
                 {
-                    name: 'Total Jugadores eSports',
+                    name: 'Jugadores Activos',
                     type: 'bar',
                     data: playersData,
                     yAxisIndex: 0,
                     itemStyle: { color: '#7e22ce', borderRadius: [4, 4, 0, 0] }
                 },
                 {
-                    name: `Gasto Mundial (${expColumnName})`,
+                    name: `Gasto (${expColumnName})`,
                     type: 'bar',
                     data: expenditureData,
                     yAxisIndex: 1,
@@ -189,17 +184,17 @@
 
 <div class="integration-container">
     <h1>🎮 eSports vs 🎭 Gasto en Cultura y Recreación</h1>
-    <p class="subtitle">Evolución global a 10 años: Volumen de jugadores vs Gasto cultural (Total Mundial)</p>
+    <p class="subtitle">Relación entre volumen de jugadores y gasto cultural por país (datos combinados)</p>
     
     <div class="info-api">
-        <p><strong>API 1 (propia):</strong> eSports Growth Stats - Agrupado por Año</p>
-        <p><strong>API 2 (compañero):</strong> Recreation & Culture Expenditure - Agrupado por Año</p>
+        <p><strong>API 1 (propia):</strong> eSports Growth Stats - Jugadores activos por país</p>
+        <p><strong>API 2 (compañero):</strong> Recreation & Culture Expenditure - Gasto por país</p>
         <p><strong>Fuente:</strong> Grupo 24 - SOS</p>
     </div>
     
     <div class="loading-overlay">
         <div class="spinner"></div>
-        <p>Procesando y cruzando años...</p>
+        <p>Buscando coincidencias de países...</p>
     </div>
     
     {#if error}
@@ -209,56 +204,18 @@
     {:else}
         {#if combinedData.length === 0 && !loading}
             <div class="error" style="background: #fffbeb; color: #d97706;">
-                <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
+                <p>⚠️ No se han encontrado coincidencias exactas de países entre ambas APIs para mostrar la gráfica.</p>
             </div>
         {/if}
         <div id="chart-container" style="height: 500px; width: 100%; margin-bottom: 2rem; display: {combinedData.length > 0 ? 'block' : 'none'};"></div>
-        
-        {#if combinedData.length > 0}
-        <div class="table-container">
-            <h3>📋 Totales Globales por Año</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Año</th>
-                            <th>Total Jugadores eSports (M)</th>
-                            <th>Gasto Cultura / Recreación Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each combinedData as item}
-                            <tr>
-                                <td><strong>{item.year}</strong></td>
-                                <td>
-                                    {#if item.players === 0}
-                                        <span class="no-data">-</span>
-                                    {:else}
-                                        {item.players.toLocaleString()}
-                                    {/if}
-                                </td>
-                                <td>
-                                    {#if item.expenditure === 0}
-                                        <span class="no-data">-</span>
-                                    {:else}
-                                        {item.expenditure.toLocaleString()}
-                                    {/if}
-                                </td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {/if}
     {/if}
     
     <div class="info">
         <h3>📖 Interpretación</h3>
         <ul>
-            <li><strong>Objetivo:</strong> Relacionar la evolución histórica del volumen de jugadores de eSports con la inversión global en recreación y cultura.</li>
-            <li><strong>Gráfico:</strong> Barras evolutivas (bar) usando <strong>Apache ECharts</strong>.</li>
-            <li><strong>Manejo de Datos:</strong> Se garantizan al menos 10 años en el eje temporal, sumando los valores mundiales y rellenando con guiones (-) cuando la información de ese año no existe.</li>
+            <li><strong>Objetivo:</strong> Relacionar el crecimiento de jugadores de eSports con la inversión en recreación y cultura de los países coincidentes.</li>
+            <li><strong>Gráfico:</strong> Barras dobles (bar) con <strong>Apache ECharts</strong>.</li>
+            <li><strong>Relación:</strong> Permite visualizar si los países con mayor gasto tradicional también lideran en deportes electrónicos, comparándolos directamente.</li>
         </ul>
     </div>
 </div>
@@ -272,13 +229,6 @@
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #7e22ce; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .error { text-align: center; padding: 2rem; margin-top: 1rem; color: #dc2626; background: #fee2e2; border-radius: 8px; }
-    .table-container { margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 0.75rem; text-align: center; border-bottom: 1px solid #e2e8f0; }
-    th { background: #faf5ff; font-weight: 600; color: #7e22ce; text-align: center; }
-    tr:hover { background: #faf5ff; }
-    .no-data { color: #94a3b8; font-style: italic; }
     .info { margin-top: 2rem; padding: 1rem; background: #faf5ff; border-radius: 12px; border: 1px solid #e9d5ff; }
     .info h3 { color: #7e22ce; margin-top: 0; }
 </style>
