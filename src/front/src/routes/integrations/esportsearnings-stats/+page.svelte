@@ -2,10 +2,10 @@
     // Solo dejamos las 4 integraciones que tienes listas[cite: 5]
     const integraciones = [
         {
-            titulo: "Integración 1 - Gutendex (Libros)",
-            descripcion: "Jugadores de eSports vs Descargas de libros clásicos (API Externa)",
-            ruta: "/integrations/esportsearnings-stats/gutendex",
-            icono: "📚"
+            titulo: "Integración 1 - TVMaze (Series)",
+            descripcion: "Jugadores de eSports vs Puntuaciones de Series (API Externa)",
+            ruta: "/integrations/esportsearnings-stats/tvmaze",
+            icono: "📺"
         },
         {
             titulo: "Integración 2 - FakeStore (Tienda)",
