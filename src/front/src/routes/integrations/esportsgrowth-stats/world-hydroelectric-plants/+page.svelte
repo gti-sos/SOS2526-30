@@ -102,76 +102,64 @@
         }
     }
     
+    // USAMOS ECHARTS PERO TIPO SCATTER (DISPERSIÓN) PARA NO REPETIR BARRAS
     function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
-        const container = document.querySelector('#chart-container');
+        const container = document.getElementById('chart-container');
         if (!container) return;
         
-        const categories = combinedData.map(d => d.country);
-        const playersData = combinedData.map(d => d.players);
-        const capacityData = combinedData.map(d => d.capacity);
+        // @ts-ignore
+        const chart = window.echarts.init(container);
         
-        // Configuración 100% legal: ApexCharts en formato barras verticales
-        const options = {
-            series: [{
-                name: 'Jugadores eSports (M)',
-                type: 'bar',
-                data: playersData
-            }, {
-                name: 'Capacidad Hidroeléctrica (MW)',
-                type: 'bar',
-                data: capacityData
-            }],
-            chart: {
-                height: 500,
-                type: 'bar',
-                toolbar: { show: false }
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false, // Las pone verticales
-                    columnWidth: '55%',
-                    borderRadius: 4
-                },
-            },
-            dataLabels: { enabled: false },
-            stroke: { show: true, width: 2, colors: ['transparent'] },
-            xaxis: {
-                categories: categories,
-                title: { text: 'País' }
-            },
-            yaxis: [
-                {
-                    title: { text: 'Jugadores Activos (M)' },
-                    labels: { style: { colors: '#7e22ce' } }
-                },
-                {
-                    opposite: true,
-                    title: { text: 'Capacidad Hidroeléctrica (MW)' },
-                    labels: { style: { colors: '#3b82f6' } }
-                }
-            ],
-            colors: ['#7e22ce', '#3b82f6'],
-            fill: { opacity: 1 },
+        // Formato para scatter: [ejeX, ejeY, nombre_pais]
+        const scatterData = combinedData.map(d => [d.players, d.capacity, d.country]);
+        
+        const option = {
             tooltip: {
-                shared: true,
-                intersect: false,
-            }
+                trigger: 'item',
+                formatter: function (params) {
+                    return `<strong>${params.data[2]}</strong><br/>Jugadores eSports: ${params.data[0].toLocaleString()} M<br/>Capacidad Hidro: ${params.data[1].toLocaleString()} MW`;
+                }
+            },
+            grid: { left: '8%', right: '10%', bottom: '15%', containLabel: true },
+            xAxis: {
+                type: 'value',
+                name: 'Jugadores Activos (M)',
+                nameLocation: 'middle',
+                nameGap: 30,
+                splitLine: { lineStyle: { type: 'dashed' } }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Capacidad Hidroeléctrica (MW)',
+                nameLocation: 'middle',
+                nameGap: 50,
+                splitLine: { lineStyle: { type: 'dashed' } }
+            },
+            series: [{
+                name: 'Países',
+                type: 'scatter',
+                symbolSize: 22, // Tamaño de las bolas
+                itemStyle: {
+                    color: '#3b82f6',
+                    opacity: 0.8,
+                    borderColor: '#1d4ed8',
+                    borderWidth: 2
+                },
+                data: scatterData
+            }]
         };
         
-        // @ts-ignore
-        const chart = new window.ApexCharts(container, options);
-        chart.render();
-        
+        chart.setOption(option);
         chartInitialized = true;
     }
 </script>
 
 <svelte:head>
     <title>API Grupo 27 - Integraciones</title>
-    <!-- Importamos ApexCharts por CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <!-- Mantenemos ECharts por CDN igual que en la otra -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 </svelte:head>
 
 <div class="integration-container">
@@ -231,8 +219,8 @@
         <h3>📖 Interpretación</h3>
         <ul>
             <li><strong>Objetivo:</strong> Comparar el volumen de jugadores de eSports con la infraestructura hidroeléctrica por país.</li>
-            <li><strong>Gráfico:</strong> Barras combinadas (bar) usando la librería <strong>ApexCharts</strong> (¡Combinación segura!).</li>
-            <li><strong>Relación:</strong> Países con más jugadores vs su capacidad hidroeléctrica instalada, en ejes independientes.</li>
+            <li><strong>Gráfico:</strong> Dispersión (scatter) usando la librería <strong>Apache ECharts</strong>.</li>
+            <li><strong>Relación:</strong> Permite ver en un plano XY dónde se sitúan los países (a más arriba, más capacidad hidroeléctrica; a más a la derecha, más jugadores).</li>
         </ul>
     </div>
 </div>
