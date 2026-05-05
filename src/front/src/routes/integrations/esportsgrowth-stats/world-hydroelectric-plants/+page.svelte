@@ -15,7 +15,7 @@
         try {
             loading = true;
             
-            // 0. Ensure hydroelectric data is loaded
+            // 0. Intentar cargar datos iniciales del compañero
             try {
                 const loadRes = await fetch('https://sos2526-27.onrender.com/api/v1/world-hydroelectric-plants/loadInitialData');
                 if (!loadRes.ok) {
@@ -23,15 +23,13 @@
                 }
             } catch (e) {
                 // @ts-ignore
-                console.log('loadInitialData error (probably already loaded):', e.message);
+                console.log('loadInitialData error:', e.message);
             }
             
-            // 1. Fetch own data: eSports Growth
-            // Using a limit to ensure we get enough data to match
+            // 1. Obtener tus datos: eSports Growth
             const esportsRes = await fetch('/api/v1/esportsgrowth-stats?limit=1000');
             const esportsData = await esportsRes.json();
             
-            // Aggregate active players by country
             const playersByCountry = {};
             // @ts-ignore
             esportsData.forEach(stat => {
@@ -42,11 +40,11 @@
                 }
             });
             
-            // 2. Fetch classmate data: Hydroelectric Plants
+            // 2. Obtener datos del compañero: Hydroelectric Plants
             const hydroRes = await fetch('https://sos2526-27.onrender.com/api/v1/world-hydroelectric-plants');
             const hydroData = await hydroRes.json();
             
-            // 3. Combine data by country
+            // 3. Combinar datos por país
             const hydroByCountry = {};
             // @ts-ignore
             hydroData.forEach(item => {
@@ -63,7 +61,7 @@
                 }
             });
             
-            // 4. Prepare combined data (Top countries with eSports players that also have Hydro data)
+            // 4. Preparar datos combinados
             combinedData = Object.keys(playersByCountry)
                 // @ts-ignore
                 .filter(country => hydroByCountry[country])
@@ -81,13 +79,13 @@
                     year: hydroByCountry[country].year
                 }))
                 .sort((a, b) => b.players - a.players)
-                .slice(0, 10); // Take the top 10
+                .slice(0, 10); 
             
             loading = false;
             
             setTimeout(() => {
                 initChart();
-            }, 200);
+            }, 300);
             
             const overlay = document.querySelector('.loading-overlay');
             // @ts-ignore
@@ -104,51 +102,77 @@
         }
     }
     
-    async function initChart() {
+    function initChart() {
         if (combinedData.length === 0 || chartInitialized) return;
         
-        const container = document.getElementById('chart-container');
-        if (!container) {
-            setTimeout(() => initChart(), 100);
-            return;
-        }
-        
-        // Dynamic import of Highcharts
-        const Highcharts = await import('highcharts');
-        const HC = Highcharts.default;
+        const container = document.querySelector('#chart-container');
+        if (!container) return;
         
         const categories = combinedData.map(d => d.country);
         const playersData = combinedData.map(d => d.players);
         const capacityData = combinedData.map(d => d.capacity);
         
-        HC.chart('chart-container', {
-            accessibility: { enabled: false },
-            chart: { type: 'bar', height: 500 },
-            title: { text: '🎮 Jugadores de eSports vs ⚡ Capacidad Hidroeléctrica por país' },
-            subtitle: { text: 'Comparativa entre jugadores activos y capacidad instalada (datos combinados)' },
-            xAxis: { categories: categories, title: { text: 'País' } },
-            yAxis: [
-                { title: { text: 'Jugadores Activos (Millones)' }, opposite: false },
-                { title: { text: 'Capacidad Hidroeléctrica (MW)' }, opposite: true }
+        // Configuración 100% legal: ApexCharts en formato barras verticales
+        const options = {
+            series: [{
+                name: 'Jugadores eSports (M)',
+                type: 'bar',
+                data: playersData
+            }, {
+                name: 'Capacidad Hidroeléctrica (MW)',
+                type: 'bar',
+                data: capacityData
+            }],
+            chart: {
+                height: 500,
+                type: 'bar',
+                toolbar: { show: false }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false, // Las pone verticales
+                    columnWidth: '55%',
+                    borderRadius: 4
+                },
+            },
+            dataLabels: { enabled: false },
+            stroke: { show: true, width: 2, colors: ['transparent'] },
+            xaxis: {
+                categories: categories,
+                title: { text: 'País' }
+            },
+            yaxis: [
+                {
+                    title: { text: 'Jugadores Activos (M)' },
+                    labels: { style: { colors: '#7e22ce' } }
+                },
+                {
+                    opposite: true,
+                    title: { text: 'Capacidad Hidroeléctrica (MW)' },
+                    labels: { style: { colors: '#3b82f6' } }
+                }
             ],
-            tooltip: { shared: true },
-            plotOptions: { bar: { dataLabels: { enabled: true, format: '{point.y}' } } },
-            series: [
-                { name: 'Jugadores Activos (M)', data: playersData, color: '#7e22ce', yAxis: 0 },
-                { name: 'Capacidad (MW)', data: capacityData, color: '#3b82f6', yAxis: 1 }
-            ]
-        });
+            colors: ['#7e22ce', '#3b82f6'],
+            fill: { opacity: 1 },
+            tooltip: {
+                shared: true,
+                intersect: false,
+            }
+        };
+        
+        // @ts-ignore
+        const chart = new window.ApexCharts(container, options);
+        chart.render();
         
         chartInitialized = true;
     }
-    
-    // @ts-ignore
-    function formatNumber(num) {
-        if (num > 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num > 1000) return (num / 1000).toFixed(1) + 'K';
-        return num.toString();
-    }
 </script>
+
+<svelte:head>
+    <title>API Grupo 27 - Integraciones</title>
+    <!-- Importamos ApexCharts por CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</svelte:head>
 
 <div class="integration-container">
     <h1>🎮 eSports vs ⚡ Capacidad Hidroeléctrica</h1>
@@ -207,90 +231,27 @@
         <h3>📖 Interpretación</h3>
         <ul>
             <li><strong>Objetivo:</strong> Comparar el volumen de jugadores de eSports con la infraestructura hidroeléctrica por país.</li>
-            <li><strong>Gráfico:</strong> Barras horizontales (bar) con Highcharts.</li>
-            <li><strong>Relación:</strong> Países con más jugadores vs su capacidad hidroeléctrica instalada.</li>
+            <li><strong>Gráfico:</strong> Barras combinadas (bar) usando la librería <strong>ApexCharts</strong> (¡Combinación segura!).</li>
+            <li><strong>Relación:</strong> Países con más jugadores vs su capacidad hidroeléctrica instalada, en ejes independientes.</li>
         </ul>
     </div>
 </div>
 
 <style>
-    .integration-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        position: relative;
-        min-height: 600px;
-    }
-    
+    .integration-container { max-width: 1200px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); position: relative; min-height: 600px; }
     h1 { color: #7e22ce; text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #666; margin-bottom: 1rem; }
-    
-    .info-api {
-        background: #faf5ff;
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        font-size: 0.85rem;
-        border-left: 4px solid #7e22ce;
-    }
-    
-    .loading-overlay {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(255, 255, 255, 0.95);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        border-radius: 16px;
-        z-index: 100;
-    }
-    
-    .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #7e22ce;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .error {
-        text-align: center;
-        padding: 2rem;
-        margin-top: 1rem;
-        color: #dc2626;
-        background: #fee2e2;
-        border-radius: 8px;
-    }
-    
-    .table-container {
-        margin-top: 2rem;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 1rem;
-    }
-    
+    .info-api { background: #faf5ff; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; border-left: 4px solid #7e22ce; }
+    .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px; z-index: 100; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #7e22ce; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .error { text-align: center; padding: 2rem; margin-top: 1rem; color: #dc2626; background: #fee2e2; border-radius: 8px; }
+    .table-container { margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
     .table-wrapper { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background: #faf5ff; font-weight: 600; color: #7e22ce; }
     tr:hover { background: #faf5ff; }
-    
-    .info {
-        margin-top: 2rem;
-        padding: 1rem;
-        background: #faf5ff;
-        border-radius: 12px;
-        border: 1px solid #e9d5ff;
-    }
+    .info { margin-top: 2rem; padding: 1rem; background: #faf5ff; border-radius: 12px; border: 1px solid #e9d5ff; }
     .info h3 { color: #7e22ce; margin-top: 0; }
 </style>
