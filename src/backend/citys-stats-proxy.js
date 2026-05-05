@@ -21,5 +21,4 @@ const loadCitysStatsProxy = (app) => {
         }
     });
 };
-
-export { loadCitysStatsProxy };
+export default loadCitysStatsProxy;
