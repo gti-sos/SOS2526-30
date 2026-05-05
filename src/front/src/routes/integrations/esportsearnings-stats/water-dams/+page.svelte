@@ -23,7 +23,7 @@
             const damsData = await resDams.json();
 
             // 3. Cruzar datos dinámicamente
-            const maxRows = Math.min(esportsData.length, damsData.length, 6); // 6 puntos es la forma ideal de un radar
+            const maxRows = Math.min(esportsData.length, damsData.length, 6);
             const labels = [];
             const rawEsports = [];
             const rawDams = [];
@@ -31,7 +31,6 @@
             for(let i = 0; i < maxRows; i++) {
                 const gameName = esportsData[i].game_name || 'Juego';
                 
-                // Extraemos un nombre y un número de la API de tu compañero sea cual sea su formato
                 const keys = Object.keys(damsData[i]);
                 const strKey = keys.find(k => typeof damsData[i][k] === 'string' && k !== 'id' && k !== '_id') || keys[0];
                 const numKey = keys.find(k => typeof damsData[i][k] === 'number' && k !== 'year' && k !== 'id') || keys[1];
@@ -43,7 +42,7 @@
                 rawDams.push(damsData[i][numKey] || 0);
             }
 
-            // 4. Normalizar los datos (0 a 100%) para que la gráfica no se deforme
+            // 4. Normalizar los datos (0 a 100%) para el radar
             const maxE = Math.max(...rawEsports) || 1;
             const maxD = Math.max(...rawDams) || 1;
             
@@ -52,8 +51,14 @@
 
             loading = false;
 
-            // 5. DIBUJAR LA GRÁFICA (ApexCharts - Tipo: radar)
-            setTimeout(() => {
+            // 5. NUEVA FUNCIÓN ROBUSTA PARA DIBUJAR LA GRÁFICA
+            const renderChart = () => {
+                // Comprueba si la librería de internet ya se ha cargado. Si no, espera 100ms y repite.
+                if (typeof ApexCharts === 'undefined') {
+                    setTimeout(renderChart, 100);
+                    return;
+                }
+
                 const options = {
                     series: [
                         { name: 'eSports (Proporción %)', data: normEsports },
@@ -65,15 +70,23 @@
                     fill: { opacity: 0.3 },
                     markers: { size: 5, hover: { size: 8 } },
                     title: { text: 'Análisis Relativo: eSports vs Presas de Agua', align: 'center', style: { color: '#7e22ce' } },
-                    yaxis: { show: false }, // Escondemos los números del eje para mantenerlo limpio
+                    yaxis: { show: false }, 
                     tooltip: {
                         y: { formatter: function(val) { return val + "% del valor máximo"; } }
                     }
                 };
 
-                const chart = new ApexCharts(document.querySelector("#chart-g27"), options);
-                chart.render();
-            }, 100);
+                // Pintamos el radar
+                const chartContainer = document.querySelector("#chart-g27");
+                if (chartContainer) {
+                    chartContainer.innerHTML = ''; // Limpiamos por si se ejecuta dos veces
+                    const chart = new ApexCharts(chartContainer, options);
+                    chart.render();
+                }
+            };
+
+            // Disparamos la función
+            renderChart();
 
         } catch (err) { 
             console.error(err);
