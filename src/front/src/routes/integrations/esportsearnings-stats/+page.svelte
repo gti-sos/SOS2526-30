@@ -24,7 +24,7 @@
             descripcion: "Cruce con Grupo 29 mediante PROXY propio",
             ruta: "/integrations/esportsearnings-stats/citys-stats",
             icono: "🏙️"
-        }
+        },
         {
             titulo: "Integración 5 - Presas de Agua (G27)",
             descripcion: "Jugadores de eSports vs Presas de Agua (ApexCharts - Radar)",
