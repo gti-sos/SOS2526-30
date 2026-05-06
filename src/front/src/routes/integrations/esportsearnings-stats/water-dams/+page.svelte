@@ -1,13 +1,24 @@
 <script>
     import { onMount, tick } from 'svelte';
-
+    
     let loading = $state(true);
     let error = $state(null);
-
-    onMount(async () => {
-        await tick();
+    let chartInitialized = false;
+    
+    // Variables para almacenar los datos del radar
+    let radarLabels = [];
+    let esportsSeries = [];
+    let damsSeries = [];
+    
+    onMount(() => {
+        fetchCombinedData();
+    });
+    
+    async function fetchCombinedData() {
         try {
-            // 1. TUS DATOS (eSports)
+            loading = true;
+            
+            // 1. Obtener tus datos: eSports Earnings
             let resEsports = await fetch('/api/v2/esportsearnings-stats');
             let esportsData = await resEsports.json();
             
@@ -16,128 +27,158 @@
                 resEsports = await fetch('/api/v2/esportsearnings-stats');
                 esportsData = await resEsports.json();
             }
-
-            // 2. DATOS GRUPO 27 (Water Dams) - Llamada Directa
+            
+            // 2. Obtener datos del G27: Water Dams (Tu integración)
             const resDams = await fetch('https://sos2526-27.onrender.com/api/v1/water-dams');
-            if (!resDams.ok) throw new Error('Bloqueo de CORS o caída en la API G27');
-            const damsData = await resDams.json();
+            if (!resDams.ok) throw new Error(`La API del Grupo 27 falla (Estado ${resDams.status})`);
+            let damsData = await resDams.json();
 
-            // 3. Cruzar datos dinámicamente
-            const maxRows = Math.min(esportsData.length, damsData.length, 6);
-            const labels = [];
+            // Saneamiento rápido por si la API devuelve formatos extraños
+            if (!Array.isArray(damsData)) {
+                damsData = damsData.data || Object.values(damsData)[0] || [];
+            }
+            
+            // 3. Cruzar datos (Top 6 para que el Radar quede perfecto geométricamente)
+            const maxRows = Math.max(0, Math.min(esportsData.length, damsData.length, 6));
+            if (maxRows === 0) throw new Error('No hay datos suficientes para generar la comparativa.');
+
             const rawEsports = [];
             const rawDams = [];
             
             for(let i = 0; i < maxRows; i++) {
-                const gameName = esportsData[i].game_name || 'Juego';
+                const gameName = esportsData[i]?.game_name || 'Juego';
                 
-                const keys = Object.keys(damsData[i]);
+                const keys = Object.keys(damsData[i] || {});
                 const strKey = keys.find(k => typeof damsData[i][k] === 'string' && k !== 'id' && k !== '_id') || keys[0];
                 const numKey = keys.find(k => typeof damsData[i][k] === 'number' && k !== 'year' && k !== 'id') || keys[1];
 
                 const damName = damsData[i][strKey] || `Presa ${i+1}`;
                 
-                labels.push(`${gameName.substring(0, 10)} / ${String(damName).substring(0, 10)}`);
-                rawEsports.push(esportsData[i].player_no || 0);
-                rawDams.push(damsData[i][numKey] || 0);
+                radarLabels.push(`${gameName.substring(0, 10)} / ${String(damName).substring(0, 10)}`);
+                rawEsports.push(Number(esportsData[i]?.player_no) || 0);
+                rawDams.push(Number(damsData[i]?.[numKey]) || 0);
             }
-
-            // 4. Normalizar los datos (0 a 100%) para el radar
-            const maxE = Math.max(...rawEsports) || 1;
-            const maxD = Math.max(...rawDams) || 1;
             
-            const normEsports = rawEsports.map(v => Math.round((v / maxE) * 100));
-            const normDams = rawDams.map(v => Math.round((v / maxD) * 100));
-
+            // 4. Normalizar los datos (0 a 100%) para la gráfica
+            const maxE = Math.max(...rawEsports, 1);
+            const maxD = Math.max(...rawDams, 1);
+            
+            esportsSeries = rawEsports.map(v => Math.round((v / maxE) * 100) || 0);
+            damsSeries = rawDams.map(v => Math.round((v / maxD) * 100) || 0);
+            
             loading = false;
-
-            // 5. NUEVA FUNCIÓN CON LA CORRECCIÓN DEL "WINDOW"
-            const renderChart = () => {
-                // Truco clave: Buscar en window para evitar errores de Svelte
-                if (typeof window !== 'undefined' && !window.ApexCharts) {
-                    setTimeout(renderChart, 100);
-                    return;
-                }
-
-                const options = {
-                    series: [
-                        { name: 'eSports (Proporción %)', data: normEsports },
-                        { name: 'Presas G27 (Proporción %)', data: normDams }
-                    ],
-                    chart: { type: 'radar', height: 500, toolbar: { show: false } },
-                    labels: labels,
-                    stroke: { width: 2 },
-                    fill: { opacity: 0.3 },
-                    markers: { size: 5, hover: { size: 8 } },
-                    title: { text: 'Análisis Relativo: eSports vs Presas de Agua', align: 'center', style: { color: '#7e22ce' } },
-                    yaxis: { show: false }, 
-                    tooltip: {
-                        y: { formatter: function(val) { return val + "% del valor máximo"; } }
-                    }
-                };
-
-                const chartContainer = document.querySelector("#chart-g27");
-                if (chartContainer) {
-                    chartContainer.innerHTML = ''; 
-                    // Usamos window.ApexCharts igual que tu compañero
-                    const chart = new window.ApexCharts(chartContainer, options);
-                    chart.render();
-                }
-            };
-
-            // Disparamos la función
-            renderChart();
-
-        } catch (err) { 
-            console.error(err);
-            error = err.message; 
-            loading = false; 
+            await tick();
+            
+            // Animación de retraso para que el overlay desaparezca de forma fluida
+            setTimeout(() => {
+                initChart();
+            }, 300);
+            
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+            
+        } catch (e) {
+            console.error('Error:', e);
+            error = e.message;
+            loading = false;
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) overlay.style.display = 'none';
         }
-    });
+    }
+    
+    function initChart() {
+        if (chartInitialized) return;
+        
+        // Esperamos por si la librería aún no ha bajado del CDN
+        if (typeof window === 'undefined' || !window.ApexCharts) {
+            setTimeout(initChart, 100);
+            return;
+        }
+        
+        const container = document.querySelector('#chart-container');
+        if (!container) return;
+        
+        // Tu configuración de Radar
+        const options = {
+            series: [{
+                name: 'eSports (Proporción %)',
+                data: esportsSeries
+            }, {
+                name: 'Presas G27 (Proporción %)',
+                data: damsSeries
+            }],
+            chart: {
+                height: 500,
+                type: 'radar', // Blindaje de la regla de no repetir
+                toolbar: { show: false }
+            },
+            colors: ['#7e22ce', '#3b82f6'],
+            labels: radarLabels,
+            stroke: { width: 2 },
+            fill: { opacity: 0.3 },
+            markers: { size: 5, hover: { size: 8 } },
+            yaxis: { show: false },
+            tooltip: {
+                y: { formatter: function(val) { return val + "% del valor máximo"; } }
+            }
+        };
+        
+        container.innerHTML = ''; // Limpiamos por si acaso
+        const chart = new window.ApexCharts(container, options);
+        chart.render();
+        
+        chartInitialized = true;
+    }
 </script>
+
 <svelte:head>
-    <!-- Importamos ApexCharts directamente por CDN (Fácil y rápido) -->
+    <title>API Grupo 27 - Integración eSports</title>
+    <!-- Importamos ApexCharts por CDN -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </svelte:head>
 
-<div class="container">
-    <a href="/integrations/esportsearnings-stats" class="back-link">← Volver a mis integraciones</a>
-    <h1>🎮 eSports vs 💧 Presas de Agua (G27)</h1>
-    <p class="subtitle">Integración Externa Directa</p>
+<div class="integration-container">
+    <a href="/integrations/esportsearnings-stats" style="color: #7e22ce; text-decoration: none; font-weight: bold; margin-bottom: 1rem; display: inline-block;">← Volver a mis integraciones</a>
     
-    <!-- Contenedor del Canvas para ApexCharts -->
-    <div id="chart-g27" style="margin-top: 2rem;"></div>
-
-    {#if loading}
-        <div class="loading">Sincronizando datos con el servidor del Grupo 27...</div>
-    {:else if error}
+    <h1>🎮 eSports vs 💧 Presas de Agua</h1>
+    <p class="subtitle">Análisis Relativo: Nº Jugadores vs Capacidad de Presas (Radar)</p>
+    
+    <div class="info-api">
+        <p><strong>API 1 (propia):</strong> eSports Earnings Stats</p>
+        <p><strong>API 2 (compañero):</strong> Water Dams Data</p>
+        <p><strong>Fuente:</strong> Grupo 27 - SOS</p>
+        <p style="margin-top: 0.5rem; color: #9333ea;"><strong>✓ Tipo Gráfica:</strong> ApexCharts (Radar) - Única en el grupo.</p>
+    </div>
+    
+    <!-- Animación de Carga estilo compañero -->
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Procesando y cruzando APIs...</p>
+    </div>
+    
+    {#if error}
         <div class="error">
             <p>❌ Error: {error}</p>
-            <p style="font-size: 0.9rem; margin-top: 1rem;">
-                <em>Nota: Si sale este error, significa que el Grupo 27 no ha habilitado el CORS en su backend. En ese caso, me avisas y montamos un Proxy rápido como hicimos con el G29.</em>
-            </p>
         </div>
+    {:else}
+        {#if radarLabels.length === 0 && !loading}
+            <div class="error" style="background: #fffbeb; color: #d97706;">
+                <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
+            </div>
+        {/if}
+        <!-- Contenedor único de la gráfica -->
+        <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem; display: {radarLabels.length > 0 ? 'block' : 'none'};"></div>
     {/if}
-
-    <div class="info-note">
-        <p><strong>📊 Ficha Técnica de Cumplimiento:</strong></p>
-        <ul>
-            <li><strong>Librería:</strong> ApexCharts</li>
-            <li><strong>Tipo:</strong> Radar (Único en el grupo para esta librería)</li>
-            <li><strong>Regla 6.i:</strong> Superada (No se usa el tipo "line").</li>
-        </ul>
-    </div>
 </div>
 
 <style>
-    .container { max-width: 1000px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #e9d5ff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .back-link { color: #7e22ce; text-decoration: none; display: inline-block; margin-bottom: 1rem; font-weight: bold; }
-    .back-link:hover { text-decoration: underline; }
+    /* Estilos copiados del diseño de tu compañero para mantener coherencia visual */
+    .integration-container { max-width: 1000px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); position: relative; min-height: 600px; }
     h1 { color: #7e22ce; text-align: center; margin-bottom: 0.5rem; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
-    .loading { text-align: center; padding: 3rem; color: #7e22ce; font-weight: bold; }
-    .error { text-align: center; padding: 2rem; color: #dc2626; background: #fee2e2; border-radius: 8px; margin-top: 2rem; }
-    .info-note { margin-top: 3rem; padding: 1.5rem; background: #faf5ff; border-radius: 8px; font-size: 0.9rem; color: #4b5563; border-left: 4px solid #7e22ce; }
-    .info-note ul { margin-top: 0.5rem; padding-left: 1.5rem; }
-    .info-note li { margin-bottom: 0.25rem; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 1rem; }
+    .info-api { background: #faf5ff; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; border-left: 4px solid #7e22ce; }
+    .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px; z-index: 100; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #7e22ce; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .error { text-align: center; padding: 2rem; margin-top: 1rem; color: #dc2626; background: #fee2e2; border-radius: 8px; }
 </style>
