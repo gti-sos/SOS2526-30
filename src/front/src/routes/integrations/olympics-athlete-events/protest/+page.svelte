@@ -31,9 +31,9 @@
             const protestsData = await protestsRes.json();
             
             // Obtener datos de Olympics
-            const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=5000');
+            const olympicsRes = await fetch('/api/v1/olympics-athlete-events/loadInitialData?limit=5000');
             const olympicsData = await olympicsRes.json();
-            const athletes = olympicsData.data || [];
+            const athletes = olympicsData;
             
             // Contar atletas por país
             const athletesByCountry = {};
