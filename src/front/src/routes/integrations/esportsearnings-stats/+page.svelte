@@ -1,66 +1,144 @@
 <script>
     const integraciones = [
         {
-            titulo: "Integración 1 - Population",
-            descripcion: "Cruce de ganancias en eSports con población mundial (API Externa)",
-            ruta: "/integrations/esportsearnings-stats/population",
-            icono: "🌍"
+            titulo: "Integración 1 - TVMaze (Series)",
+            descripcion: "Jugadores de eSports vs Puntuaciones de Series (API Externa)",
+            ruta: "/integrations/esportsearnings-stats/tvmaze",
+            icono: "📺"
         },
-       {
-            titulo: "Integración 2 - CoinCap",
-            descripcion: "Premios eSports vs Precio Criptomonedas (API Externa)",
-            ruta: "/integrations/esportsearnings-stats/coincap",
-            icono: "💰"
+        {
+            titulo: "Integración 2 - FakeStore (Tienda)",
+            descripcion: "Premios de eSports vs Precio de productos (API Externa)",
+            ruta: "/integrations/esportsearnings-stats/fakestore",
+            icono: "🛒"
         },
-      {
+        {
             titulo: "Integración 3 - Rick & Morty",
             descripcion: "Géneros de eSports vs Especies de personajes (API Externa)",
             ruta: "/integrations/esportsearnings-stats/rick-and-morty",
             icono: "👽"
         },
         {
-            titulo: "Integración 4 - (Próximamente)",
-            descripcion: "API SOS Grupo X",
-            ruta: "#",
-            icono: "📊"
+            titulo: "Integración 4 - Citys Stats (G29)",
+            descripcion: "Cruce con Grupo 29 mediante PROXY propio",
+            ruta: "/integrations/esportsearnings-stats/citys-stats",
+            icono: "🏙️"
         },
         {
-            titulo: "Integración 5 - (Próximamente)",
-            descripcion: "API SOS Grupo Y (Proxy)",
-            ruta: "#",
-            icono: "🔒"
+            titulo: "Integración 5 - Presas de Agua (G27)",
+            descripcion: "Jugadores de eSports vs Presas de Agua (ApexCharts - Radar)",
+            ruta: "/integrations/esportsearnings-stats/water-dams",
+            icono: "💧"
+        },
+        {
+            titulo: "Integración 6 - Pandemias (G10)",
+            descripcion: "Jugadores eSports vs Víctimas (ApexCharts - Barras Horizontales)",
+            ruta: "/integrations/esportsearnings-stats/pandemics",
+            icono: "🦠"
         }
     ];
 </script>
 
-<div class="integrations-container">
-    <a href="/integrations" class="back-link">← Volver al menú general</a>
-    <h1>🎮 Integraciones - eSports Earnings</h1>
-    <p class="subtitle">Visualizaciones y cruce de datos (Mario)</p>
+<!-- Aquí está el HTML que faltaba para que la página no salga en blanco -->
+<div class="container">
+    <a href="/" class="back-link">← Volver al inicio</a>
+    
+    <div class="header">
+        <h1>🎮 Integraciones - eSports Earnings</h1>
+        <p>Visualizaciones y cruce de datos</p>
+    </div>
 
-    <div class="integrations-grid">
-        {#each integraciones as item}
-            <div class="integration-card">
-                <div class="card-icon">{item.icono}</div>
-                <h3>{item.titulo}</h3>
-                <p class="descripcion">{item.descripcion}</p>
-                <a href="{item.ruta}" class="btn-integracion">Ver integración →</a>
+    <div class="grid">
+        <!-- Esto recorre la lista de arriba y dibuja una tarjeta por cada una -->
+        {#each integraciones as int}
+            <div class="card">
+                <div class="icon">{int.icono}</div>
+                <h2>{int.titulo}</h2>
+                <p>{int.descripcion}</p>
+                <a href={int.ruta} class="btn">Ver integración →</a>
             </div>
         {/each}
     </div>
 </div>
 
+<!-- Y aquí los estilos para que se vea profesional -->
 <style>
-    .integrations-container { max-width: 1200px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .back-link { color: #7e22ce; text-decoration: none; display: inline-block; margin-bottom: 1rem; font-weight: bold; }
-    h1 { color: #7e22ce; text-align: center; margin-bottom: 0.5rem; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
-    .integrations-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-    .integration-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 1.5rem; text-align: center; transition: 0.2s; }
-    .integration-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(147,51,234,0.1); border-color: #a855f7; }
-    .card-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .integration-card h3 { color: #7e22ce; margin: 0 0 0.5rem 0; font-size: 1.25rem; }
-    .descripcion { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
-    .btn-integracion { display: inline-block; background: #a855f7; color: white; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; }
-    .btn-integracion:hover { background: #9333ea; }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+    .back-link {
+        color: #7e22ce;
+        text-decoration: none;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 2rem;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    .header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .header h1 {
+        color: #7e22ce;
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+    }
+    .header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+    .card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3e8ff;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: #d8b4fe;
+    }
+    .icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .card h2 {
+        color: #4c1d95;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .card p {
+        color: #4b5563;
+        margin-bottom: 2rem;
+        flex-grow: 1;
+    }
+    .btn {
+        display: inline-block;
+        background-color: #9333ea;
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: background-color 0.2s;
+    }
+    .btn:hover {
+        background-color: #7e22ce;
+    }
 </style>
