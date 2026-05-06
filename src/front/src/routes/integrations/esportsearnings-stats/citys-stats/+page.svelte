@@ -20,7 +20,18 @@
 
             // 2. DATOS GRUPO 29 (Llamando a tu nuevo PROXY Express)
             const resC = await fetch('/proxy/citys-stats');
-            if (!resC.ok) throw new Error('Fallo en el proxy al conectar con G29');
+        // NUEVO SISTEMA DE DETECCIÓN DE ERRORES:
+            if (!resC.ok) {
+                let motivo = resC.statusText;
+                try {
+                    // Intentamos leer el mensaje exacto que nos devuelve axios desde el proxy
+                    const errJson = await resC.json(); 
+                    if(errJson.error) motivo = errJson.error;
+                } catch(e) {} // Si no es un JSON, ignoramos
+                
+                throw new Error(`La API del Grupo 29 está fallando (Estado: ${resC.status}). Motivo reportado: ${motivo}`);
+            }
+            
             const citysData = await resC.json();
 
             // 3. PROCESAR DATOS (Agrupar por año)
