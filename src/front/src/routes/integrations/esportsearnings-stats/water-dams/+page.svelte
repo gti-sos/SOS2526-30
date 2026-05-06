@@ -5,9 +5,11 @@
     let error = $state(null);
     let chartInitialized = false;
     
-    let radarLabels = [];
-    let esportsSeries = [];
-    let damsSeries = [];
+    // ¡LA CLAVE! Ahora tienen $state() para que Svelte actualice la pantalla al llenarse
+    let radarLabels = $state([]);
+    let esportsSeries = $state([]);
+    let damsSeries = $state([]);
+    let chartElement; // Enlace directo al HTML
     
     onMount(() => {
         fetchCombinedData();
@@ -36,7 +38,7 @@
                 damsData = damsData.data || Object.values(damsData)[0] || [];
             }
 
-            // NUEVO: Si la base de datos de tu compañero está vacía, la "despertamos" rellenándola
+            // Despertamos y rellenamos la BD del compañero si está vacía
             if (damsData.length === 0) {
                 console.log("Base de datos G27 vacía. Cargando datos iniciales...");
                 try {
@@ -53,10 +55,11 @@
             
             // 3. Cruzar datos (Top 6)
             const maxRows = Math.max(0, Math.min(esportsData.length, damsData.length, 6));
-            if (maxRows === 0) throw new Error('No hay datos suficientes para generar la comparativa. (La API del G27 sigue vacía tras intentar reiniciarla).');
+            if (maxRows === 0) throw new Error('No hay datos suficientes para generar la comparativa.');
 
             const rawEsports = [];
             const rawDams = [];
+            const tempLabels = [];
             
             for(let i = 0; i < maxRows; i++) {
                 const gameName = esportsData[i]?.game_name || 'Juego';
@@ -67,20 +70,21 @@
 
                 const damName = damsData[i][strKey] || `Presa ${i+1}`;
                 
-                radarLabels.push(`${gameName.substring(0, 10)} / ${String(damName).substring(0, 10)}`);
+                tempLabels.push(`${gameName.substring(0, 10)} / ${String(damName).substring(0, 10)}`);
                 rawEsports.push(Number(esportsData[i]?.player_no) || 0);
                 rawDams.push(Number(damsData[i]?.[numKey]) || 0);
             }
             
-            // 4. Normalizar (0 a 100%)
+            // 4. Normalizar (0 a 100%) y asignar a variables de estado
             const maxE = Math.max(...rawEsports, 1);
             const maxD = Math.max(...rawDams, 1);
             
             esportsSeries = rawEsports.map(v => Math.round((v / maxE) * 100) || 0);
             damsSeries = rawDams.map(v => Math.round((v / maxD) * 100) || 0);
+            radarLabels = tempLabels;
             
             loading = false;
-            await tick();
+            await tick(); // Obligamos a Svelte a actualizar el HTML ahora mismo
             
             setTimeout(() => {
                 initChart();
@@ -106,8 +110,7 @@
             return;
         }
         
-        const container = document.querySelector('#chart-container');
-        if (!container) return;
+        if (!chartElement) return; // Si el div no existe aún, cancelamos
         
         const options = {
             series: [{
@@ -133,8 +136,8 @@
             }
         };
         
-        container.innerHTML = ''; 
-        const chart = new window.ApexCharts(container, options);
+        chartElement.innerHTML = ''; 
+        const chart = new window.ApexCharts(chartElement, options);
         chart.render();
         
         chartInitialized = true;
@@ -174,7 +177,8 @@
                 <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
             </div>
         {/if}
-        <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem; display: {radarLabels.length > 0 ? 'block' : 'none'};"></div>
+        <!-- ¡NUEVO! Con bind:this vinculamos el div directamente a la variable de JS -->
+        <div bind:this={chartElement} style="height: 550px; width: 100%; margin-bottom: 2rem; display: {radarLabels.length > 0 ? 'block' : 'none'};"></div>
     {/if}
 </div>
 
