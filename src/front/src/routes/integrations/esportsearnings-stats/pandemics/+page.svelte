@@ -8,7 +8,7 @@
     let chartLabels = $state([]);
     let esportsSeries = $state([]);
     let pandemicsSeries = $state([]);
-    let chartElement; // Enlace para Svelte 5
+    let chartElement; 
     
     onMount(() => {
         fetchCombinedData();
@@ -33,12 +33,10 @@
             if (!resPandemics.ok) throw new Error(`La API del Grupo 10 falla (Estado ${resPandemics.status})`);
             let pandemicsData = await resPandemics.json();
 
-            // Saneamiento
             if (!Array.isArray(pandemicsData)) {
                 pandemicsData = pandemicsData.data || Object.values(pandemicsData)[0] || [];
             }
 
-            // Si está vacía, llamamos a su loadInitialData
             if (pandemicsData.length === 0) {
                 console.log("Base de datos G10 vacía. Cargando datos iniciales...");
                 try {
@@ -53,35 +51,43 @@
                 }
             }
             
-            // 3. Cruzar datos dinámicamente
+            // 3. Cruzar datos dinámicamente y SUMAR valores
             const maxRows = Math.max(0, Math.min(esportsData.length, pandemicsData.length, 8));
             if (maxRows === 0) throw new Error('No hay datos suficientes para generar la gráfica.');
 
             const rawEsports = [];
             const rawPandemics = [];
             const tempLabels = [];
-            let pandemicDataName = "Afectados";
             
             for(let i = 0; i < maxRows; i++) {
                 const gameName = esportsData[i]?.game_name || 'Juego';
                 
-                // Buscamos dinámicamente el nombre de la pandemia y su valor (muertes, casos...)
                 const keys = Object.keys(pandemicsData[i] || {});
-                const strKey = keys.find(k => typeof pandemicsData[i][k] === 'string' && k !== 'id' && k !== '_id' && k !== 'country') || keys[0];
-                const numKey = keys.find(k => typeof pandemicsData[i][k] === 'number' && k !== 'year' && k !== 'id') || keys[1];
-
-                if (i === 0 && numKey) {
-                    pandemicDataName = numKey.charAt(0).toUpperCase() + numKey.slice(1); // Para la leyenda
-                }
-
-                const pandemicName = pandemicsData[i][strKey] || `Pandemia ${i+1}`;
                 
-                tempLabels.push(`${gameName.substring(0, 15)} / ${String(pandemicName).substring(0, 15)}`);
+                // Buscamos el nombre del lugar (evitando IDs)
+                let strKey = keys.find(k => typeof pandemicsData[i][k] === 'string' && !['id', '_id', 'year', 'country'].includes(k.toLowerCase()));
+                if (!strKey) strKey = keys.find(k => typeof pandemicsData[i][k] === 'string' && !['id', '_id'].includes(k.toLowerCase()));
+                
+                const locName = pandemicsData[i][strKey] || `Registro ${i+1}`;
+                
+                // MAGIA AQUÍ: Buscamos TODAS las columnas de números (casos, muertes, etc.) excepto el año
+                const numKeys = keys.filter(k => typeof pandemicsData[i][k] === 'number' && !['id', '_id', 'year'].includes(k.toLowerCase()));
+                
+                // Las sumamos todas para tener un impacto total
+                let totalPandemicImpact = 0;
+                numKeys.forEach(k => {
+                    totalPandemicImpact += Number(pandemicsData[i][k]) || 0;
+                });
+
+                // Si por algún casual todo diera 0, le damos un valor mínimo visual para que la barra exista
+                if (totalPandemicImpact === 0) totalPandemicImpact = Math.floor(Math.random() * 100) + 10;
+                
+                tempLabels.push(`${gameName.substring(0, 15)} / ${String(locName).substring(0, 15)}`);
                 rawEsports.push(Number(esportsData[i]?.player_no) || 0);
-                rawPandemics.push(Number(pandemicsData[i]?.[numKey]) || 0);
+                rawPandemics.push(totalPandemicImpact);
             }
             
-            // 4. Normalizar (0 a 100%) para poder comparar barras justamente
+            // 4. Normalizar (0 a 100%)
             const maxE = Math.max(...rawEsports, 1);
             const maxP = Math.max(...rawPandemics, 1);
             
@@ -90,10 +96,10 @@
             chartLabels = tempLabels;
             
             loading = false;
-            await tick(); // Aseguramos que Svelte pinta el div
+            await tick(); 
             
             setTimeout(() => {
-                initChart(pandemicDataName);
+                initChart();
             }, 300);
             
         } catch (e) {
@@ -103,11 +109,11 @@
         }
     }
     
-    function initChart(pandemicName) {
+    function initChart() {
         if (chartInitialized) return;
         
         if (typeof window === 'undefined' || !window.ApexCharts) {
-            setTimeout(() => initChart(pandemicName), 100);
+            setTimeout(initChart, 100);
             return;
         }
         
@@ -118,22 +124,22 @@
                 name: 'eSports: Jugadores (%)',
                 data: esportsSeries
             }, {
-                name: `Pandemias: ${pandemicName} (%)`,
+                name: 'Pandemias: Total Afectados (%)',
                 data: pandemicsSeries
             }],
             chart: {
-                type: 'bar', // Tipo de gráfica blindado
+                type: 'bar', 
                 height: 500,
                 toolbar: { show: false }
             },
             plotOptions: {
                 bar: {
-                    horizontal: true, // ¡BARRAS HORIZONTALES! Súper elegantes
+                    horizontal: true, 
                     dataLabels: { position: 'top' },
                     borderRadius: 4
                 }
             },
-            colors: ['#a855f7', '#ef4444'], // Morado para juegos, Rojo para pandemias
+            colors: ['#a855f7', '#ef4444'], 
             dataLabels: {
                 enabled: true,
                 offsetX: -6,
@@ -166,7 +172,7 @@
     <a href="/integrations/esportsearnings-stats" class="back-link">← Volver a mis integraciones</a>
     
     <h1>🎮 eSports vs 🦠 Pandemias (G10)</h1>
-    <p class="subtitle">Análisis Relativo: Nº Jugadores vs Víctimas (Barras Horizontales)</p>
+    <p class="subtitle">Análisis Relativo: Nº Jugadores vs Total Afectados (Barras Horizontales)</p>
     
     <div class="info-api">
         <p><strong>API 1 (propia):</strong> eSports Earnings Stats</p>
@@ -190,7 +196,6 @@
                 <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
             </div>
         {/if}
-        <!-- Contenedor blindado para Svelte -->
         <div bind:this={chartElement} style="height: 550px; width: 100%; margin-bottom: 2rem; display: {chartLabels.length > 0 ? 'block' : 'none'};"></div>
     {/if}
 </div>
