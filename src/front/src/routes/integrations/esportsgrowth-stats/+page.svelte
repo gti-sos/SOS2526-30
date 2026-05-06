@@ -26,11 +26,12 @@
             <span class="badge">ECharts | Funnel</span>
         </a>
 
-        <!-- BOTÓN 3: API EXTERNA 1 (Proxy) - AÚN PENDIENTE -->
-        <div class="integration-card ext-card placeholder">
-            <h3>🌍 API Externa 1 (Con Proxy)</h3>
-            <p>Pendiente...</p>
-        </div>
+        <!-- BOTÓN 3: API EXTERNA 1 (Universidades con Proxy) - ¡ACTIVADO! -->
+        <a href="/integrations/esportsgrowth-stats/externa-universidades" class="integration-card ext-card active-ext">
+            <h3>🌍 API Externa 1 (Proxy)</h3>
+            <p>HipoLabs Universidades vs eSports</p>
+            <span class="badge">Chart.js | Mixed (Bar+Line)</span>
+        </a>
 
         <!-- BOTÓN 4: API EXTERNA 2 (Población REST Countries) - ¡ACTIVADO! -->
         <a href="/integrations/esportsgrowth-stats/externa-poblacion" class="integration-card ext-card active-ext">

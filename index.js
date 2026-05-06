@@ -16,6 +16,7 @@ import dotenv from 'dotenv';
     import dogProxy from './src/backend/dog-proxy.js';
     import openweatherProxy from './src/backend/openweather-proxy.js';
     import sportsdbProxy from './src/backend/sportsdb-proxy.js';
+    import loadUniversitiesEsportsProxy from './rutahacia/tu/archivo/universities-proxy.js';
 
 import loadBackendGGG from './src/backend/olympics-athlete-events.js';
 import loadBackendFMGP from './src/backend/cheaters-stats.js';
@@ -41,6 +42,7 @@ loadCitysStatsProxy(app);
 loadBackendGGG(app);
 loadBackendFMGP(app);
 loadGithubEsportsProxy(app);
+loadUniversitiesEsportsProxy(app);
 
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);
