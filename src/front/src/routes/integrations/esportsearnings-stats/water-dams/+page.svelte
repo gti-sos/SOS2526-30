@@ -5,7 +5,6 @@
     let error = $state(null);
     let chartInitialized = false;
     
-    // Variables para almacenar los datos del radar
     let radarLabels = [];
     let esportsSeries = [];
     let damsSeries = [];
@@ -28,19 +27,33 @@
                 esportsData = await resEsports.json();
             }
             
-            // 2. Obtener datos del G27: Water Dams (Tu integración)
-            const resDams = await fetch('https://sos2526-27.onrender.com/api/v1/water-dams');
+            // 2. Obtener datos del G27: Water Dams
+            let resDams = await fetch('https://sos2526-27.onrender.com/api/v1/water-dams');
             if (!resDams.ok) throw new Error(`La API del Grupo 27 falla (Estado ${resDams.status})`);
             let damsData = await resDams.json();
 
-            // Saneamiento rápido por si la API devuelve formatos extraños
             if (!Array.isArray(damsData)) {
                 damsData = damsData.data || Object.values(damsData)[0] || [];
             }
+
+            // NUEVO: Si la base de datos de tu compañero está vacía, la "despertamos" rellenándola
+            if (damsData.length === 0) {
+                console.log("Base de datos G27 vacía. Cargando datos iniciales...");
+                try {
+                    await fetch('https://sos2526-27.onrender.com/api/v1/water-dams/loadInitialData');
+                    resDams = await fetch('https://sos2526-27.onrender.com/api/v1/water-dams');
+                    damsData = await resDams.json();
+                    if (!Array.isArray(damsData)) {
+                        damsData = damsData.data || Object.values(damsData)[0] || [];
+                    }
+                } catch (e) {
+                    console.error("No se pudo cargar datos iniciales del G27", e);
+                }
+            }
             
-            // 3. Cruzar datos (Top 6 para que el Radar quede perfecto geométricamente)
+            // 3. Cruzar datos (Top 6)
             const maxRows = Math.max(0, Math.min(esportsData.length, damsData.length, 6));
-            if (maxRows === 0) throw new Error('No hay datos suficientes para generar la comparativa.');
+            if (maxRows === 0) throw new Error('No hay datos suficientes para generar la comparativa. (La API del G27 sigue vacía tras intentar reiniciarla).');
 
             const rawEsports = [];
             const rawDams = [];
@@ -59,7 +72,7 @@
                 rawDams.push(Number(damsData[i]?.[numKey]) || 0);
             }
             
-            // 4. Normalizar los datos (0 a 100%) para la gráfica
+            // 4. Normalizar (0 a 100%)
             const maxE = Math.max(...rawEsports, 1);
             const maxD = Math.max(...rawDams, 1);
             
@@ -69,7 +82,6 @@
             loading = false;
             await tick();
             
-            // Animación de retraso para que el overlay desaparezca de forma fluida
             setTimeout(() => {
                 initChart();
             }, 300);
@@ -89,7 +101,6 @@
     function initChart() {
         if (chartInitialized) return;
         
-        // Esperamos por si la librería aún no ha bajado del CDN
         if (typeof window === 'undefined' || !window.ApexCharts) {
             setTimeout(initChart, 100);
             return;
@@ -98,7 +109,6 @@
         const container = document.querySelector('#chart-container');
         if (!container) return;
         
-        // Tu configuración de Radar
         const options = {
             series: [{
                 name: 'eSports (Proporción %)',
@@ -109,7 +119,7 @@
             }],
             chart: {
                 height: 500,
-                type: 'radar', // Blindaje de la regla de no repetir
+                type: 'radar',
                 toolbar: { show: false }
             },
             colors: ['#7e22ce', '#3b82f6'],
@@ -123,7 +133,7 @@
             }
         };
         
-        container.innerHTML = ''; // Limpiamos por si acaso
+        container.innerHTML = ''; 
         const chart = new window.ApexCharts(container, options);
         chart.render();
         
@@ -133,7 +143,6 @@
 
 <svelte:head>
     <title>API Grupo 27 - Integración eSports</title>
-    <!-- Importamos ApexCharts por CDN -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </svelte:head>
 
@@ -150,7 +159,6 @@
         <p style="margin-top: 0.5rem; color: #9333ea;"><strong>✓ Tipo Gráfica:</strong> ApexCharts (Radar) - Única en el grupo.</p>
     </div>
     
-    <!-- Animación de Carga estilo compañero -->
     <div class="loading-overlay">
         <div class="spinner"></div>
         <p>Procesando y cruzando APIs...</p>
@@ -166,13 +174,11 @@
                 <p>⚠️ No hay datos disponibles para mostrar la gráfica.</p>
             </div>
         {/if}
-        <!-- Contenedor único de la gráfica -->
         <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem; display: {radarLabels.length > 0 ? 'block' : 'none'};"></div>
     {/if}
 </div>
 
 <style>
-    /* Estilos copiados del diseño de tu compañero para mantener coherencia visual */
     .integration-container { max-width: 1000px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); position: relative; min-height: 600px; }
     h1 { color: #7e22ce; text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #666; margin-bottom: 1rem; }
