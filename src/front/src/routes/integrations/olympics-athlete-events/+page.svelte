@@ -31,6 +31,11 @@
             descripcion: "Integracion con api The Cat API", 
             ruta: "/integrations/olympics-athlete-events/theCatsApi",            
         },
+        {
+            titulo: "Integracion 7 - protest",
+            descripcion: "Integracion con api G10-protest",
+            ruta: "/integrations/olympics-athlete-events/protest"
+        },  
     ];
 </script>
 
