@@ -42,8 +42,8 @@ router.get('/check-token', async (req, res) => {
 router.use(async (req, res) => {
     // LIMPIAR la URL para quitar /api/github si existe
     let apiPath = req.url;
-    if (apiPath.startsWith('/api/github')) {
-        apiPath = apiPath.replace('/api/github', '');
+    if (apiPath.startsWith('/api/github-proxy')) {
+        apiPath = apiPath.replace('/api/github-proxy', '');
     }
     
     const url = 'https://api.github.com' + apiPath;

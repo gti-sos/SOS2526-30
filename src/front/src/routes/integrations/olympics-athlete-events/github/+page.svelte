@@ -70,7 +70,7 @@
                     while (!success && retries < 3) {
                         try {
                             const timestamp = Date.now();
-                            const response = await fetch(`/api/github/search/repositories?q=language:${lang}&per_page=1&_=${timestamp}`);
+                            const response = await fetch(`/api/github-proxy/search/repositories?q=language:${lang}&per_page=1&_=${timestamp}`);
                             
                             if (response.ok) {
                                 const data = await response.json();
