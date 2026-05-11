@@ -10,7 +10,7 @@ import dotenv from 'dotenv';
     import { handler } from './src/front/build/handler.js';
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
-    import cryptoProxy from './src/backend/GGG-crypto-proxy.js';
+    import randomProxy from './src/backend/GGG-random-proxy.js';
     import  loadCitysStatsProxy  from './src/backend/citys-stats-proxy.js';
     import loadGithubEsportsProxy from './src/backend/programadores-proxy.js';
     import dogProxy from './src/backend/dog-proxy.js';
@@ -31,7 +31,7 @@ const BASE_URL_API2 = "/api/v2";
 
 app.use(express.json());
 
-app.use('/api/crypto-proxy', cryptoProxy);
+app.use('/api/random-proxy', randomProxy);
 app.use('/api/dog', dogProxy);
 app.use('/api/weather', openweatherProxy);
 app.use('/api/sports', sportsdbProxy);

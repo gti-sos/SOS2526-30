@@ -22,9 +22,9 @@
             
         },
         {
-            titulo: "Integracion 5 - Bitcoin API",
-            descripcion: "Integracion con api Bitcoin",
-            ruta: "/integrations/olympics-athlete-events/crypto",
+            titulo: "Integracion 5 - random User API",
+            descripcion: "Integracion con api random User",
+            ruta: "/integrations/olympics-athlete-events/random",   
         },
         {
             titulo: "Integracion 6 - The Cat API",
