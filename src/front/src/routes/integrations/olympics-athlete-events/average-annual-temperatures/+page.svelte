@@ -1,11 +1,13 @@
 <script>
     import { onMount } from 'svelte';
+    import * as echarts from 'echarts';
     
     let loading = $state(true);
     let error = $state(null);
     // @ts-ignore
+    let chart = null;
+    // @ts-ignore
     let combinedData = $state([]);
-    let chartInitialized = false;
     
     onMount(() => {
         fetchCombinedData();
@@ -15,23 +17,10 @@
         try {
             loading = true;
             
-            // 0. Primero, asegurar que los datos del compañero están cargados (loadInitialData)
-            try {
-                const loadRes = await fetch('https://sos2526-25.onrender.com/api/v1/average-annual-temperatures/loadInitialData');
-                if (!loadRes.ok) {
-                    console.log('loadInitialData responded with status:', loadRes.status);
-                }
-            } catch (e) {
-                // @ts-ignore
-                console.log('loadInitialData error (probablemente ya cargado):', e.message);
-            }
-            
-            // 1. Obtener datos de Olympics - atletas por país
-            const olympicsRes = await fetch('/api/v2/olympics-athlete-events?limit=2000');
+            const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=2000');
             const olympicsData = await olympicsRes.json();
             const athletes = olympicsData.data || [];
             
-            // Contar atletas por país
             const athletesByCountry = {};
             // @ts-ignore
             athletes.forEach(ath => {
@@ -42,11 +31,9 @@
                 }
             });
             
-            // 2. Obtener datos de Temperatures (endpoint principal)
             const tempRes = await fetch('https://sos2526-25.onrender.com/api/v1/average-annual-temperatures');
             const tempData = await tempRes.json();
             
-            // 3. Combinar datos por país (último año disponible)
             const tempByCountry = {};
             // @ts-ignore
             tempData.forEach(item => {
@@ -55,15 +42,11 @@
                 if (country && !tempByCountry[country]) {
                     // @ts-ignore
                     tempByCountry[country] = {
-                        temperature: item.temperature,
-                        co2: item.co2_emission,
-                        precipitation: item.precipitation,
-                        year: item.year
+                        temperature: item.temperature
                     };
                 }
             });
             
-            // 4. Preparar datos combinados (Top 10 países con más atletas)
             combinedData = Object.keys(athletesByCountry)
                 // @ts-ignore
                 .filter(country => tempByCountry[country])
@@ -72,22 +55,16 @@
                     // @ts-ignore
                     athletes: athletesByCountry[country] || 0,
                     // @ts-ignore
-                    temperature: tempByCountry[country].temperature || 0,
-                    // @ts-ignore
-                    co2: tempByCountry[country].co2 || 0,
-                    // @ts-ignore
-                    precipitation: tempByCountry[country].precipitation || 0,
-                    // @ts-ignore
-                    year: tempByCountry[country].year
+                    temperature: tempByCountry[country].temperature || 0
                 }))
                 .sort((a, b) => b.athletes - a.athletes)
                 .slice(0, 10);
             
-            loading = false;
-            
             setTimeout(() => {
-                initChart();
+                createBarChart();
             }, 200);
+            
+            loading = false;
             
             const overlay = document.querySelector('.loading-overlay');
             // @ts-ignore
@@ -104,41 +81,97 @@
         }
     }
     
-    async function initChart() {
-        if (combinedData.length === 0 || chartInitialized) return;
-        
+    function createBarChart() {
         const container = document.getElementById('chart-container');
-        if (!container) {
-            setTimeout(() => initChart(), 100);
-            return;
+        if (!container || combinedData.length === 0) return;
+        
+        // @ts-ignore
+        if (chart) {
+            chart.dispose();
         }
         
-        const Highcharts = await import('highcharts');
-        const HC = Highcharts.default;
-        
-        const categories = combinedData.map(d => d.country);
+        const countries = combinedData.map(d => d.country);
         const athletesData = combinedData.map(d => d.athletes);
-        const temperatureData = combinedData.map(d => d.temperature);
+        const tempData = combinedData.map(d => d.temperature);
         
-        HC.chart('chart-container', {
-            accessibility: { enabled: false },
-            chart: { type: 'bar', height: 500 },
-            title: { text: '🏅 Atletas Olímpicos vs 🌡️ Temperatura media por país' },
-            subtitle: { text: 'Comparativa entre número de atletas y temperatura media (datos combinados)' },
-            xAxis: { categories: categories, title: { text: 'País' } },
+        chart = echarts.init(container);
+        
+        const option = {
+            title: {
+                text: 'Atletas Olímpicos vs Temperatura media por país',
+                subtext: 'Barras: Atletas | Círculos: Temperatura',
+                left: 'center',
+                top: 5,
+                textStyle: { fontSize: 16, color: '#0369a1' },
+                subtextStyle: { fontSize: 12, color: '#666' }
+            },
+            tooltip: {
+                trigger: 'axis',
+                // @ts-ignore
+                formatter: function(params) {
+                    let result = `<b>${params[0].axisValue}</b><br/>`;
+                    // @ts-ignore
+                    params.forEach(p => {
+                        if (p.seriesName === 'Atletas') {
+                            result += `🏅 Atletas: ${p.value.toLocaleString()}<br/>`;
+                        } else {
+                            result += `🌡️ Temperatura: ${p.value.toFixed(1)}°C<br/>`;
+                        }
+                    });
+                    return result;
+                }
+            },
+            xAxis: {
+                type: 'category',
+                data: countries,
+                name: 'País',
+                axisLabel: { rotate: 45, fontSize: 10, interval: 0 }
+            },
             yAxis: [
-                { title: { text: 'Número de Atletas' }, opposite: false },
-                { title: { text: 'Temperatura media (°C)' }, opposite: true }
+                {
+                    type: 'value',
+                    name: 'Atletas Olímpicos',
+                    nameLocation: 'middle',
+                    nameGap: 50
+                },
+                {
+                    type: 'value',
+                    name: 'Temperatura (°C)',
+                    nameLocation: 'middle',
+                    nameGap: 50
+                }
             ],
-            tooltip: { shared: true },
-            plotOptions: { bar: { dataLabels: { enabled: true, format: '{point.y}' } } },
             series: [
-                { name: 'Atletas Olímpicos', data: athletesData, color: '#0284c7', yAxis: 0 },
-                { name: 'Temperatura media (°C)', data: temperatureData, color: '#f59e0b', yAxis: 1 }
-            ]
-        });
+                {
+                    name: 'Atletas',
+                    type: 'bar',
+                    data: athletesData,
+                    itemStyle: { color: '#0284c7', borderRadius: [4, 4, 0, 0] },
+                    barWidth: '50%'
+                },
+                {
+                    name: 'Temperatura',
+                    type: 'scatter',
+                    data: tempData,
+                    itemStyle: { color: '#f59e0b' },
+                    symbolSize: 12,
+                    yAxisIndex: 1,
+                    // @ts-ignore
+                    tooltip: { valueFormatter: (value) => value.toFixed(1) + '°C' }
+                }
+            ],
+            grid: {
+                containLabel: true,
+                top: 70,
+                bottom: 40,
+                left: 60,
+                right: 60
+            }
+        };
         
-        chartInitialized = true;
+        chart.setOption(option);
+        // @ts-ignore
+        window.addEventListener('resize', () => chart?.resize());
     }
     
     // @ts-ignore
@@ -150,39 +183,36 @@
 </script>
 
 <div class="integration-container">
-    <h1>🏅 Atletas Olímpicos vs 🌡️ Temperatura media por país</h1>
-    <p class="subtitle">Relación entre número de atletas y temperatura media (datos combinados)</p>
+    <h1>Atletas Olímpicos vs Temperatura media por país</h1>
+    <p class="subtitle">Barras azules = Atletas | Círculos naranjas = Temperatura media (°C)</p>
     
     <div class="info-api">
         <p><strong>API 1 (propia):</strong> Olympics Athlete Events - Número de atletas por país</p>
         <p><strong>API 2 (compañero):</strong> Average Annual Temperatures - Temperatura media por país</p>
-        <p><strong>Fuente:</strong> Grupo 25 - SOS</p>
+        <p><strong>Widget:</strong> Bar + Scatter con <strong>ECharts</strong></p>
     </div>
     
     <div class="loading-overlay">
         <div class="spinner"></div>
-        <p>Cargando datos combinados...</p>
+        <p>Cargando datos...</p>
     </div>
     
     {#if error}
-        <div class="error">
-            <p>❌ Error: {error}</p>
-        </div>
-    {:else}
+        <div class="error">Error: {error}</div>
+    {/if}
+    
+    {#if !loading}
         <div id="chart-container" style="height: 550px; width: 100%; margin-bottom: 2rem;"></div>
         
         <div class="table-container">
-            <h3>📋 Datos combinados</h3>
+            <h3>Datos combinados</h3>
             <div class="table-wrapper">
-                <table>
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>País</th>
                             <th>Atletas Olímpicos</th>
                             <th>Temperatura media (°C)</th>
-                            <th>CO2 emitido</th>
-                            <th>Precipitación (mm)</th>
-                            <th>Año dato</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -191,9 +221,6 @@
                                 <td><strong>{item.country}</strong></td>
                                 <td>{item.athletes.toLocaleString()}</td>
                                 <td>{item.temperature.toFixed(1)}°C</td>
-                                <td>{formatNumber(item.co2)} t</td>
-                                <td>{item.precipitation} mm</td>
-                                <td>{item.year}</td>
                             </tr>
                         {/each}
                     </tbody>
@@ -203,11 +230,12 @@
     {/if}
     
     <div class="info">
-        <h3>📖 Interpretación</h3>
+        <h3>Interpretación</h3>
         <ul>
-            <li><strong>Objetivo:</strong> Comparar éxito deportivo (atletas) con temperatura media por país</li>
-            <li><strong>Gráfico:</strong> Barras horizontales (bar) con Highcharts</li>
-            <li><strong>Relación:</strong> Países con más atletas vs su temperatura media</li>
+            <li><strong>Barras azules:</strong> Número de atletas olímpicos por país</li>
+            <li><strong>Círculos naranjas:</strong> Temperatura media del país (°C)</li>
+            <li><strong>Librería:</strong> ECharts</li>
+            <li><strong>Eje Y izquierdo:</strong> Atletas | <strong>Eje Y derecho:</strong> Temperatura</li>
         </ul>
     </div>
 </div>
@@ -266,7 +294,6 @@
     .error {
         text-align: center;
         padding: 2rem;
-        margin-top: 1rem;
         color: #dc2626;
         background: #fee2e2;
         border-radius: 8px;
@@ -278,10 +305,29 @@
         padding-top: 1rem;
     }
     
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #f8fafc; font-weight: 600; color: #0369a1; }
+    .table-container h3 { color: #0369a1; margin-bottom: 1rem; }
+    .table-wrapper { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+    
+    th, td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #0369a1;
+        position: sticky;
+        top: 0;
+    }
+    
     tr:hover { background: #f0f9ff; }
     
     .info {
@@ -291,5 +337,8 @@
         border-radius: 12px;
         border: 1px solid #bae6fd;
     }
+    
     .info h3 { color: #0369a1; margin-top: 0; }
+    .info ul { margin: 0; padding-left: 1.5rem; }
+    .info li { margin: 0.5rem 0; color: #333; }
 </style>
