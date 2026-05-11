@@ -6,11 +6,12 @@
 
     let loading = $state(true);
     let error = $state(null);
-    // @ts-ignore
     let chart = null;
-    // @ts-ignore
     let combinedData = [];
     let selectedCrypto = $state('bitcoin');
+
+    // Función para esperar
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     async function fetchAthletesByYear() {
         console.log('[FETCH] Obteniendo atletas por año...');
@@ -20,11 +21,9 @@
             const athletes = data;
 
             const athletesByYear = {};
-            // @ts-ignore
             athletes.forEach(ath => {
                 const year = ath.year;
                 if (year && year >= 2000 && year <= 2025) {
-                    // @ts-ignore
                     athletesByYear[year] = (athletesByYear[year] || 0) + 1;
                 }
             });
@@ -35,25 +34,43 @@
         }
     }
 
-    // @ts-ignore
-    async function fetchCryptoPriceByYear(cryptoId) {
-        try {
-            const url = `/api/crypto-proxy/price?ids=${cryptoId}&vs_currencies=usd`;
-            const res = await fetch(url);
-            const data = await res.json();
-            const currentPrice = data[cryptoId]?.usd || 0;
+    async function fetchCryptoPriceByYear(cryptoId, retries = 3) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const url = `/api/crypto-proxy/price?ids=${cryptoId}&vs_currencies=usd`;
+                console.log(`[CRYPTO] Intento ${attempt} - Llamando a: ${url}`);
+                
+                const res = await fetch(url);
+                
+                if (res.status === 429) {
+                    const waitTime = attempt * 2000; // 2s, 4s, 6s
+                    console.warn(`[CRYPTO] Rate limit, esperando ${waitTime/1000}s...`);
+                    await delay(waitTime);
+                    continue; // Reintentar
+                }
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                
+                const data = await res.json();
+                const currentPrice = data[cryptoId]?.usd || 0;
+                console.log(`[CRYPTO] Precio obtenido: $${currentPrice}`);
 
-            const years = [];
-            const prices = [];
-            for (let y = 2000; y <= 2025; y++) {
-                years.push(y);
-                const factor = Math.exp((y - 2000) / 8);
-                prices.push(currentPrice * factor);
+                const years = [];
+                const prices = [];
+                for (let y = 2000; y <= 2025; y++) {
+                    years.push(y);
+                    const factor = Math.exp((y - 2000) / 8);
+                    prices.push(currentPrice * factor);
+                }
+                return { years, prices };
+                
+            } catch (err) {
+                console.error(`[CRYPTO] Error en intento ${attempt}:`, err);
+                if (attempt === retries) throw err;
+                await delay(2000);
             }
-            return { years, prices };
-        } catch (err) {
-            console.error('[CRYPTO] Error:', err);
-            throw err;
         }
     }
 
@@ -61,10 +78,8 @@
         try {
             loading = true;
             
-            // Asegurar que el overlay sea visible
             const overlay = document.querySelector('.loading-overlay');
             if (overlay) {
-                // @ts-ignore
                 overlay.style.display = 'flex';
             }
 
@@ -73,33 +88,26 @@
 
             const combined = cryptoYears.map((year, idx) => ({
                 year,
-                // @ts-ignore
                 athletes: athletesByYear[year] || 0,
                 cryptoPrice: cryptoPrices[idx]
             }));
 
             combinedData = combined;
 
-            // Crear gráfico y esperar a que termine
             await createChart();
             
-            // IMPORTANTE: loading debe ser false para que se muestre la tabla
             loading = false;
             
-            // Ocultar overlay
             if (overlay) {
-                // @ts-ignore
                 overlay.style.display = 'none';
             }
             
         } catch (e) {
             console.error('[LOAD] Error:', e);
-            // @ts-ignore
-            error = e.message;
+            error = `Error al cargar datos de ${selectedCrypto === 'bitcoin' ? 'Bitcoin' : 'Ethereum'}. Inténtalo de nuevo más tarde.`;
             loading = false;
             const overlay = document.querySelector('.loading-overlay');
             if (overlay) {
-                // @ts-ignore
                 overlay.style.display = 'none';
             }
         }
@@ -115,7 +123,6 @@
                 return;
             }
 
-            // @ts-ignore
             if (chart) {
                 chart.destroy();
             }
@@ -123,9 +130,8 @@
             const cryptoName = selectedCrypto === 'bitcoin' ? 'Bitcoin' : 'Ethereum';
             const color = selectedCrypto === 'bitcoin' ? '#f7931a' : '#627eea';
 
-            // @ts-ignore
             const scatterData = combinedData
-                .filter(d => d.athletes > 0)
+                .filter(d => d.athletes > 0 && d.cryptoPrice > 0)
                 .map(d => ({
                     x: d.year,
                     y: d.cryptoPrice,
@@ -134,12 +140,10 @@
 
             if (scatterData.length === 0) {
                 console.warn('[CHART] No hay datos para mostrar');
-                // @ts-ignore
                 resolve();
                 return;
             }
 
-            // @ts-ignore
             chart = Highcharts.chart('scatter-container', {
                 chart: {
                     type: 'scatter',
@@ -149,7 +153,6 @@
                     events: {
                         load: function() {
                             console.log('[CHART] Gráfico cargado completamente');
-                            // @ts-ignore
                             resolve();
                         }
                     }
@@ -263,7 +266,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {#each combinedData.filter(d => d.athletes > 0) as item}
+                        {#each combinedData.filter(d => d.athletes > 0 && d.cryptoPrice > 0) as item}
                             <tr>
                                 <td><strong>{item.year}</strong></td>
                                 <td>{item.athletes.toLocaleString()}</td>
@@ -273,7 +276,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="table-info">Años con datos de atletas: {combinedData.filter(d => d.athletes > 0).length}</p>
+            <p class="table-info">Años con datos: {combinedData.filter(d => d.athletes > 0 && d.cryptoPrice > 0).length}</p>
         </div>
     {/if}
 
@@ -387,6 +390,7 @@
     .error {
         text-align: center;
         padding: 2rem;
+        margin-top: 1rem;
         color: #dc2626;
         background: #fee2e2;
         border-radius: 8px;
