@@ -7,78 +7,158 @@
     let Plotly = null;
     
     onMount(async () => {
-        // Importar Plotly solo en el cliente
-        const plotlyModule = await import('plotly.js-dist');
-        Plotly = plotlyModule.default;
-        await fetchCombinedData();
+        console.log('[INICIO] Montando componente...');
+        
+        // Cargar Plotly desde CDN con versión específica
+        const loadPlotly = () => {
+            console.log('[PLOTLY] Iniciando carga...');
+            return new Promise((resolve, reject) => {
+                if (window.Plotly) {
+                    console.log('[PLOTLY] Ya estaba cargado');
+                    resolve(window.Plotly);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdn.plot.ly/plotly-2.35.2.min.js';
+                script.onload = () => {
+                    console.log('[PLOTLY] Cargado correctamente');
+                    resolve(window.Plotly);
+                };
+                script.onerror = () => {
+                    console.error('[PLOTLY] Error al cargar');
+                    reject(new Error('Failed to load Plotly'));
+                };
+                document.head.appendChild(script);
+            });
+        };
+        
+        try {
+            Plotly = await loadPlotly();
+            console.log('[PLOTLY] Versión:', Plotly.version);
+            await fetchCombinedData();
+        } catch (err) {
+            console.error('[PLOTLY] Error:', err);
+            error = 'Error al cargar la librería de gráficos';
+            loading = false;
+        }
     });
     
     async function fetchCombinedData() {
+    try {
+        loading = true;
+        console.log('[DATOS] Iniciando carga de datos...');
+        
+        // 1. Obtener datos de Olympics
+        console.log('[DATOS] Obteniendo datos de Olympics...');
+        const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=2000');
+        const olympicsData = await olympicsRes.json();
+        const athletes = olympicsData.data || [];
+        
+        const athletesByCountry = {};
+        athletes.forEach(ath => {
+            const country = ath.team;
+            if (country && country !== 'NA') {
+                athletesByCountry[country] = (athletesByCountry[country] || 0) + 1;
+            }
+        });
+        console.log('[DATOS] Países con atletas:', Object.keys(athletesByCountry).length);
+        
+        // 2. Cargar datos iniciales de Temperatures (necesario antes de obtener datos)
         try {
-            loading = true;
-            
-            const olympicsRes = await fetch('/api/v1/olympics-athlete-events?limit=2000');
-            const olympicsData = await olympicsRes.json();
-            const athletes = olympicsData.data || [];
-            
-            const athletesByCountry = {};
-            athletes.forEach(ath => {
-                const country = ath.team;
-                if (country && country !== 'NA') {
-                    athletesByCountry[country] = (athletesByCountry[country] || 0) + 1;
-                }
-            });
-            
-            const tempRes = await fetch('https://sos2526-25.onrender.com/api/v1/average-annual-temperatures');
-            const tempData = await tempRes.json();
-            
-            const tempByCountry = {};
-            tempData.forEach(item => {
-                const country = item.country;
-                if (country && !tempByCountry[country]) {
-                    tempByCountry[country] = {
-                        temperature: item.temperature,
-                        co2: item.co2_emission
-                    };
-                }
-            });
-            
-            combinedData = Object.keys(athletesByCountry)
-                .filter(country => tempByCountry[country])
-                .map(country => ({
-                    country: country,
-                    athletes: athletesByCountry[country] || 0,
-                    temperature: tempByCountry[country].temperature || 0,
-                    co2: tempByCountry[country].co2 || 0
-                }))
-                .sort((a, b) => b.athletes - a.athletes)
-                .slice(0, 10);
-            
-            setTimeout(() => {
-                createBarChart();
-            }, 200);
-            
-            loading = false;
-            
-            const overlay = document.querySelector('.loading-overlay');
-            if (overlay) overlay.style.display = 'none';
-            
+            console.log('[DATOS] Cargando datos iniciales de temperaturas...');
+            const loadRes = await fetch('https://sos2526-25.onrender.com/api/v1/average-annual-temperatures/loadInitialData');
+            console.log('[DATOS] loadInitialData status:', loadRes.status);
         } catch (e) {
-            console.error('Error:', e);
-            error = e.message;
-            loading = false;
-            const overlay = document.querySelector('.loading-overlay');
-            if (overlay) overlay.style.display = 'none';
+            console.log('[DATOS] loadInitialData error (probablemente ya cargado):', e.message);
         }
+        
+        // 3. Obtener datos reales de Temperatures
+        console.log('[DATOS] Obteniendo datos de Temperatures...');
+        const tempRes = await fetch('https://sos2526-25.onrender.com/api/v1/average-annual-temperatures');
+        const tempData = await tempRes.json();
+        console.log('[DATOS] Temperatures recibidos:', tempData.length);
+        
+        // 4. Procesar datos de temperaturas (tomar el último año disponible por país)
+        const tempByCountry = {};
+        tempData.forEach(item => {
+            const country = item.country;
+            if (country && !tempByCountry[country]) {
+                tempByCountry[country] = {
+                    temperature: item.temperature,
+                    co2: item.co2_emission
+                };
+            }
+        });
+        console.log('[DATOS] Países con temperatura:', Object.keys(tempByCountry).length);
+        
+        // 5. Combinar datos
+        combinedData = Object.keys(athletesByCountry)
+            .filter(country => tempByCountry[country])
+            .map(country => ({
+                country: country,
+                athletes: athletesByCountry[country] || 0,
+                temperature: tempByCountry[country].temperature || 0,
+                co2: tempByCountry[country].co2 || 0
+            }))
+            .sort((a, b) => b.athletes - a.athletes)
+            .slice(0, 10);
+        
+        console.log('[DATOS] Datos combinados finales:', combinedData.length);
+        
+        loading = false;
+        
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+        
+        setTimeout(() => {
+            if (Plotly && combinedData.length > 0) {
+                createBarChart();
+            }
+        }, 300);
+        
+    } catch (e) {
+        console.error('[DATOS] Error:', e);
+        error = e.message;
+        loading = false;
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'none';
     }
+}
     
     function createBarChart() {
+        console.log('[CHART] Creando gráfico...');
+        
         const container = document.getElementById('chart-container');
-        if (!container || combinedData.length === 0 || !Plotly) return;
+        console.log('[CHART] Contenedor encontrado:', !!container);
+        
+        if (!container) {
+            console.log('[CHART] Contenedor no encontrado, reintentando en 500ms');
+            setTimeout(() => createBarChart(), 500);
+            return;
+        }
+        
+        if (!Plotly) {
+            console.log('[CHART] Plotly no disponible, reintentando en 500ms');
+            setTimeout(() => createBarChart(), 500);
+            return;
+        }
+        
+        if (combinedData.length === 0) {
+            console.log('[CHART] No hay datos');
+            return;
+        }
+        
+        console.log('[CHART] Limpiando contenedor...');
+        // Limpiar el contenedor antes de dibujar
+        Plotly.purge(container);
         
         const countries = combinedData.map(d => d.country);
         const athletesData = combinedData.map(d => d.athletes);
         const tempData = combinedData.map(d => d.temperature);
+        
+        console.log('[CHART] Países:', countries);
+        console.log('[CHART] Atletas:', athletesData);
+        console.log('[CHART] Temperaturas:', tempData);
         
         const trace1 = {
             x: countries,
@@ -104,6 +184,7 @@
             },
             barmode: 'group',
             height: 550,
+            width: Math.max(800, countries.length * 80),
             margin: { 
                 b: 120,
                 l: 80,
@@ -114,7 +195,14 @@
             paper_bgcolor: '#ffffff'
         };
         
-        Plotly.newPlot(container, [trace1], layout, { responsive: true });
+        try {
+            console.log('[CHART] Dibujando gráfico...');
+            Plotly.newPlot(container, [trace1], layout, { responsive: true });
+            console.log('[CHART] Gráfico dibujado correctamente');
+        } catch (err) {
+            console.error('[CHART] Error al dibujar:', err);
+            error = 'Error al crear el gráfico: ' + err.message;
+        }
     }
     
     function formatNumber(num) {
@@ -140,7 +228,9 @@
     </div>
     
     {#if error}
-        <div class="error">Error: {error}</div>
+        <div class="error">
+            <p>Error: {error}</p>
+        </div>
     {/if}
     
     {#if !loading}
@@ -170,13 +260,14 @@
                     </tbody>
                 </table>
             </div>
+            <p class="table-info">Años con datos: {combinedData.length}</p>
         </div>
     {/if}
     
     <div class="info">
         <h3>Interpretación</h3>
         <ul>
-            <li><strong>Librería:</strong> Plotly.js (cargada en cliente)</li>
+            <li><strong>Librería:</strong> Plotly.js (CDN versión 2.35.2)</li>
             <li><strong>Tipo:</strong> Bar</li>
             <li><strong>Números naranjas:</strong> Temperatura media en °C</li>
         </ul>
