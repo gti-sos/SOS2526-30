@@ -1,26 +1,21 @@
 <script>
-    import { onMount, tick, onDestroy } from 'svelte';
+    import { onMount } from 'svelte';
 
     let chartContainer;
-    let errorMessage = $state('');
-    let loading = $state(true);
-    
-    // Variables para el filtro interactivo
-    let selectedRange = $state('all');
-    let allFetchedData = [];
-    let apexChart = null; // Guardamos la instancia de la gráfica para poder actualizarla
+    let errorMessage = '';
 
     onMount(async () => {
-        await tick();
         try {
-            // 1. Pedimos los datos a tu API v2
+            const Highcharts = (await import('highcharts')).default;
+
+            // 1. Cargamos los datos de TU API en la V2 (con anti-caché)
             let response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
-            if (!response.ok) throw new Error('Error al cargar los datos de la API');
+            if (!response.ok) throw new Error('No se pudo conectar con la API v2');
             
             let rawData = await response.json();
             let data = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
-            // SALVAVIDAS: Si Render ha borrado la base de datos
+            // SALVAVIDAS: Si el servidor de Render ha borrado los datos, los recuperamos
             if (data.length === 0) {
                 await fetch('/api/v2/esportsearnings-stats/loadInitialData');
                 response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
@@ -29,123 +24,81 @@
             }
 
             if (data.length === 0) {
-                throw new Error("No hay datos disponibles en la base de datos.");
+                throw new Error("No hay datos en la base de datos.");
             }
 
-            // Guardamos todos los datos puros en la variable global para poder filtrarlos luego
-            allFetchedData = data;
-            loading = false;
-            await tick(); 
+            data.sort((a, b) => a.year - b.year);
+
+            // 2. Preparamos los datos usando tus nombres de variable (total_money, tournament_no)
+            const categories = data.map(d => `${d.country} (${d.year})`);
             
-            // Dibujamos la gráfica por primera vez
-            filterAndRenderChart();
+            // Dividimos entre 1 millón para que cuadre con tu etiqueta "M$" en el eje
+            const money = data.map(d => Number(((d.total_money || 0) / 1000000).toFixed(2))); 
+            const tournaments = data.map(d => d.tournament_no || 0);
 
-        } catch (error) {
-            console.error(error);
-            errorMessage = error.message;
-            loading = false;
-        }
-    });
-
-    // Función mágica que filtra los datos y actualiza la gráfica en vivo
-    const filterAndRenderChart = () => {
-        if (typeof window === 'undefined' || !window.ApexCharts) {
-            setTimeout(filterAndRenderChart, 100);
-            return;
-        }
-
-        // 1. FILTRAR POR AÑO
-        let filteredData = allFetchedData;
-        if (selectedRange !== 'all') {
-            const [start, end] = selectedRange.split('-').map(Number);
-            filteredData = allFetchedData.filter(d => (d.year || 0) >= start && (d.year || 0) <= end);
-        }
-
-        // 2. AGRUPAR Y SUMAR
-        const countryStats = {};
-        filteredData.forEach(d => {
-            const country = d.country || 'Desconocido';
-            if (!countryStats[country]) {
-                countryStats[country] = { money: 0, tournaments: 0 };
-            }
-            countryStats[country].money += (d.total_money || 0) / 1000000;
-            countryStats[country].tournaments += (d.tournament_no || 0);
-        });
-
-        // 3. DAR FORMATO AL TREEMAP
-        const treemapData = Object.keys(countryStats).map(country => ({
-            x: country,
-            y: Number(countryStats[country].money.toFixed(2)),
-            tournaments: countryStats[country].tournaments
-        })).sort((a, b) => b.y - a.y);
-
-        // Si todos los valores son cero (no hubo datos en esa década), metemos un aviso visual
-        if (treemapData.length === 0 || treemapData.every(d => d.y === 0)) {
-            treemapData.push({ x: "Sin datos en este rango", y: 0, tournaments: 0 });
-        }
-
-        // 4. DIBUJAR O ACTUALIZAR
-        if (!apexChart) {
-            // Primera vez: Creamos la gráfica desde cero
-            const options = {
-                series: [{ name: 'Ganancias', data: treemapData }],
-                chart: {
-                    type: 'treemap',
-                    height: 550,
-                    toolbar: { show: false },
-                    animations: { enabled: true, easing: 'easeinout', speed: 800 } 
-                },
-                title: { 
-                    text: '💰 Mapa de Calor (Treemap): Ganancias eSports por País', 
-                    align: 'center',
-                    style: { color: '#064e3b', fontSize: '18px', fontWeight: 'bold' }
-                },
-                colors: ['#10b981'],
-                plotOptions: {
-                    treemap: {
-                        enableShades: true,
-                        shadeIntensity: 0.5,
-                        reverseNegativeShade: true,
-                        colorScale: {
-                            ranges: [
-                                { from: -1, to: 10, color: '#d1fae5' },    
-                                { from: 10.01, to: 50, color: '#6ee7b7' }, 
-                                { from: 50.01, to: 200, color: '#10b981' }, 
-                                { from: 200.01, to: 99999, color: '#047857' } 
-                            ]
-                        }
-                    }
-                },
-                tooltip: {
-                    custom: function({series, seriesIndex, dataPointIndex, w}) {
-                        const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
-                        return `
-                            <div style="padding: 12px; background: white; border: 2px solid #10b981; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                                <h3 style="margin: 0 0 8px 0; color: #064e3b;">🌍 ${data.x}</h3>
-                                <p style="margin: 0 0 4px 0;">Dinero Total: <b>${data.y} Millones $</b></p>
-                                <p style="margin: 0;">Nº Torneos: <b>${data.tournaments}</b></p>
-                            </div>
-                        `;
-                    }
-                }
-            };
-
+            // 3. Dibujamos el gráfico
             if (chartContainer) {
-                chartContainer.innerHTML = ''; 
-                apexChart = new window.ApexCharts(chartContainer, options);
-                apexChart.render();
+                Highcharts.chart(chartContainer, {
+                    chart: {
+                        type: 'bar', // Único en el grupo
+                        backgroundColor: '#ffffff'
+                    },
+                    title: { text: '💰 Ganancias y Torneos en eSports' },
+                    subtitle: { text: 'Visualización Individual - Mario' },
+                    xAxis: {
+                        categories: categories,
+                        title: { text: 'País y Año' }
+                    },
+                    yAxis: [
+                        { title: { text: 'Dinero Total (M$)' }, min: 0 },
+                        { title: { text: 'Nº Torneos' }, opposite: true, min: 0 }
+                    ],
+                    tooltip: { shared: true },
+                    series: [
+                        {
+                            name: 'Dinero Total',
+                            data: money,
+                            color: '#10b981', // Verde
+                            tooltip: { valueSuffix: ' M$' }
+                        },
+                        {
+                            name: 'Torneos',
+                            data: tournaments,
+                            color: '#fbbf24', // Dorado
+                            yAxis: 1
+                        }
+                    ]
+                });
             }
-        } else {
-            // Las siguientes veces (al usar el filtro): Actualizamos los datos en vivo
-            apexChart.updateSeries([{ data: treemapData }]);
-        }
-    };
-
-    // ¡EL TRUCO PARA EL HOT-RELOAD DE VITE!
-    // Cuando guardas el archivo en tu editor, Svelte destruye la gráfica vieja y pinta la nueva sin duplicarla.
-    onDestroy(() => {
-        if (apexChart) {
-            apexChart.destroy();
+        } catch (error) {
+            errorMessage = error.message;
         }
     });
 </script>
+
+<svelte:head>
+    <title>Analítica - Mario</title>
+</svelte:head>
+
+<main class="container">
+    <h1>📊 Mi Análisis de eSports Earnings</h1>
+    
+    <div class="nav">
+        <a href="/analytics/esportsearnings-stats/map" class="btn">🌍 Ir al Mapa</a>
+    </div>
+
+    {#if errorMessage}
+        <div class="error">❌ {errorMessage}</div>
+    {:else}
+        <div bind:this={chartContainer} class="chart"></div>
+    {/if}
+</main>
+
+<style>
+    .container { max-width: 1000px; margin: 2rem auto; padding: 1rem; font-family: sans-serif; }
+    h1 { color: #064e3b; text-align: center; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+    .nav { display: flex; justify-content: center; margin-bottom: 2rem; }
+    .btn { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .chart { width: 100%; height: 550px; border-radius: 12px; border: 1px solid #d1fae5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .error { color: #dc2626; text-align: center; background: #fee2e2; padding: 1rem; border-radius: 8px; }
+</style>
