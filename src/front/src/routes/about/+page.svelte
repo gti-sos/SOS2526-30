@@ -1,11 +1,11 @@
 <script>
 // @ts-nocheck
-    // Información del equipo (se mantiene igual)
+    // Información del equipo
     const team = [
-        { name: "David Real Pérez", dataSource: "esportsgrowth-stats", github: "https://github.com/davreaper" },
-        { name: "Mario Ramos Tuñón", dataSource: "esportsearnings-stats", github: "https://github.com/MarioRt8558" },
-        { name: "Gonzalo García Gómez", dataSource: "olympics-athlete-events", github: "https://github.com/gonzaloogrcia" },
-        { name: "Francisco Manuel García Patino", dataSource: "cheaters-stats", github: "https://github.com/PaGarPa" }
+        { name: "David Real Pérez", dataSource: "esportsgrowth-stats", github: "https://github.com/davreaper", video: "ENLACE_YOUTUBE_DAVID" },
+        { name: "Mario Ramos Tuñón", dataSource: "esportsearnings-stats", github: "https://github.com/MarioRt8558", video: "ENLACE_YOUTUBE_MARIO" },
+        { name: "Gonzalo García Gómez", dataSource: "olympics-athlete-events", github: "https://github.com/gonzaloogrcia", video: "ENLACE_YOUTUBE_GONZALO" },
+        { name: "Francisco Manuel García Patino", dataSource: "cheaters-stats", github: "https://github.com/PaGarPa", video: "ENLACE_YOUTUBE_FRANCISCO" }
     ];
 
     const repoUrl = "https://github.com/gti-sos/SOS2526-30";
@@ -25,13 +25,14 @@
     <h2>Descripción del Proyecto</h2>
     <p>Our sources of information are geared towards analysing the relationship between the growth of the esports industry, the earnings of esports players, cheating players in esports, and statistics on Olympic athletes.</p>
 
-    <h2>Miembros del Equipo</h2>
+    <h2>Miembros del Equipo (Presentaciones D03)</h2>
     
     <div class="team-member">
         <div class="member-name">David Real Pérez</div>
         <div class="member-details">
             <code>esportsgrowth-stats</code>
             <a href="https://github.com/davreaper" target="_blank" class="btn-github">GitHub</a>
+            <a href="PONER_AQUI_EL_ENLACE_DE_DAVID" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -40,6 +41,7 @@
         <div class="member-details">
             <code>esportsearnings-stats</code>
             <a href="https://github.com/MarioRt8558" target="_blank" class="btn-github">GitHub</a>
+            <a href="PONER_AQUI_TU_ENLACE" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -48,6 +50,7 @@
         <div class="member-details">
             <code>olympics-athlete-events</code>
             <a href="https://github.com/gonzaloogrcia" target="_blank" class="btn-github">GitHub</a>
+            <a href="PONER_AQUI_EL_ENLACE_DE_GONZALO" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -56,6 +59,7 @@
         <div class="member-details">
             <code>cheaters-stats</code>
             <a href="https://github.com/PaGarPa" target="_blank" class="btn-github">GitHub</a>
+            <a href="PONER_AQUI_EL_ENLACE_DE_FRANCISCO" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -120,17 +124,6 @@
 
     <div class="grid-2">
         <div class="api-item">
-            <span class="api-name">Esports Earnings v1:</span>
-            <a href="/api/v1/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v1/esportsearnings-stats/docs</a>
-        </div>
-        <div class="api-item">
-            <span class="api-name">Esports Earnings v2:</span>
-            <a href="/api/v2/esportsearnings-stats/docs" class="api-link" target="_blank">/api/v2/esportsearnings-stats/docs</a>
-        </div>
-    </div>
-    
-    <div class="grid-2">
-        <div class="api-item">
             <span class="api-name">Cheaters Stats v1:</span>
             <a href="/api/v1/cheaters-stats/docs" class="api-link" target="_blank">/api/v1/cheaters-stats/docs</a>
         </div>
@@ -139,6 +132,7 @@
             <a href="/api/v2/cheaters-stats/docs" class="api-link" target="_blank">/api/v2/cheaters-stats/docs</a>
         </div>
     </div>
+    
     <div class="grid-2">
         <div class="api-item">
             <span class="api-name">Olympics v1:</span>
@@ -267,14 +261,31 @@
     .btn-github {
         background: var(--blue-600);
         color: white;
-        padding: 0.2rem 0.8rem;
+        padding: 0.3rem 0.8rem;
         border-radius: 16px;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         text-decoration: none;
         display: inline-block;
+        transition: background 0.2s;
     }
     .btn-github:hover {
         background: var(--blue-700);
+    }
+
+    /* NUEVO ESTILO PARA EL BOTÓN DE YOUTUBE */
+    .btn-youtube {
+        background: #ef4444;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: bold;
+        transition: background 0.2s;
+    }
+    .btn-youtube:hover {
+        background: #dc2626;
     }
 
     .api-item {
