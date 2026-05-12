@@ -41,7 +41,7 @@
         <div class="member-details">
             <code>esportsearnings-stats</code>
             <a href="https://github.com/MarioRt8558" target="_blank" class="btn-github">GitHub</a>
-            <a href="PONER_AQUI_TU_ENLACE" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
+            <a href="https://youtu.be/04ZKjztOZz0" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
