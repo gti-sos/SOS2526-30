@@ -3,7 +3,7 @@
     // Información del equipo
     const team = [
         { name: "David Real Pérez", dataSource: "esportsgrowth-stats", github: "https://github.com/davreaper", video: "ENLACE_YOUTUBE_DAVID" },
-        { name: "Mario Ramos Tuñón", dataSource: "esportsearnings-stats", github: "https://github.com/MarioRt8558", video: "ENLACE_YOUTUBE_MARIO" },
+        { name: "Mario Ramos Tuñón", dataSource: "esportsearnings-stats", github: "https://github.com/MarioRt8558", video: "https://youtu.be/04ZKjztOZz0" },
         { name: "Gonzalo García Gómez", dataSource: "olympics-athlete-events", github: "https://github.com/gonzaloogrcia", video: "ENLACE_YOUTUBE_GONZALO" },
         { name: "Francisco Manuel García Patino", dataSource: "cheaters-stats", github: "https://github.com/PaGarPa", video: "ENLACE_YOUTUBE_FRANCISCO" }
     ];
