@@ -2,101 +2,150 @@
     import { onMount } from 'svelte';
 
     let chartContainer;
-    let errorMessage = '';
+    let errorMessage = $state('');
 
     onMount(async () => {
         try {
+            // 1. Importamos Highcharts
             const Highcharts = (await import('highcharts')).default;
 
-            // 1. Hacemos la primera petición
+            // 2. Pedimos los datos a tu API v2 (con el truco antiborrado)
             let response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
-            if (!response.ok) throw new Error('No se pudo conectar con la API v2');
+            if (!response.ok) throw new Error('Error al cargar los datos de la API');
             
-            let data = await response.json();
-            
-            // ¡EL SALVAVIDAS! Si la base de datos se ha borrado por el reinicio de Render, la rellenamos
-            if (!data || data.length === 0) {
-                console.log("Base de datos vacía. Cargando datos iniciales...");
+            let rawData = await response.json();
+            let data = Array.isArray(rawData) ? rawData : (rawData.data || []);
+
+            // SALVAVIDAS: Si Render ha borrado la base de datos, la rellenamos
+            if (data.length === 0) {
                 await fetch('/api/v2/esportsearnings-stats/loadInitialData');
-                // Volvemos a pedir los datos una vez rellenados
                 response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
-                data = await response.json();
+                rawData = await response.json();
+                data = Array.isArray(rawData) ? rawData : (rawData.data || []);
             }
-            
-            // Si aún así no hay datos, mostramos un error
-            if (!data || data.length === 0) {
-                throw new Error("No hay datos disponibles ni siquiera tras intentar cargarlos.");
+
+            if (data.length === 0) {
+                throw new Error("No hay datos disponibles en la base de datos.");
             }
-            
-            // Ordenamos por año
-            data.sort((a, b) => a.year - b.year);
 
-            // Preparamos los datos
-            const categories = data.map(d => `${d.country} (${d.year})`);
-            const money = data.map(d => (d.total_money / 1000000)); // Lo dividimos entre 1 millón para que se lea mejor en M$
-            const tournaments = data.map(d => d.tournament_no);
+            // Ordenamos por año para que el gráfico no haga saltos raros
+            data.sort((a, b) => (a.year || 0) - (b.year || 0));
 
-            // Dibujamos el gráfico
-            Highcharts.chart(chartContainer, {
-                chart: {
-                    type: 'bar', // Único en el grupo
-                    backgroundColor: '#ffffff'
-                },
-                title: { text: '💰 Ganancias y Torneos en eSports' },
-                subtitle: { text: 'Visualización Individual - Mario' },
-                xAxis: {
-                    categories: categories,
-                    title: { text: 'País y Año' }
-                },
-                yAxis: [
-                    { title: { text: 'Dinero Total (Millones $)' } },
-                    { title: { text: 'Nº Torneos' }, opposite: true }
-                ],
-                tooltip: { shared: true },
-                series: [
-                    {
-                        name: 'Dinero Total',
-                        data: money,
-                        color: '#10b981', // Verde
-                        tooltip: { valueSuffix: ' M$' }
+            // 3. Preparamos TUS datos
+            const categories = data.map(d => `${d.country || 'N/A'} (${d.year || 'N/A'})`);
+            const money = data.map(d => Number(((d.total_money || 0) / 1000000).toFixed(2))); // Convertido a Millones $
+            const tournaments = data.map(d => d.tournament_no || 0);
+
+            // 4. Dibujamos TU gráfico (Tipo: bar - Barras Horizontales)
+            if (chartContainer) {
+                Highcharts.chart(chartContainer, {
+                    chart: {
+                        type: 'bar',
+                        backgroundColor: '#ffffff'
                     },
-                    {
-                        name: 'Torneos',
-                        data: tournaments,
-                        color: '#fbbf24', // Dorado
-                        yAxis: 1
-                    }
-                ]
-            });
+                    title: { text: '💰 Ganancias y Torneos en eSports' },
+                    subtitle: { text: 'Visualización Individual - Mario' },
+                    xAxis: {
+                        categories: categories,
+                        title: { text: 'País y Año' },
+                        crosshair: true
+                    },
+                    yAxis: [
+                        { min: 0, title: { text: 'Dinero Total (Millones $)' } },
+                        { min: 0, title: { text: 'Nº Torneos' }, opposite: true }
+                    ],
+                    tooltip: { shared: true },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4 // Bordes redondeados para que quede más moderno
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Dinero Total',
+                            data: money,
+                            color: '#10b981', // Verde estilo compañero
+                            tooltip: { valueSuffix: ' M$' }
+                        },
+                        {
+                            name: 'Torneos',
+                            data: tournaments,
+                            color: '#fbbf24', // Dorado
+                            yAxis: 1
+                        }
+                    ]
+                });
+            }
         } catch (error) {
+            console.error(error);
             errorMessage = error.message;
         }
     });
 </script>
 
 <svelte:head>
-    <title>Analítica - Mario</title>
+    <title>Gráfica Analítica - eSports Earnings</title>
 </svelte:head>
 
-<main class="container">
-    <h1>📊 Mi Análisis de eSports Earnings (V2)</h1>
+<main>
+    <h1>📊 Analítica de eSports Earnings (V2)</h1>
     
-    <div class="nav">
-        <a href="/analytics/esportsearnings-stats/map" class="btn">🌍 Ir al Mapa</a>
+    <div class="nav-links">
+        <a href="/analytics/esportsearnings-stats/map" class="btn-green">🌍 Ir al Mapa Geoespacial</a>
     </div>
 
     {#if errorMessage}
-        <div class="error">❌ {errorMessage}</div>
+        <p class="error">❌ {errorMessage}</p>
     {:else}
-        <div bind:this={chartContainer} class="chart"></div>
+        <div bind:this={chartContainer} class="chart-container"></div>
     {/if}
 </main>
 
 <style>
-    .container { max-width: 1000px; margin: 2rem auto; padding: 1rem; font-family: sans-serif; }
-    h1 { color: #064e3b; text-align: center; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
-    .nav { display: flex; justify-content: center; margin-bottom: 2rem; }
-    .btn { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
-    .chart { width: 100%; height: 550px; border-radius: 12px; border: 1px solid #d1fae5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .error { color: #dc2626; text-align: center; background: #fee2e2; padding: 1rem; border-radius: 8px; }
+    main {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 1rem;
+        font-family: sans-serif;
+    }
+    h1 {
+        color: #7e22ce;
+        text-align: center;
+        border-bottom: 2px solid #a855f7;
+        padding-bottom: 0.5rem;
+    }
+    .nav-links {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    a {
+        text-decoration: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+        transition: 0.2s;
+    }
+    .btn-green { background: #10b981; }
+    .btn-green:hover { background: #059669; }
+    
+    .chart-container {
+        width: 100%;
+        height: 550px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        border: 1px solid #e9d5ff;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+    .error {
+        color: #dc2626;
+        text-align: center;
+        background: #fee2e2;
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: bold;
+    }
 </style>
