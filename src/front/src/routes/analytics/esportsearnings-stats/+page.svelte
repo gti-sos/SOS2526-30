@@ -8,19 +8,32 @@
         try {
             const Highcharts = (await import('highcharts')).default;
 
-            // ¡LA CLAVE ESTÁ AQUÍ! Usamos la v2 y añadimos el Date.now() para reventar la caché
-            const response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
-            
+            // 1. Hacemos la primera petición
+            let response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
             if (!response.ok) throw new Error('No se pudo conectar con la API v2');
             
-            const data = await response.json();
+            let data = await response.json();
+            
+            // ¡EL SALVAVIDAS! Si la base de datos se ha borrado por el reinicio de Render, la rellenamos
+            if (!data || data.length === 0) {
+                console.log("Base de datos vacía. Cargando datos iniciales...");
+                await fetch('/api/v2/esportsearnings-stats/loadInitialData');
+                // Volvemos a pedir los datos una vez rellenados
+                response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
+                data = await response.json();
+            }
+            
+            // Si aún así no hay datos, mostramos un error
+            if (!data || data.length === 0) {
+                throw new Error("No hay datos disponibles ni siquiera tras intentar cargarlos.");
+            }
             
             // Ordenamos por año
             data.sort((a, b) => a.year - b.year);
 
             // Preparamos los datos
             const categories = data.map(d => `${d.country} (${d.year})`);
-            const money = data.map(d => d.total_money);
+            const money = data.map(d => (d.total_money / 1000000)); // Lo dividimos entre 1 millón para que se lea mejor en M$
             const tournaments = data.map(d => d.tournament_no);
 
             // Dibujamos el gráfico
@@ -36,7 +49,7 @@
                     title: { text: 'País y Año' }
                 },
                 yAxis: [
-                    { title: { text: 'Dinero Total (M$)' } },
+                    { title: { text: 'Dinero Total (Millones $)' } },
                     { title: { text: 'Nº Torneos' }, opposite: true }
                 ],
                 tooltip: { shared: true },
