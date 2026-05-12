@@ -9,7 +9,7 @@
     
     async function fetchSportsData() {
         console.log('⚽ Obteniendo datos de SportsDB...');
-        const response = await fetch('https://www.thesportsdb.com/api/v1/json/123/all_sports.php');
+        const response = await fetch('/api/sports/sports');
         const data = await response.json();
         
         // Depurar: ver qué devuelve la API
