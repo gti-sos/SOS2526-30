@@ -2,7 +2,6 @@
     import { onMount, tick } from 'svelte';
 
     let chartContainer;
-    // ¡CLAVE 1! Le devolvemos el $state() para que si hay error se vea en pantalla
     let errorMessage = $state('');
     let loading = $state(true);
 
@@ -11,13 +10,13 @@
         try {
             const Highcharts = (await import('highcharts')).default;
 
-            // 1. Intentamos cargar la V2 primero
-            let response = await fetch('/api/v2/esportsearnings-stats?limit=500&t=' + Date.now());
+            // 1. LLAMADA LIMPIA (Sin el ?limit= ni el ?t= que rompían tu backend)
+            let response = await fetch('/api/v2/esportsearnings-stats');
             
-            // ¡CLAVE 2! EL TRUCO DE FRANCISCO: Si la v2 da error 404 o 500, usamos la v1 automáticamente
+            // Si la v2 falla, usamos la v1
             if (!response.ok) {
-                console.log("La v2 falló, cambiando automáticamente a la v1...");
-                response = await fetch('/api/v1/esportsearnings-stats?limit=500&t=' + Date.now());
+                console.log("La v2 falló, cambiando a la v1...");
+                response = await fetch('/api/v1/esportsearnings-stats');
             }
 
             if (!response.ok) throw new Error('No se pudo conectar con la API (Ni v1 ni v2)');
@@ -25,11 +24,14 @@
             let rawData = await response.json();
             let data = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
-            // SALVAVIDAS: Si ambas están vacías, cargamos datos iniciales de la v1 que es la más segura
+            // 2. SALVAVIDAS
             if (data.length === 0) {
                 console.log("Base de datos vacía, rellenando...");
+                // Usamos la V1 para rellenar, ya que hemos comprobado que es más estable en tu grupal
                 await fetch('/api/v1/esportsearnings-stats/loadInitialData');
-                response = await fetch('/api/v1/esportsearnings-stats?limit=500&t=' + Date.now());
+                
+                // Llamada limpia de nuevo
+                response = await fetch('/api/v1/esportsearnings-stats');
                 rawData = await response.json();
                 data = Array.isArray(rawData) ? rawData : (rawData.data || []);
             }
@@ -46,7 +48,6 @@
             const money = data.map(d => Number(((d.total_money || 0) / 1000000).toFixed(2)));
             const tournaments = data.map(d => d.tournament_no || 0);
 
-            // Quitamos la pantalla de carga y esperamos a que el div exista
             loading = false;
             await tick(); 
 
@@ -106,7 +107,7 @@
     {#if loading}
         <div class="loading-box">
             <div class="spinner"></div>
-            <p>Conectando con la base de datos y cargando gráfica...</p>
+            <p>Conectando con la base de datos...</p>
         </div>
     {:else if errorMessage}
         <div class="error">❌ {errorMessage}</div>
