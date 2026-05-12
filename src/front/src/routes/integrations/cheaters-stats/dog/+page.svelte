@@ -54,7 +54,7 @@
     async function fetchCheatersData() {
         console.log('📊 Cargando datos de Cheaters Stats...');
         try {
-            const response = await fetch('http://sos2526-30.onrender.com/api/v2/cheaters-stats?limit=200');
+            const response = await fetch('https://sos2526-30.onrender.com/api/v2/cheaters-stats?limit=200');
             if (response.ok) {
                 const json = await response.json();
                 return json.data || [];
