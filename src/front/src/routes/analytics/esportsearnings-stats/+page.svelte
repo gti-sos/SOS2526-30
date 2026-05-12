@@ -1,24 +1,35 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, tick } from 'svelte';
 
     let chartContainer;
-    let errorMessage = '';
+    // ¡CLAVE 1! Le devolvemos el $state() para que si hay error se vea en pantalla
+    let errorMessage = $state('');
+    let loading = $state(true);
 
     onMount(async () => {
+        await tick();
         try {
             const Highcharts = (await import('highcharts')).default;
 
-            // 1. Cargamos los datos de TU API en la V2 (con anti-caché)
-            let response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
-            if (!response.ok) throw new Error('No se pudo conectar con la API v2');
+            // 1. Intentamos cargar la V2 primero
+            let response = await fetch('/api/v2/esportsearnings-stats?limit=500&t=' + Date.now());
+            
+            // ¡CLAVE 2! EL TRUCO DE FRANCISCO: Si la v2 da error 404 o 500, usamos la v1 automáticamente
+            if (!response.ok) {
+                console.log("La v2 falló, cambiando automáticamente a la v1...");
+                response = await fetch('/api/v1/esportsearnings-stats?limit=500&t=' + Date.now());
+            }
+
+            if (!response.ok) throw new Error('No se pudo conectar con la API (Ni v1 ni v2)');
             
             let rawData = await response.json();
             let data = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
-            // SALVAVIDAS: Si el servidor de Render ha borrado los datos, los recuperamos
+            // SALVAVIDAS: Si ambas están vacías, cargamos datos iniciales de la v1 que es la más segura
             if (data.length === 0) {
-                await fetch('/api/v2/esportsearnings-stats/loadInitialData');
-                response = await fetch('/api/v2/esportsearnings-stats?t=' + Date.now());
+                console.log("Base de datos vacía, rellenando...");
+                await fetch('/api/v1/esportsearnings-stats/loadInitialData');
+                response = await fetch('/api/v1/esportsearnings-stats?limit=500&t=' + Date.now());
                 rawData = await response.json();
                 data = Array.isArray(rawData) ? rawData : (rawData.data || []);
             }
@@ -27,20 +38,23 @@
                 throw new Error("No hay datos en la base de datos.");
             }
 
-            data.sort((a, b) => a.year - b.year);
+            // Ordenar por año
+            data.sort((a, b) => (a.year || 0) - (b.year || 0));
 
-            // 2. Preparamos los datos usando tus nombres de variable (total_money, tournament_no)
+            // Preparamos los datos
             const categories = data.map(d => `${d.country} (${d.year})`);
-            
-            // Dividimos entre 1 millón para que cuadre con tu etiqueta "M$" en el eje
-            const money = data.map(d => Number(((d.total_money || 0) / 1000000).toFixed(2))); 
+            const money = data.map(d => Number(((d.total_money || 0) / 1000000).toFixed(2)));
             const tournaments = data.map(d => d.tournament_no || 0);
+
+            // Quitamos la pantalla de carga y esperamos a que el div exista
+            loading = false;
+            await tick(); 
 
             // 3. Dibujamos el gráfico
             if (chartContainer) {
                 Highcharts.chart(chartContainer, {
                     chart: {
-                        type: 'bar', // Único en el grupo
+                        type: 'bar', // Tu barra horizontal original
                         backgroundColor: '#ffffff'
                     },
                     title: { text: '💰 Ganancias y Torneos en eSports' },
@@ -71,7 +85,9 @@
                 });
             }
         } catch (error) {
+            console.error(error);
             errorMessage = error.message;
+            loading = false;
         }
     });
 </script>
@@ -87,7 +103,12 @@
         <a href="/analytics/esportsearnings-stats/map" class="btn">🌍 Ir al Mapa</a>
     </div>
 
-    {#if errorMessage}
+    {#if loading}
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <p>Conectando con la base de datos y cargando gráfica...</p>
+        </div>
+    {:else if errorMessage}
         <div class="error">❌ {errorMessage}</div>
     {:else}
         <div bind:this={chartContainer} class="chart"></div>
@@ -100,5 +121,10 @@
     .nav { display: flex; justify-content: center; margin-bottom: 2rem; }
     .btn { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
     .chart { width: 100%; height: 550px; border-radius: 12px; border: 1px solid #d1fae5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .error { color: #dc2626; text-align: center; background: #fee2e2; padding: 1rem; border-radius: 8px; }
+    .error { color: #dc2626; text-align: center; background: #fee2e2; padding: 2rem; border-radius: 8px; font-weight: bold; border: 1px solid #fca5a5; margin-top: 2rem;}
+    
+    /* Efecto de carga */
+    .loading-box { text-align: center; padding: 4rem; background: #f0fdf4; border-radius: 12px; border: 1px solid #d1fae5; color: #059669; font-weight: bold; }
+    .spinner { border: 4px solid #d1fae5; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
