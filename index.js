@@ -10,12 +10,13 @@ import dotenv from 'dotenv';
     import { handler } from './src/front/build/handler.js';
     import util from 'util';
     util.isDate = function(d) { return d instanceof Date; };
-    import githubGGGProxy from './src/backend/github-GGG-proxy.js'; 
+    import randomProxy from './src/backend/GGG-random-proxy.js';
     import  loadCitysStatsProxy  from './src/backend/citys-stats-proxy.js';
     import loadGithubEsportsProxy from './src/backend/programadores-proxy.js';
     import dogProxy from './src/backend/dog-proxy.js';
     import openweatherProxy from './src/backend/openweather-proxy.js';
     import sportsdbProxy from './src/backend/sportsdb-proxy.js';
+    import loadUniversitiesEsportsProxy from './src/backend/universities-proxy.js';
 
 import loadBackendGGG from './src/backend/olympics-athlete-events.js';
 import loadBackendFMGP from './src/backend/cheaters-stats.js';
@@ -30,9 +31,7 @@ const BASE_URL_API2 = "/api/v2";
 
 app.use(express.json());
 
-app.use('/api/github', githubGGGProxy);
-
-
+app.use('/api/random-proxy', randomProxy);
 app.use('/api/dog', dogProxy);
 app.use('/api/weather', openweatherProxy);
 app.use('/api/sports', sportsdbProxy);
@@ -43,6 +42,7 @@ loadCitysStatsProxy(app);
 loadBackendGGG(app);
 loadBackendFMGP(app);
 loadGithubEsportsProxy(app);
+loadUniversitiesEsportsProxy(app);
 
 app.use(`${BASE_URL_API}/esportsgrowth-stats`, esportsgrowthAPI);
 app.use(`${BASE_URL_API}/esportsearnings-stats`, esportsearningsAPIv1);

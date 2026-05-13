@@ -44,6 +44,7 @@
 		"leaflet": "^1.9.4",
 		"mapbox-gl": "^3.22.0",
 		"maplibre-gl": "^5.23.0",
+		"plotly.js-dist": "^3.5.1",
 		"three": "^0.184.0",
 		"topojson": "^3.0.2"
 	}

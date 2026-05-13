@@ -1,46 +1,79 @@
 <script>
     import { onMount, tick } from 'svelte';
+    import Highcharts from 'highcharts';
 
-    // ¡EL TRUCO MÁGICO! Le decimos a Svelte que estas variables deben actualizar la pantalla
     let loading = $state(true);
     let error = $state(null);
-    let tableData = $state([]);
 
     onMount(async () => {
         await tick();
         try {
-            // 1. TUS DATOS (eSports)
-            let resEsports = await fetch('/api/v2/esportsearnings-stats');
-            let esportsData = await resEsports.json();
+            // 1. TUS DATOS (eSports Earnings)
+            let resE = await fetch('/api/v2/esportsearnings-stats');
+            let esportsData = await resE.json();
             
             if (!esportsData || esportsData.length === 0) {
                 await fetch('/api/v2/esportsearnings-stats/loadInitialData');
-                resEsports = await fetch('/api/v2/esportsearnings-stats');
-                esportsData = await resEsports.json();
+                resE = await fetch('/api/v2/esportsearnings-stats');
+                esportsData = await resE.json();
             }
 
-            // 2. NUEVA API EXTERNA: TVMaze (Series de TV)
-            const resTV = await fetch('https://api.tvmaze.com/shows');
-            if (!resTV.ok) throw new Error('Fallo al conectar con TVMaze');
-            const tvData = await resTV.json();
+            // 2. DATOS GRUPO 29 (Llamando a tu nuevo PROXY Express)
+            const resC = await fetch('/proxy/citys-stats');
+            if (!resC.ok) throw new Error(`Fallo en el proxy (Estado: ${resC.status})`);
+            let citysDataRaw = await resC.json();
 
-            // 3. Cruzamos los datos usando una variable temporal
-            const maxRows = Math.min(esportsData.length, tvData.length, 10);
-            let tempData = []; // Array temporal
-            
+            // Extraemos el array correcto venga como venga
+            let citysData = Array.isArray(citysDataRaw) ? citysDataRaw : (citysDataRaw.data || []);
+
+            // 3. PROCESAR DATOS (Premios Millonarios vs Población Millonaria)
+            const maxRows = Math.min(esportsData.length, citysData.length, 10);
+            const labels = [];
+            const esportsValues = [];
+            const citysValues = [];
+
             for(let i = 0; i < maxRows; i++) {
-                tempData.push({
-                    rank: i + 1,
-                    game: esportsData[i].game_name || 'Desconocido',
-                    players: esportsData[i].player_no || 0,
-                    show: tvData[i].name || 'Desconocida',
-                    rating: tvData[i].rating?.average || 'N/A'
-                });
+                const gameName = esportsData[i]?.game_name || 'Juego';
+                // Convertimos tus premios a millones de dólares
+                const moneyMillions = (Number(esportsData[i]?.total_money) || 0) / 1000000;
+
+                // Leemos exactamente los campos de la API de tu compañero
+                const cityNameRaw = citysData[i]?.city || `Ciudad ${i+1}`;
+                const populationRaw = Number(citysData[i]?.un_2025_population) || 0;
+                
+                // Convertimos su población a millones de habitantes
+                const populationMillions = populationRaw / 1000000;
+
+                // Ponemos la primera letra de la ciudad en mayúscula (ej: "jakarta" -> "Jakarta")
+                const cityCapitalized = cityNameRaw.charAt(0).toUpperCase() + cityNameRaw.slice(1);
+
+                labels.push(`${gameName.substring(0, 15)} / ${cityCapitalized}`);
+                
+                // Guardamos los valores redondeados a 2 decimales
+                esportsValues.push(Number(moneyMillions.toFixed(2)));
+                citysValues.push(Number(populationMillions.toFixed(2)));
             }
 
-            // 4. Asignamos los datos finales (Esto dispara la actualización de la pantalla)
-            tableData = tempData;
             loading = false;
+            await tick(); // Esperamos a que Svelte pinte el div
+
+            // 4. DIBUJAR GRÁFICA (Highcharts - Spline)
+            setTimeout(() => {
+                Highcharts.chart('chart-proxy', {
+                    chart: { type: 'spline' },
+                    title: { text: 'Impacto Global: eSports vs Población de Ciudades (G29)', style: { color: '#7e22ce' } },
+                    xAxis: { categories: labels, title: { text: 'Juego / Ciudad' } },
+                    yAxis: [
+                        { title: { text: 'Premios eSports (Millones $)', style: { color: '#a855f7' } } },
+                        { title: { text: 'Población 2025 (Millones Hab.)', style: { color: '#0ea5e9' } }, opposite: true }
+                    ],
+                    series: [
+                        { name: 'Dinero eSports (M$)', data: esportsValues, color: '#a855f7', tooltip: { valueSuffix: ' M$' } },
+                        { name: 'Población Ciudad (M)', data: citysValues, yAxis: 1, color: '#0ea5e9', tooltip: { valueSuffix: ' Millones' } }
+                    ],
+                    tooltip: { shared: true }
+                });
+            }, 100);
 
         } catch (err) { 
             console.error(err);
@@ -50,41 +83,17 @@
     });
 </script>
 
-<!-- ESTA ES LA PARTE QUE FALTABA PARA QUE SE VEA EN PANTALLA -->
 <div class="container">
     <a href="/integrations/esportsearnings-stats" class="back-link">← Volver a mis integraciones</a>
-    <h1>🎮 eSports vs 📺 Series de TV (TVMaze)</h1>
-    <p class="subtitle">Integración Textual en HTML (Cumplimiento Regla 6.i)</p>
+    <h1>🎮 eSports vs 🏙️ Ciudades (G29)</h1>
+    <p class="subtitle">Integración mediante Proxy Propio (Cumplimiento de Requisito SOS)</p>
+    
+    <div id="chart-proxy" style="height: 500px; margin-top: 2rem;"></div>
     
     {#if loading}
-        <div class="loading">Cargando catálogo de series...</div>
+        <div class="loading">Conectando con Proxy y sincronizando datos...</div>
     {:else if error}
         <div class="error">❌ Error: {error}</div>
-    {:else}
-        <div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Top</th>
-                        <th>Juego (eSports)</th>
-                        <th>Nº Jugadores</th>
-                        <th>Serie de TV</th>
-                        <th>Nota (Sobre 10)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each tableData as row}
-                        <tr>
-                            <td class="rank-col">#{row.rank}</td>
-                            <td class="highlight-purple">{row.game}</td>
-                            <td>{row.players.toLocaleString()} 👤</td>
-                            <td class="highlight-blue">{row.show}</td>
-                            <td>⭐ {row.rating}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
     {/if}
 </div>
 
@@ -94,17 +103,6 @@
     .back-link:hover { text-decoration: underline; }
     h1 { color: #7e22ce; text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
-    
-    .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; background: white; }
-    .data-table th { background: #f3e8ff; color: #7e22ce; padding: 1rem; font-weight: bold; border-bottom: 2px solid #d8b4fe; }
-    .data-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
-    .data-table tbody tr:hover { background: #faf5ff; }
-    
-    .rank-col { font-weight: bold; color: #9ca3af; }
-    .highlight-purple { font-weight: bold; color: #9333ea; }
-    .highlight-blue { font-weight: bold; color: #2563eb; }
-    
     .loading { text-align: center; padding: 3rem; color: #7e22ce; font-weight: bold; }
     .error { text-align: center; padding: 2rem; color: #dc2626; background: #fee2e2; border-radius: 8px; margin-top: 2rem; }
 </style>

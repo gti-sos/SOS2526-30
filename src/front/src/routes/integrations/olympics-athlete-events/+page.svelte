@@ -22,15 +22,20 @@
             
         },
         {
-            titulo: "Integracion 5 - GitHub API",
-            descripcion: "Integracion con api GitHub",
-            ruta: "/integrations/olympics-athlete-events/github",
+            titulo: "Integracion 5 - random User API",
+            descripcion: "Integracion con api random User",
+            ruta: "/integrations/olympics-athlete-events/random",   
         },
         {
             titulo: "Integracion 6 - The Cat API",
             descripcion: "Integracion con api The Cat API", 
             ruta: "/integrations/olympics-athlete-events/theCatsApi",            
         },
+        {
+            titulo: "Integracion 7 - protest",
+            descripcion: "Integracion con api G10-protest",
+            ruta: "/integrations/olympics-athlete-events/protest"
+        },  
     ];
 </script>
 

@@ -1,5 +1,4 @@
 <script>
-    // Solo dejamos las 4 integraciones que tienes listas[cite: 5]
     const integraciones = [
         {
             titulo: "Integración 1 - TVMaze (Series)",
@@ -24,6 +23,18 @@
             descripcion: "Cruce con Grupo 29 mediante PROXY propio",
             ruta: "/integrations/esportsearnings-stats/citys-stats",
             icono: "🏙️"
+        },
+        {
+            titulo: "Integración 5 - Presas de Agua (G27)",
+            descripcion: "Jugadores de eSports vs Presas de Agua (ApexCharts - Radar)",
+            ruta: "/integrations/esportsearnings-stats/water-dams",
+            icono: "💧"
+        },
+        {
+            titulo: "Integración 6 - Pandemias (G10)",
+            descripcion: "Jugadores eSports vs Víctimas (ApexCharts - Barras Horizontales)",
+            ruta: "/integrations/esportsearnings-stats/pandemics",
+            icono: "🦠"
         }
     ];
 </script>
