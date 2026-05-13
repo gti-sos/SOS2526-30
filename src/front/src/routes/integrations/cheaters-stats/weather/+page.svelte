@@ -8,9 +8,7 @@
     let currentWeather = null;
     let forecast = [];
     let patStatus = null;
-    // Eliminado: let cities = [...]
-    // Usamos una sola ciudad fija obtenida desde la API o por defecto
-    let currentCity = 'Madrid'; // Ciudad por defecto, pero se puede cambiar dinámicamente
+    let currentCity = 'Madrid';
     
     async function loadInitialData() {
         console.log('🌤️ Verificando OpenWeather API...');
@@ -56,20 +54,7 @@
         return [];
     }
     
-    async function fetchYearlyTemperatures() {
-        console.log('🌡️ Obteniendo temperaturas anuales...');
-        try {
-            const response = await fetch('/api/weather/yearly-temperatures');
-            const data = await response.json();
-            if (data.success) {
-                console.log(`✅ Temperaturas anuales: ${Object.keys(data.years).length} años`);
-                return data.years;
-            }
-        } catch (err) {
-            console.warn('Error fetching yearly temps:', err);
-        }
-        return {};
-    }
+  
     
     async function fetchCheatersData() {
         console.log('📊 Cargando datos de Cheaters Stats...');
@@ -94,41 +79,59 @@
         return cheatersByYear;
     }
     
-    function prepareCirclePackData(cheatersByYear, yearlyTemps, forecastDays) {
+    function prepareCirclePackData(cheatersByYear, forecastDays, currentTemp) {
+        // Obtener años y reportes
+        const years = Object.keys(cheatersByYear).sort();
+        const reportsData = years.map(y => cheatersByYear[y]);
+        
+        // Calcular máximo para normalizar
+        const maxReports = Math.max(...reportsData, 1);
+        const normalizedReports = reportsData.map(r => (r / maxReports) * 50 + 20); // Escalar para visualización
+        
+        // Crear nodos para el circle packing
+        const children = [];
+        
+        // Nodos de reportes por año
+        years.forEach((year, i) => {
+            children.push({
+                name: `📊 ${year}`,
+                value: normalizedReports[i],
+                type: 'reports',
+                originalValue: reportsData[i],
+                year: year
+            });
+        });
+        
+        // Nodos de pronóstico
+        if (forecastDays && forecastDays.length > 0) {
+            forecastDays.slice(0, 5).forEach((day, i) => {
+                children.push({
+                    name: `📅 ${day.date || `Día ${i+1}`}`,
+                    value: (day.temp_max || 20) * 2,
+                    type: 'forecast',
+                    tempMin: day.temp_min,
+                    tempMax: day.temp_max,
+                    description: day.description
+                });
+            });
+        }
+        
+        // Nodo de clima actual si existe
+        if (currentTemp) {
+            children.push({
+                name: `🌡️ Actual`,
+                value: (currentTemp + 20) * 2,
+                type: 'current',
+                temperature: currentTemp
+            });
+        }
+        
         const root = {
             name: '🌍 Clima y Reportes',
-            children: [
-                {
-                    name: '📊 Reportes Cheaters',
-                    children: Object.entries(cheatersByYear).map(([year, reports]) => ({
-                        name: `Año ${year}`,
-                        value: reports,
-                        type: 'reports'
-                    }))
-                },
-                {
-                    name: '🌡️ Temperaturas Globales',
-                    children: Object.entries(yearlyTemps).map(([year, temp]) => ({
-                        name: `Año ${year}`,
-                        value: temp * 10,
-                        type: 'temperature',
-                        originalValue: temp
-                    }))
-                },
-                {
-                    name: '📅 Pronóstico 5 días',
-                    children: (forecastDays || []).map((day, i) => ({
-                        name: day.date || `Día ${i+1}`,
-                        value: day.temp_max || 20,
-                        type: 'forecast',
-                        tempMin: day.temp_min,
-                        tempMax: day.temp_max,
-                        description: day.description
-                    }))
-                }
-            ]
+            children: children
         };
         
+        console.log('📊 Datos preparados:', children.length, 'nodos');
         return root;
     }
     
@@ -159,12 +162,9 @@
             .style('border-radius', '16px');
         
         const colorMap = {
-            '📊 Reportes Cheaters': '#7e22ce',
-            '🌡️ Temperaturas Globales': '#ef4444',
-            '📅 Pronóstico 5 días': '#3b82f6',
-            'reports': '#c084fc',
-            'temperature': '#fca5a5',
-            'forecast': '#93c5fd'
+            'reports': '#7e22ce',
+            'forecast': '#3b82f6',
+            'current': '#f59e0b'
         };
         
         const tooltip = d3.select(container)
@@ -181,18 +181,16 @@
             .style('max-width', '250px');
         
         const circle = svg.selectAll('circle')
-            .data(nodes)
+            .data(nodes.filter(d => d.depth > 0))
             .enter()
             .append('circle')
             .attr('cx', d => d.x)
             .attr('cy', d => d.y)
             .attr('r', d => d.r)
             .attr('fill', d => {
-                if (d.depth === 0) return '#fef3c7';
-                if (d.depth === 1) return colorMap[d.data.name] || '#ccc';
                 if (d.data.type === 'reports') return colorMap.reports;
-                if (d.data.type === 'temperature') return colorMap.temperature;
                 if (d.data.type === 'forecast') return colorMap.forecast;
+                if (d.data.type === 'current') return colorMap.current;
                 return '#e5e7eb';
             })
             .attr('stroke', 'white')
@@ -204,15 +202,11 @@
                 
                 let tooltipHtml = `<strong>${d.data.name}</strong><br/>`;
                 if (d.data.type === 'reports') {
-                    tooltipHtml += `📊 Reportes: ${d.data.value.toLocaleString()}`;
-                } else if (d.data.type === 'temperature') {
-                    tooltipHtml += `🌡️ Temperatura: ${d.data.originalValue?.toFixed(1)}°C`;
+                    tooltipHtml += `📊 Reportes: ${d.data.originalValue?.toLocaleString() || 0}`;
                 } else if (d.data.type === 'forecast') {
                     tooltipHtml += `🌡️ Máx: ${d.data.tempMax}°C / Mín: ${d.data.tempMin}°C<br/>${d.data.description || ''}`;
-                } else if (d.depth === 1) {
-                    tooltipHtml += `📂 Categoría principal`;
-                } else {
-                    tooltipHtml += `📊 Valor: ${d.data.value || d.r}`;
+                } else if (d.data.type === 'current') {
+                    tooltipHtml += `🌡️ Temperatura actual: ${d.data.temperature}°C`;
                 }
                 
                 tooltip.style('opacity', 1)
@@ -225,25 +219,28 @@
                 tooltip.style('opacity', 0);
             });
         
+        // Etiquetas
         svg.selectAll('text')
-            .data(nodes.filter(d => d.depth >= 2 && d.r > 15))
+            .data(nodes.filter(d => d.depth > 0 && d.r > 20))
             .enter()
             .append('text')
             .attr('x', d => d.x)
             .attr('y', d => d.y)
             .attr('text-anchor', 'middle')
             .attr('dy', '0.35em')
-            .style('font-size', d => Math.min(12, d.r / 6) + 'px')
+            .style('font-size', d => Math.min(12, d.r / 5) + 'px')
             .style('fill', 'white')
             .style('font-weight', 'bold')
             .style('pointer-events', 'none')
             .text(d => {
                 let name = d.data.name;
-                if (name.includes('Año')) name = name.replace('Año ', '');
-                if (name.length > 10) name = name.substring(0, 8) + '...';
+                if (name.includes('📊')) name = name.replace('📊 ', '');
+                if (name.includes('📅')) name = name.replace('📅 ', '');
+                if (name.length > 12) name = name.substring(0, 10) + '...';
                 return name;
             });
         
+        // Título
         svg.append('text')
             .attr('x', width / 2)
             .attr('y', 30)
@@ -252,14 +249,6 @@
             .style('font-weight', 'bold')
             .style('fill', '#15803d')
             .text(`🌤️ Reportes de Tramposos vs Clima - ${cityName}`);
-        
-        svg.append('text')
-            .attr('x', width / 2)
-            .attr('y', 55)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '11px')
-            .style('fill', '#666')
-            .text('El tamaño de cada círculo es proporcional al valor');
         
         if (currentWeatherData) {
             svg.append('text')
@@ -279,9 +268,9 @@
             
             await loadInitialData();
             
-            const [cheatersData, yearlyTemps, weatherData, forecastData] = await Promise.all([
+            // Ya NO llamamos a fetchYearlyTemperatures
+            const [cheatersData, weatherData, forecastData] = await Promise.all([
                 fetchCheatersData(),
-                fetchYearlyTemperatures(),
                 fetchCurrentWeather(currentCity),
                 fetchForecast(currentCity)
             ]);
@@ -292,10 +281,9 @@
             const cheatersByYear = processCheatersData(cheatersData);
             yearsList = Object.keys(cheatersByYear).sort();
             
-            const chartData = prepareCirclePackData(cheatersByYear, yearlyTemps, forecast);
+            const chartData = prepareCirclePackData(cheatersByYear, forecast, currentWeather?.temperature);
             
             console.log('📅 Años:', yearsList);
-            console.log('🌡️ Temperaturas:', Object.keys(yearlyTemps).length);
             console.log('📅 Pronóstico:', forecast.length);
             console.log('🌤️ Clima actual:', currentWeather?.city, currentWeather?.temperature);
             
@@ -319,12 +307,12 @@
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
     <h1>🌤️ OpenWeather API + Cheaters Stats</h1>
-    <p class="subtitle">Circle Packing (D3.js): Proporciones de reportes, temperaturas y pronóstico</p>
+    <p class="subtitle">Circle Packing (D3.js): Proporciones de reportes, clima actual y pronóstico</p>
     
     <div class="info-note-top">
         📌 <strong>Interpretación del Circle Packing:</strong> Cada círculo representa un dato. 
         El <strong>tamaño</strong> es proporcional al valor. Los colores distinguen categorías: 
-        Reportes (morado) | Temperaturas (rojo) | Pronóstico (azul)
+        Reportes (morado) | Pronóstico (azul) | Clima actual (naranja)
     </div>
     
     <div style="min-height: 750px; width: 100%; overflow-x: auto; display: flex; justify-content: center;">
@@ -368,14 +356,13 @@
         <div class="info-note">
             <p><strong>📌 Circle Packing (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Círculos morados:</strong> Reportes de tramposos por año (desde Cheaters Stats API)</li>
-                <li><strong>🔴 Círculos rojos:</strong> Temperaturas globales promedio (desde endpoint NOAA/NASA)</li>
-                <li><strong>🔵 Círculos azules:</strong> Pronóstico de temperatura por día (desde OpenWeather API)</li>
-                <li><strong>📏 Tamaño:</strong> Proporcional al valor (mayor círculo = mayor valor)</li>
+                <li><strong>🟣 Círculos morados:</strong> Reportes de tramposos por año (Cheaters Stats API)</li>
+                <li><strong>🔵 Círculos azules:</strong> Pronóstico de temperatura por día (OpenWeather API)</li>
+                <li><strong>🟠 Círculo naranja:</strong> Clima actual (OpenWeather API)</li>
+                <li><strong>📏 Tamaño:</strong> Proporcional al valor</li>
                 <li><strong>🔘 Hover:</strong> Muestra el valor exacto</li>
             </ul>
             <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
-            <p><strong>🔗 API:</strong> OpenWeather (con PAT) + Cheaters Stats</p>
             <p><strong>✅ Sin datos precargados:</strong> Todo se obtiene mediante fetch() a las APIs</p>
         </div>
     {/if}
