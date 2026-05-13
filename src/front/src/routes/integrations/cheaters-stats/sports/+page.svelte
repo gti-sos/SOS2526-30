@@ -5,39 +5,15 @@
     let loading = true;
     let error = null;
     
-<<<<<<< HEAD
     let totalReportes = 0;
     let maxStadiumCapacity = 0;
     let maxStadiumTeam = '';
     let totalTeamsProcessed = 0;
     let teamsWithCapacity = 0;
-=======
-    async function fetchSportsData() {
-        console.log('⚽ Obteniendo datos de SportsDB...');
-        const response = await fetch('/api/sports/sports');
-        const data = await response.json();
-        
-        // Depurar: ver qué devuelve la API
-        console.log('📦 SportsDB respuesta completa:', data);
-        console.log('📦 SportsDB sports array:', data.sports);
-        console.log('📦 Número de deportes:', data.sports?.length || 0);
-        
-        // Mostrar los primeros 5 deportes para depurar
-        if (data.sports && data.sports.length > 0) {
-            console.log('🏆 Primeros 5 deportes:');
-            data.sports.slice(0, 5).forEach((sport, i) => {
-                console.log(`  ${i+1}. ${sport.strSport} - ID: ${sport.idSport}`);
-            });
-        }
-        
-        return data;
-    }
->>>>>>> b734228fd4e197635949fcab9dc8d4e12327b438
     
     // 1. Obtener datos de Cheaters Stats
     async function fetchCheatersData() {
         console.log('📊 Cargando datos de Cheaters Stats...');
-<<<<<<< HEAD
         
         const proxyResponse = await fetch('/api/v2/cheaters-stats?limit=200');
         if (proxyResponse.ok) {
@@ -46,17 +22,6 @@
             const total = allData.reduce((sum, item) => sum + (item.cheater_report || 0), 0);
             console.log(`📊 Total reportes: ${total}`);
             return total;
-=======
-        try {
-            const response = await fetch('http://sos2526-30.onrender.com/api/v2/cheaters-stats?limit=200');
-            if (response.ok) {
-                const json = await response.json();
-                console.log(`📊 Cheaters: ${json.data?.length || 0} registros`);
-                return json.data || [];
-            }
-        } catch (err) {
-            console.warn('No se pudo conectar al backend:', err.message);
->>>>>>> b734228fd4e197635949fcab9dc8d4e12327b438
         }
         
         throw new Error('No se pudo obtener datos de Cheaters Stats');
