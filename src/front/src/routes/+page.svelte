@@ -113,6 +113,16 @@
         <h2>Repositorio</h2>
         <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
     </section>
+
+    <!-- Nuevo enlace al video entregable -->
+    <section class="card full-width video-card">
+        <h2>Video Entregable D03 cheaters-stats</h2>
+        <p>
+            <a href="https://youtu.be/MDm96x4fNVo" target="_blank" rel="noreferrer" class="video-link">
+                🎥 Ver en YouTube: Francisco Manuel García Patino
+            </a>
+        </p>
+    </section>
 </div>
 
 <style>
@@ -344,6 +354,33 @@
     .links-list li a small {
         color: var(--celeste-500);
         font-size: 0.8rem;
+    }
+
+    /* Estilos para la nueva tarjeta de video */
+    .video-card {
+        background: linear-gradient(135deg, #ffffff 0%, var(--celeste-50) 100%);
+        text-align: center;
+    }
+
+    .video-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--celeste-700);
+        background-color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 48px;
+        border: 2px solid var(--celeste-300);
+        transition: all 0.3s ease;
+    }
+
+    .video-link:hover {
+        background-color: var(--celeste-100);
+        border-color: var(--celeste-500);
+        transform: scale(1.02);
+        text-decoration: none;
     }
 
     @media (max-width: 640px) {
