@@ -4,174 +4,97 @@
     
     let loading = true;
     let error = null;
-    let yearsList = [];
-    let debugInfo = '';
     
-    async function fetchSportsData() {
-        console.log('⚽ Obteniendo datos de SportsDB...');
-        const response = await fetch('https://www.thesportsdb.com/api/v1/json/123/all_sports.php');
-        const data = await response.json();
-        
-        // Depurar: ver qué devuelve la API
-        console.log('📦 SportsDB respuesta completa:', data);
-        console.log('📦 SportsDB sports array:', data.sports);
-        console.log('📦 Número de deportes:', data.sports?.length || 0);
-        
-        // Mostrar los primeros 5 deportes para depurar
-        if (data.sports && data.sports.length > 0) {
-            console.log('🏆 Primeros 5 deportes:');
-            data.sports.slice(0, 5).forEach((sport, i) => {
-                console.log(`  ${i+1}. ${sport.strSport} - ID: ${sport.idSport}`);
-            });
-        }
-        
-        return data;
-    }
+    let totalReportes = 0;
+    let maxStadiumCapacity = 0;
+    let maxStadiumTeam = '';
+    let totalTeamsProcessed = 0;
+    let teamsWithCapacity = 0;
     
+    // 1. Obtener datos de Cheaters Stats
     async function fetchCheatersData() {
         console.log('📊 Cargando datos de Cheaters Stats...');
-        try {
-            const response = await fetch('http://localhost:3000/api/v2/cheaters-stats?limit=200');
-            if (response.ok) {
-                const json = await response.json();
-                console.log(`📊 Cheaters: ${json.data?.length || 0} registros`);
-                return json.data || [];
-            }
-        } catch (err) {
-            console.warn('No se pudo conectar al backend:', err.message);
+        
+        const proxyResponse = await fetch('/api/v2/cheaters-stats?limit=200');
+        if (proxyResponse.ok) {
+            const json = await proxyResponse.json();
+            const allData = json.data || [];
+            const total = allData.reduce((sum, item) => sum + (item.cheater_report || 0), 0);
+            console.log(`📊 Total reportes: ${total}`);
+            return total;
         }
         
-        try {
-            const response = await fetch('/api/v2/cheaters-stats?limit=200');
-            if (response.ok) {
-                const json = await response.json();
-                console.log(`📊 Cheaters (proxy): ${json.data?.length || 0} registros`);
-                return json.data || [];
-            }
-        } catch (err) {
-            console.warn('No se pudo conectar al proxy:', err.message);
-        }
-        
-        return [];
+        throw new Error('No se pudo obtener datos de Cheaters Stats');
     }
     
-    function processCheatersData(cheatersData) {
-        const cheatersByYear = {};
-        cheatersData.forEach(item => {
-            const year = item.year;
-            if (year) {
-                cheatersByYear[year] = (cheatersByYear[year] || 0) + (item.cheater_report || 0);
+    // 2. Obtener equipos de España a través del PROXY
+    async function fetchSpanishTeams() {
+        console.log('⚽ Obteniendo equipos de fútbol de España a través del proxy...');
+        
+        // ✅ Ahora llama al proxy, no directamente a la API externa
+        const response = await fetch('/api/sports/teams?sport=Soccer&country=Spain');
+        
+        if (!response.ok) {
+            throw new Error('Error al obtener datos del proxy');
+        }
+        
+        const data = await response.json();
+        const teams = data.teams || [];
+        
+        console.log(`⚽ Equipos encontrados: ${teams.length}`);
+        
+        let maxCapacity = 0;
+        let maxTeam = '';
+        let validTeams = 0;
+        
+        teams.forEach(team => {
+            const capacity = parseInt(team.intStadiumCapacity, 10);
+            if (!isNaN(capacity) && capacity > 0) {
+                validTeams++;
+                if (capacity > maxCapacity) {
+                    maxCapacity = capacity;
+                    maxTeam = team.strTeam;
+                }
             }
         });
-        console.log('📊 Cheaters por año:', cheatersByYear);
-        return cheatersByYear;
+        
+        console.log(`⚽ Equipos con capacidad válida: ${validTeams}`);
+        console.log(`🏟️ Capacidad máxima: ${maxCapacity.toLocaleString()} (${maxTeam})`);
+        
+        return { maxCapacity, maxTeam, totalTeams: teams.length, validTeams };
     }
     
-    function processSportsData(sportsData, cheatersByYear) {
-        const sports = sportsData.sports || [];
-        
-        // Tomar TODOS los deportes que no sean null o vacíos
-        let allSports = sports
-            .filter(s => s && s.strSport && s.strSport.trim() !== '')
-            .map(s => s.strSport);
-        
-        console.log(`🏆 Total deportes encontrados: ${allSports.length}`);
-        console.log('🏆 Lista completa de deportes:', allSports);
-        
-        // Si hay más de 15, limitamos a 15 para que el gráfico sea legible
-        const mainSports = allSports.length > 15 ? allSports.slice(0, 15) : allSports;
-        console.log(`🏆 Deportes a mostrar en gráfico: ${mainSports.length}`);
-        
-        const years = Object.keys(cheatersByYear).sort();
-        const selectedYears = years.slice(-10); // Últimos 10 años
-        
-        const allItems = [...mainSports, ...selectedYears.map(y => `${y}`)];
-        const n = allItems.length;
-        
-        // Crear matriz de relaciones
-        const matrix = [];
-        for (let i = 0; i < n; i++) {
-            matrix[i] = [];
-            for (let j = 0; j < n; j++) {
-                matrix[i][j] = 0;
-            }
-        }
-        
-        // Relaciones deporte-año basadas en popularidad y reportes
-        mainSports.forEach((sport, i) => {
-            selectedYears.forEach((year, jIdx) => {
-                const j = mainSports.length + jIdx;
-                const reports = cheatersByYear[year] || 0;
-                // Popularidad base: longitud del nombre del deporte + reportes normalizados
-                const baseValue = (sport.length % 20) * 5 + 10;
-                matrix[i][j] = baseValue + (reports / 2000);
-                matrix[j][i] = matrix[i][j];
-            });
-        });
-        
-        // Relaciones entre deportes
-        for (let i = 0; i < mainSports.length; i++) {
-            for (let j = i + 1; j < mainSports.length; j++) {
-                const value = (mainSports[i].length + mainSports[j].length) * 3;
-                matrix[i][j] = value;
-                matrix[j][i] = value;
-            }
-        }
-        
-        // Relaciones entre años
-        for (let i = 0; i < selectedYears.length; i++) {
-            for (let j = i + 1; j < selectedYears.length; j++) {
-                const year1 = selectedYears[i];
-                const year2 = selectedYears[j];
-                const reports1 = cheatersByYear[year1] || 0;
-                const reports2 = cheatersByYear[year2] || 0;
-                const value = (reports1 + reports2) / 1000;
-                const idx1 = mainSports.length + i;
-                const idx2 = mainSports.length + j;
-                matrix[idx1][idx2] = value;
-                matrix[idx2][idx1] = value;
-            }
-        }
-        
-        debugInfo = `Deportes encontrados: ${allSports.length} | Mostrados: ${mainSports.length} | Años: ${selectedYears.length}`;
-        
-        return { mainSports, selectedYears, matrix, allItems };
-    }
-    
-    function renderChordDiagram(sportsInfo) {
-        const container = document.getElementById('chart');
+    function renderPieChart() {
+        const container = document.getElementById('pie-chart');
         if (!container) return;
         container.innerHTML = '';
         
-        const width = Math.min(1200, window.innerWidth - 100);
-        const height = width;
-        const outerRadius = Math.min(width, height) * 0.4 - 40;
-        const innerRadius = outerRadius - 25;
+        const totalComparacion = totalReportes + maxStadiumCapacity;
         
-        const chord = d3.chord()
-            .padAngle(0.05)
-            .sortSubgroups(d3.descending);
+        const data = [
+            { name: '📊 Reportes de Tramposos', value: totalReportes, color: '#7e22ce', description: 'Total de reportes' },
+            { name: '🏟️ Capacidad Máxima Estadio', value: maxStadiumCapacity, color: '#f59e0b', description: `Estadio de ${maxStadiumTeam}` }
+        ];
         
-        const chords = chord(sportsInfo.matrix);
-        
-        const arc = d3.arc()
-            .innerRadius(innerRadius)
-            .outerRadius(outerRadius);
-        
-        const ribbon = d3.ribbon()
-            .radius(innerRadius);
+        const width = 700;
+        const height = 650;
+        const radius = Math.min(width, height) / 2 - 80;
         
         const svg = d3.select(container)
             .append('svg')
             .attr('width', width)
             .attr('height', height)
             .append('g')
-            .attr('transform', `translate(${width / 2},${height / 2})`);
+            .attr('transform', `translate(${width / 2}, ${height / 2 - 30})`);
         
-        // Colores
-        const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.name))
+            .range(data.map(d => d.color));
         
-        // Tooltip
+        const pie = d3.pie().value(d => d.value).sort(null);
+        const arc = d3.arc().innerRadius(60).outerRadius(radius);
+        const arcHover = d3.arc().innerRadius(60).outerRadius(radius + 10);
+        
         const tooltip = d3.select(container)
             .append('div')
             .style('position', 'absolute')
@@ -184,124 +107,125 @@
             .style('opacity', 0)
             .style('z-index', '1000');
         
-        // Grupos
-        const group = svg.append('g')
-            .selectAll('g')
-            .data(chords.groups)
-            .enter()
-            .append('g');
-        
-        group.append('path')
-            .attr('d', arc)
-            .style('fill', (d, i) => colorScale(i))
-            .style('stroke', 'white')
-            .style('stroke-width', 1.5)
-            .style('cursor', 'pointer')
-            .on('mouseover', function(event, d) {
-                d3.select(this).style('opacity', 0.7);
-                const name = sportsInfo.allItems[d.index];
-                tooltip.style('opacity', 1)
-                    .html(`<strong>${name}</strong>`)
-                    .style('left', (event.pageX + 15) + 'px')
-                    .style('top', (event.pageY - 30) + 'px');
-            })
-            .on('mouseout', function() {
-                d3.select(this).style('opacity', 1);
-                tooltip.style('opacity', 0);
-            });
-        
-        // Etiquetas (solo si hay espacio)
-        group.append('text')
-            .attr('dy', '.35em')
-            .attr('transform', d => {
-                const angle = (d.startAngle + d.endAngle) / 2;
-                const x = (outerRadius + 20) * Math.sin(angle);
-                const y = -(outerRadius + 20) * Math.cos(angle);
-                return `translate(${x},${y}) rotate(${angle * 180 / Math.PI - 90})`;
-            })
-            .attr('text-anchor', 'middle')
-            .style('font-size', d => {
-                const name = sportsInfo.allItems[d.index];
-                return name.length > 15 ? '8px' : '10px';
-            })
-            .style('font-weight', 'bold')
-            .style('fill', '#333')
-            .text(d => {
-                let name = sportsInfo.allItems[d.index];
-                if (name.length > 20) name = name.substring(0, 17) + '...';
-                return name;
-            });
-        
-        // Cuerdas
-        svg.append('g')
-            .selectAll('path')
-            .data(chords)
+        const slices = svg.selectAll('path')
+            .data(pie(data))
             .enter()
             .append('path')
-            .attr('d', ribbon)
-            .style('fill', d => colorScale(d.source.index))
-            .style('stroke', 'white')
-            .style('stroke-width', 0.5)
-            .style('opacity', 0.4)
+            .attr('d', arc)
+            .attr('fill', d => color(d.data.name))
+            .attr('stroke', 'white')
+            .attr('stroke-width', 2)
             .style('cursor', 'pointer')
             .on('mouseover', function(event, d) {
-                d3.select(this).style('opacity', 0.9);
-                const sourceName = sportsInfo.allItems[d.source.index];
-                const targetName = sportsInfo.allItems[d.target.index];
-                const value = d.source.value;
+                d3.select(this).transition().duration(200).attr('d', arcHover);
+                const percentage = ((d.data.value / totalComparacion) * 100).toFixed(1);
                 tooltip.style('opacity', 1)
-                    .html(`<strong>${sourceName} ↔ ${targetName}</strong><br/>📊 Valor: ${value.toFixed(0)}`)
+                    .html(`<strong>${d.data.name}</strong><br/>📊 Valor: ${d.data.value.toLocaleString()}<br/>📈 Porcentaje: ${percentage}%<br/>📝 ${d.data.description}`)
                     .style('left', (event.pageX + 15) + 'px')
                     .style('top', (event.pageY - 30) + 'px');
             })
             .on('mouseout', function() {
-                d3.select(this).style('opacity', 0.4);
+                d3.select(this).transition().duration(200).attr('d', arc);
                 tooltip.style('opacity', 0);
             });
+        
+        slices.append('text')
+            .attr('transform', d => {
+                const centroid = arc.centroid(d);
+                const angle = Math.atan2(centroid[1], centroid[0]);
+                const r = radius * 0.7;
+                const x = r * Math.cos(angle);
+                const y = r * Math.sin(angle);
+                return `translate(${x}, ${y})`;
+            })
+            .attr('text-anchor', 'middle')
+            .attr('dy', '.35em')
+            .style('font-size', '14px')
+            .style('font-weight', 'bold')
+            .style('fill', 'white')
+            .style('text-shadow', '1px 1px 0px rgba(0,0,0,0.5)')
+            .text(d => {
+                const percentage = ((d.data.value / totalComparacion) * 100).toFixed(1);
+                return `${percentage}%`;
+            });
+        
+        // Texto central
+        svg.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dy', '.35em')
+            .style('font-size', '18px')
+            .style('font-weight', 'bold')
+            .style('fill', '#166534')
+            .text('COMPARATIVA');
+        
+        svg.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dy', '1.6em')
+            .style('font-size', '13px')
+            .style('fill', '#166534')
+            .text(totalComparacion.toLocaleString());
         
         // Título
         svg.append('text')
             .attr('x', 0)
-            .attr('y', -outerRadius - 25)
+            .attr('y', -radius - 20)
             .attr('text-anchor', 'middle')
             .style('font-size', '16px')
             .style('font-weight', 'bold')
             .style('fill', '#166534')
-            .text('⚽ Deportes vs Años - Chord Diagram');
+            .text('⚽ Reportes de Tramposos vs Capacidad del Estadio Más Grande');
         
-        // Subtítulo con info de debug
-        svg.append('text')
-            .attr('x', 0)
-            .attr('y', -outerRadius - 5)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '10px')
-            .style('fill', '#666')
-            .text(`Datos: ${sportsInfo.mainSports.length} deportes | ${sportsInfo.selectedYears.length} años | ${sportsInfo.allItems.length} nodos`);
+        // Leyenda debajo del gráfico
+        const legendX = -150;
+        const legendY = radius + 40;
+        
+        const legend = svg.append('g')
+            .attr('transform', `translate(${legendX}, ${legendY})`);
+        
+        data.forEach((d, i) => {
+            const legendRow = legend.append('g')
+                .attr('transform', `translate(${i * 220}, 0)`);
+            
+            legendRow.append('rect')
+                .attr('width', 16)
+                .attr('height', 16)
+                .attr('fill', d.color)
+                .attr('rx', 4);
+            
+            legendRow.append('text')
+                .attr('x', 22)
+                .attr('y', 13)
+                .style('font-size', '12px')
+                .style('fill', '#333')
+                .style('font-weight', 'bold')
+                .text(`${d.name}: ${d.value.toLocaleString()}`);
+        });
     }
     
     onMount(async () => {
         await tick();
-        
         try {
-            const sportsData = await fetchSportsData();
-            const cheatersData = await fetchCheatersData();
+            const [reportes, sportsData] = await Promise.all([
+                fetchCheatersData(),
+                fetchSpanishTeams()
+            ]);
             
-            const cheatersByYear = processCheatersData(cheatersData);
-            yearsList = Object.keys(cheatersByYear).sort();
+            totalReportes = reportes;
+            maxStadiumCapacity = sportsData.maxCapacity;
+            maxStadiumTeam = sportsData.maxTeam;
+            totalTeamsProcessed = sportsData.totalTeams;
+            teamsWithCapacity = sportsData.validTeams;
             
-            const sportsInfo = processSportsData(sportsData, cheatersByYear);
+            console.log('✅ Datos cargados desde el proxy:', { 
+                totalReportes, 
+                maxStadiumCapacity, 
+                maxStadiumTeam
+            });
             
-            console.log('📅 Años:', yearsList);
-            console.log('⚽ Deportes encontrados:', sportsInfo.mainSports.length);
-            console.log('⚽ Lista:', sportsInfo.mainSports);
-            console.log('📊 Debug info:', debugInfo);
-            
-            renderChordDiagram(sportsInfo);
-            
+            renderPieChart();
             loading = false;
-            
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('❌ Error fatal:', err);
             error = err.message;
             loading = false;
         }
@@ -310,41 +234,55 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>⚽ SportsDB + Cheaters Stats</h1>
-    <p class="subtitle">Chord Diagram (D3.js): Relaciones entre deportes, años y reportes</p>
+    <h1>⚽ Cheaters Stats + Fútbol en España</h1>
+    <p class="subtitle">Comparativa: Reportes de tramposos vs Capacidad del estadio más grande de España</p>
     
     <div class="info-note-top">
-        📌 <strong>Interpretación del Chord Diagram:</strong> Los arcos exteriores representan deportes y años. 
-        Las <strong>cuerdas (flechas)</strong> muestran la intensidad de la relación.
+        📌 <strong>Interpretación del gráfico:</strong> El gráfico circular compara el total de reportes de tramposos 
+        con la <strong>capacidad máxima de un estadio de fútbol</strong> en España (The Sports DB).
     </div>
     
-    <div style="min-height: 900px; width: 100%; overflow-x: auto; display: flex; justify-content: center;">
-        <div id="chart"></div>
+    <div style="min-height: 750px; width: 100%; display: flex; justify-content: center;">
+        <div id="pie-chart"></div>
     </div>
     
     {#if loading}
-        <div class="loading">⚽ Cargando datos desde las APIs...</div>
+        <div class="loading">⚽ Cargando datos de las APIs a través del proxy...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
-        <div class="info-note">
-            <p><strong>📌 Datos obtenidos en tiempo real:</strong></p>
-            <ul>
-                <li><strong>⚽ Deportes:</strong> {sportsInfo?.mainSports?.length || 0} deportes desde SportsDB API</li>
-                <li><strong>📊 Años:</strong> {yearsList.length} años desde Cheaters Stats</li>
-                <li><strong>🔗 Relaciones:</strong> Calculadas dinámicamente</li>
-            </ul>
-            <p><strong>🏆 Deportes cargados:</strong> {sportsInfo?.mainSports?.join(', ') || 'Cargando...'}</p>
-            <div class="debug-note">
-                💡 <strong>Nota:</strong> SportsDB API devuelve alrededor de 30-40 deportes. Si ves pocos, revisa la consola (F12) 
-                para ver el log completo de la API.
+        <div class="stats-grid">
+            <div class="stat-card cheaters">
+                <h3>📊 Reportes de Tramposos</h3>
+                <p class="big-number">{totalReportes.toLocaleString()}</p>
+                <p>Total de reportes</p>
             </div>
+            <div class="stat-card stadium">
+                <h3>🏟️ Capacidad Máxima</h3>
+                <p class="big-number">{maxStadiumCapacity.toLocaleString()}</p>
+                <p>Estadio de <strong>{maxStadiumTeam}</strong></p>
+            </div>
+            <div class="stat-card info">
+                <h3>⚽ Equipos Analizados</h3>
+                <p class="big-number">{totalTeamsProcessed}</p>
+                <p>Equipos de fútbol en España</p>
+                <small>({teamsWithCapacity} con capacidad válida)</small>
+            </div>
+        </div>
+        
+        <div class="info-note">
+            <p><strong>📌 Datos obtenidos en tiempo real (sin precarga):</strong></p>
+            <ul>
+                <li><strong>📊 Cheaters Stats:</strong> <code>fetch('/api/v2/cheaters-stats')</code> → Total de reportes</li>
+                <li><strong>⚽ The Sports DB (vía proxy):</strong> <code>fetch('/api/sports/teams?sport=Soccer&country=Spain')</code> → Equipos españoles y capacidades</li>
+                <li><strong>🏟️ Capacidad máxima:</strong> Se calcula recorriendo todos los equipos</li>
+            </ul>
         </div>
     {/if}
 </div>
 
 <style>
-    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #dcfce7; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid #dcfce7; }
     .back-link { color: #16a34a; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     .back-link:hover { text-decoration: underline; }
     h1 { color: #166534; margin: 0; }
@@ -352,9 +290,17 @@
     .loading { text-align: center; padding: 2rem; color: #16a34a; }
     .error { text-align: center; padding: 3rem; color: #dc2626; }
     .info-note-top { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-size: 0.85rem; color: #166534; }
-    .info-note { margin-top: 2rem; padding: 1rem; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; border-left: 4px solid #22c55e; }
+    
+    .stats-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; margin: 2rem 0; }
+    .stat-card { border-radius: 16px; padding: 1rem 1.5rem; text-align: center; min-width: 200px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .stat-card.cheaters { background: linear-gradient(135deg, #7e22ce, #581c87); color: white; }
+    .stat-card.stadium { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .stat-card.info { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+    .big-number { font-size: 2rem; font-weight: bold; margin: 0.5rem 0; }
+    .stat-card p { margin: 0; opacity: 0.9; }
+    .stat-card small { display: block; font-size: 0.7rem; opacity: 0.7; margin-top: 0.3rem; }
+    
+    .info-note { margin-top: 1rem; padding: 1rem; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; border-left: 4px solid #22c55e; }
     .info-note ul { margin: 0.5rem 0; padding-left: 1.5rem; }
-    .info-note li { margin: 0.3rem 0; }
     .info-note code { background: #bbf7d0; padding: 0.1rem 0.3rem; border-radius: 4px; }
-    .debug-note { margin-top: 1rem; padding: 0.5rem; background: #fef3c7; border-radius: 6px; font-size: 0.8rem; color: #92400e; }
 </style>

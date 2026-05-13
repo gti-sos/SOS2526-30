@@ -31,6 +31,8 @@ const BASE_URL_API2 = "/api/v2";
 app.use(express.json());
 
 app.use('/api/github', githubGGGProxy);
+
+
 app.use('/api/dog', dogProxy);
 app.use('/api/weather', openweatherProxy);
 app.use('/api/sports', sportsdbProxy);
