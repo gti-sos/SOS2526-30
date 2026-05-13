@@ -7,7 +7,6 @@ const RANDOM_USER_API_URL = 'https://randomuser.me/api';
 
 // Middleware de logging
 router.use((req, res, next) => {
-    console.log(`[GGG-RANDOM-PROXY] ${req.method} ${req.url}`);
     next();
 });
 
@@ -17,10 +16,7 @@ router.get('/user', async (req, res) => {
     const { seed } = req.query;
     const seedValue = seed || Date.now();
     const url = `${RANDOM_USER_API_URL}/?results=1&seed=${seedValue}`;
-    
-    console.log(`[GGG-RANDOM-PROXY] Llamando con seed: ${seedValue}`);// Añadir timestamp para evitar caché
-    
-    console.log(`[GGG-RANDOM-PROXY] Llamando a: ${url}`);
+
     
     try {
         const response = await fetch(url, {
@@ -31,14 +27,11 @@ router.get('/user', async (req, res) => {
         });
         
         if (!response.ok) {
-            console.error(`[GGG-RANDOM-PROXY] Error ${response.status}`);
             return res.status(response.status).json({ error: `Random User API error: ${response.status}` });
         }
         
         const data = await response.json();
-        console.log(`[GGG-RANDOM-PROXY] Usuario obtenido: ${data.results[0]?.name?.first}`);
         
-        // No cachear
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
@@ -46,7 +39,6 @@ router.get('/user', async (req, res) => {
         res.json(data);
         
     } catch (error) {
-        console.error('[GGG-RANDOM-PROXY] Error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

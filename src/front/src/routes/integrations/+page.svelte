@@ -29,23 +29,12 @@
 </script>
 
 <div class="integrations-container">
-    <h1>🔗 Integraciones con APIs</h1>
+    <h1>Integraciones con APIs</h1>
     <p class="subtitle">Visualizaciones y usos de APIs propias y de compañeros</p>
 
     <div class="integrations-grid">
         {#each miembros as miembro}
             <div class="integration-card">
-                <div class="card-icon">
-                    {#if miembro.recurso === "Olympics Athlete Events"}
-                        🏅
-                    {:else if miembro.recurso === "Esports Growth Stats"}
-                        📈
-                    {:else if miembro.recurso === "Esports Earnings Stats"}
-                        💰
-                    {:else}
-                        🚫
-                    {/if}
-                </div>
                 <h3>{miembro.recurso}</h3>
                 <p class="autor">por <strong>{miembro.nombre}</strong></p>
                 <p class="descripcion">{miembro.descripcion}</p>
@@ -57,7 +46,7 @@
     </div>
 
     <div class="info">
-        <h3>📖 Sobre las integraciones</h3>
+        <h3>Sobre las integraciones</h3>
         <ul>
             <li>Cada integración consume una API diferente (propia o de compañeros)</li>
             <li>Se utilizan diferentes tipos de visualización (no "line")</li>

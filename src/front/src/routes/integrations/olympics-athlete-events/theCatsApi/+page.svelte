@@ -22,12 +22,12 @@
             loading = true;
             
             // 1. Obtener datos de Olympics
-            console.log('📡 Obteniendo datos de Olympics...');
+            console.log('Obteniendo datos de Olympics...');
             const olympicsRes = await fetch('/api/v1/olympics-athlete-events/loadInitialData?limit=5000');
             const olympicsData = await olympicsRes.json();
             const athletes = olympicsData;
             
-            // 2. Contar atletas por país
+            // 2. Contar atletas por pais
             const countryCount = {};
             athletes.forEach(ath => {
                 const country = ath.team;
@@ -36,13 +36,13 @@
                 }
             });
             
-            // 3. Top 6 países
+            // 3. Top 6 paises
             const topCountries = Object.entries(countryCount)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 6)
                 .map(([country, count]) => ({ country, athletes: count }));
             
-            // 4. Buscar razas de gato para cada país
+            // 4. Buscar razas de gato para cada pais
             const countriesWithCats = [];
             
             for (let i = 0; i < topCountries.length; i++) {
@@ -104,13 +104,13 @@
                                 imageUrl = imgData[0]?.url || null;
                             }
                             
-                            console.log(`✅ ${country} → Raza: ${foundBreed.name}`);
+                            console.log(`OK ${country} -> Raza: ${foundBreed.name}`);
                         } else {
-                            console.log(`⚠️ No se encontró raza para ${country}`);
+                            console.log(`No se encontró raza para ${country}`);
                         }
                     }
                 } catch (error) {
-                    console.error(`❌ Error con ${country}:`, error);
+                    console.error(`Error con ${country}:`, error);
                 }
                 
                 countriesWithCats.push({
@@ -131,7 +131,7 @@
             }
             
             countriesData = countriesWithCats;
-            console.log('✅ Datos finales:', countriesData);
+            console.log('Datos finales:', countriesData);
             
             await createDonutChart();
             loading = false;
@@ -140,7 +140,7 @@
             if (overlay) overlay.style.display = 'none';
             
         } catch (e) {
-            console.error('❌ Error:', e);
+            console.error('Error:', e);
             error = e.message;
             loading = false;
             const overlay = document.querySelector('.loading-overlay');
@@ -156,7 +156,7 @@
         // Preparar datos para el donut
         const columns = countriesData.map(item => [item.country, item.athletes]);
         
-        // Crear un mapa de países a datos de gato para el tooltip
+        // Crear un mapa de paises a datos de gato para el tooltip
         const catInfoMap = {};
         countriesData.forEach(item => {
             if (item.breed) {
@@ -191,7 +191,7 @@
             },
             donut: {
                 title: {
-                    text: 'Atletas Olímpicos',
+                    text: 'Atletas Olimpicos',
                     position: 'bottom'
                 },
                 label: {
@@ -216,7 +216,7 @@
                             tooltipText += `\n Peso: ${catInfo.weight} kg`;
                             
                         } else {
-                            tooltipText += `\n\n No se encontró raza de gato para este país`;
+                            tooltipText += `\n\n No se encontró raza de gato para este pais`;
                         }
                         
                         return tooltipText;
@@ -253,14 +253,14 @@
 </script>
 
 <div class="integration-container">
-    <h1>🐱 Atletas Olímpicos + Razas de Gatos por País</h1>
-    <p class="subtitle">Gráfico Donut: Distribución de atletas | Tooltip con información de la raza de gato</p>
+    <h1>Atletas Olimpicos + Razas de Gatos por Pais</h1>
+    <p class="subtitle">Grafico Donut: Distribucion de atletas | Tooltip con informacion de la raza de gato</p>
     
     <div class="info-api">
-        <p><strong>API 1 (propia):</strong> Olympics Athlete Events - Número de atletas por país (campo <code>team</code>)</p>
-        <p><strong>API 2 (The Cat API):</strong> Razas de gatos - Campo <code>origin</code> (país de origen de la raza)</p>
+        <p><strong>API 1 (propia):</strong> Olympics Athlete Events - Numero de atletas por pais (campo <code>team</code>)</p>
+        <p><strong>API 2 (The Cat API):</strong> Razas de gatos - Campo <code>origin</code> (pais de origen de la raza)</p>
         <p><strong>Widget:</strong> Donut (Doughnut) con <strong>C3.js</strong></p>
-        <p><strong>Interacción:</strong> Pasa el ratón sobre cualquier sector para ver los datos del gato | Haz clic para ver imagen y más detalles</p>
+        <p><strong>Interaccion:</strong> Pasa el raton sobre cualquier sector para ver los datos del gato | Haz clic para ver imagen y mas detalles</p>
     </div>
     
     <div class="loading-overlay">
@@ -270,26 +270,23 @@
     
     {#if error}
         <div class="error">
-            <p>❌ Error: {error}</p>
-            <p>Verifica que VITE_CAT_API_KEY esté configurada</p>
+            <p>Error: {error}</p>
+            <p>Verifica que VITE_CAT_API_KEY este configurada</p>
         </div>
     {:else}
-        <!-- Gráfico Donut único -->
         <div id="donut-chart" style="min-height: 550px; width: 100%; margin-bottom: 2rem;"></div>
         
-        <!-- Tabla de datos combinados -->
         <div class="table-container">
-            <h3>📋 Datos combinados: Atletas + Razas de Gato</h3>
+            <h3>Datos combinados: Atletas + Razas de Gato</h3>
             <div class="table-wrapper">
-                <table>
+                <table class="data-table">
                     <thead>
                         <tr>
-                            <th>País</th>
-                            <th>Atletas Olímpicos</th>
+                            <th>Pais</th>
+                            <th>Atletas Olimpicos</th>
                             <th>Raza de Gato</th>
                             <th>Origen</th>
                             <th>Temperamento</th>
-                            <th>Detalles</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -299,46 +296,36 @@
                                 <td>{item.athletes.toLocaleString()}</td>
                                 <td>
                                     {#if item.breed}
-                                        🐱 {item.breed.name}
+                                         {item.breed.name}
                                     {:else}
                                         <span class="no-breed">No encontrada</span>
                                     {/if}
                                 </td>
                                 <td>{item.breed?.origin || '-'}</td>
                                 <td>{item.breed?.temperament || '-'}</td>
-                                <td>
-                                    {#if item.breed}
-                                        <button class="detail-btn" on:click={() => showCountryModal(item)}>
-                                            Ver más
-                                        </button>
-                                    {:else}
-                                        <span class="no-data">-</span>
-                                    {/if}
-                                </td>
                             </tr>
                         {/each}
                     </tbody>
                 </table>
             </div>
             <p class="table-info">
-                Total países analizados: {countriesData.length} | 
+                Total paises analizados: {countriesData.length} | 
                 Razas encontradas: {countriesData.filter(c => c.breed).length} | 
                 No encontradas: {countriesData.filter(c => !c.breed).length}
             </p>
         </div>
         
-        <!-- Modal con detalles y foto del gato -->
         {#if selectedCountry}
             <div class="modal" on:click={closeModal}>
                 <div class="modal-content" on:click|stopPropagation>
                     <button class="close-btn" on:click={closeModal}>✕</button>
                     
                     <h2>{selectedCountry.country}</h2>
-                    <p class="athletes">🏅 {selectedCountry.athletes.toLocaleString()} atletas olímpicos</p>
+                    <p class="athletes">{selectedCountry.athletes.toLocaleString()} atletas olimpicos</p>
                     
                     {#if selectedCountry.breed}
                         <div class="breed-details">
-                            <h3>🐱 {selectedCountry.breed.name}</h3>
+                            <h3> {selectedCountry.breed.name}</h3>
                             
                             <div class="breed-image">
                                 {#if selectedCountry.breed.imageUrl}
@@ -349,17 +336,17 @@
                             </div>
                             
                             <div class="breed-info">
-                                <p><strong>🌍 Origen:</strong> {selectedCountry.breed.origin}</p>
-                                <p><strong>📖 Descripción:</strong> {selectedCountry.breed.description}</p>
-                                <p><strong>😾 Temperamento:</strong> {selectedCountry.breed.temperament}</p>
-                                <p><strong>⏱️ Esperanza de vida:</strong> {selectedCountry.breed.lifeSpan} años</p>
-                                <p><strong>⚖️ Peso:</strong> {selectedCountry.breed.weight} kg</p>
+                                <p><strong>Origen:</strong> {selectedCountry.breed.origin}</p>
+                                <p><strong>Descripcion:</strong> {selectedCountry.breed.description}</p>
+                                <p><strong>Temperamento:</strong> {selectedCountry.breed.temperament}</p>
+                                <p><strong>Esperanza de vida:</strong> {selectedCountry.breed.lifeSpan} años</p>
+                                <p><strong>Peso:</strong> {selectedCountry.breed.weight} kg</p>
                             </div>
                         </div>
                     {:else}
                         <div class="no-breed">
-                            <p>🐱 No se encontró una raza de gato originaria de <strong>{selectedCountry.country}</strong></p>
-                            <p>The Cat API no tiene razas registradas para este país</p>
+                            <p>No se encontró una raza de gato originaria de <strong>{selectedCountry.country}</strong></p>
+                            <p>The Cat API no tiene razas registradas para este pais</p>
                         </div>
                     {/if}
                 </div>
@@ -368,13 +355,13 @@
     {/if}
     
     <div class="info">
-        <h3>📖 Interpretación</h3>
+        <h3>Interpretacion</h3>
         <ul>
-            <li><strong>Gráfico Donut (C3.js):</strong> Muestra la distribución de atletas olímpicos por país (Top 6)</li>
-            <li><strong>Tooltip interactivo:</strong> Al pasar el ratón sobre cada sector, muestra también los datos de la raza de gato</li>
-            <li><strong>Datos de Olympics:</strong> Campo <code>team</code> = país del atleta</li>
-            <li><strong>The Cat API:</strong> Campo <code>origin</code> = país de origen de la raza</li>
-            <li><strong>Haz clic:</strong> En el gráfico o en "Ver más" para ver la imagen y detalles completos</li>
+            <li><strong>Grafico Donut (C3.js):</strong> Muestra la distribucion de atletas olimpicos por pais (Top 6)</li>
+            <li><strong>Tooltip interactivo:</strong> Al pasar el raton sobre cada sector, muestra tambien los datos de la raza de gato</li>
+            <li><strong>Datos de Olympics:</strong> Campo <code>team</code> = pais del atleta</li>
+            <li><strong>The Cat API:</strong> Campo <code>origin</code> = pais de origen de la raza</li>
+            <li><strong>Haz clic:</strong> En el grafico o en "Ver mas" para ver la imagen y detalles completos</li>
         </ul>
     </div>
 </div>
@@ -535,7 +522,6 @@
         text-align: right;
     }
     
-    /* Modal */
     .modal {
         position: fixed;
         top: 0;

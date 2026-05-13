@@ -213,7 +213,7 @@
     
     {#if error}
         <div class="error">
-            <p>❌ Error: {error}</p>
+            <p> Error: {error}</p>
         </div>
     {/if}
     

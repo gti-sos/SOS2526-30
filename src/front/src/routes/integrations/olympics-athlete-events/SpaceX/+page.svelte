@@ -5,6 +5,7 @@
     let loading = $state(true);
     let error = $state(null);
     let chart = $state(null);
+    // @ts-ignore
     let combinedData = [];
     let summaryStats = $state({
         totalYears: 0,
@@ -30,9 +31,11 @@
             console.log('[PASO 1.1] Atletas recibidos:', athletes.length);
             
             const athletesByYear = {};
+            // @ts-ignore
             athletes.forEach(ath => {
                 const year = ath.year;
                 if (year && year >= 2000 && year <= 2024) {
+                    // @ts-ignore
                     athletesByYear[year] = (athletesByYear[year] || 0) + 1;
                 }
             });
@@ -45,10 +48,12 @@
             console.log('[PASO 2.1] Lanzamientos recibidos:', launches.length);
             
             const launchesByYear = {};
+            // @ts-ignore
             launches.forEach(launch => {
                 const date = new Date(launch.date_utc);
                 const year = date.getFullYear();
                 if (year >= 2000 && year <= 2024) {
+                    // @ts-ignore
                     launchesByYear[year] = (launchesByYear[year] || 0) + 1;
                 }
             });
@@ -60,7 +65,9 @@
             combinedData = Array.from(allYears)
                 .map(year => ({
                     year: parseInt(year),
+                    // @ts-ignore
                     athletes: athletesByYear[year] || 0,
+                    // @ts-ignore
                     launches: launchesByYear[year] || 0
                 }))
                 .sort((a, b) => a.year - b.year);
@@ -75,7 +82,9 @@
                 totalYears: combinedData.length,
                 totalAthletes: totalAthletes,
                 totalLaunches: totalLaunches,
+                // @ts-ignore
                 avgAthletes: (totalAthletes / combinedData.length).toFixed(0),
+                // @ts-ignore
                 avgLaunches: (totalLaunches / combinedData.length).toFixed(1)
             };
             
@@ -86,13 +95,17 @@
             loading = false;
             
             const overlay = document.querySelector('.loading-overlay');
+            // @ts-ignore
             if (overlay) overlay.style.display = 'none';
             
         } catch (e) {
+            // @ts-ignore
             console.error('[ERROR]', e.message);
+            // @ts-ignore
             error = e.message;
             loading = false;
             const overlay = document.querySelector('.loading-overlay');
+            // @ts-ignore
             if (overlay) overlay.style.display = 'none';
         }
     }
@@ -102,6 +115,7 @@
         if (!container) return;
         
         if (chart) {
+            // @ts-ignore
             chart.dispose();
         }
         
@@ -115,7 +129,9 @@
         };
         
         // Calcular totales por década
+        // @ts-ignore
         combinedData.forEach(item => {
+            // @ts-ignore
             for (const [decade, data] of Object.entries(decadesData)) {
                 if (data.years.includes(item.year)) {
                     data.athletes += item.athletes;
@@ -132,6 +148,7 @@
             if (data.athletes > 0 || data.launches > 0) {
                 // Obtener años de esa década
                 const yearsChildren = [];
+                // @ts-ignore
                 const decadeYears = combinedData.filter(item => decadesData[decade].years.includes(item.year));
                 
                 for (const yearData of decadeYears) {
@@ -159,6 +176,7 @@
             }
         }
         
+        // @ts-ignore
         chart = echarts.init(container);
         
         const option = {
@@ -172,6 +190,7 @@
             },
             tooltip: {
                 trigger: 'item',
+                // @ts-ignore
                 formatter: function(params) {
                     if (params.treePathInfo && params.treePathInfo.length === 3) {
                         const data = params.data;
@@ -244,7 +263,9 @@
             }]
         };
         
+        // @ts-ignore
         chart.setOption(option);
+        // @ts-ignore
         window.addEventListener('resize', () => chart?.resize());
     }
 </script>

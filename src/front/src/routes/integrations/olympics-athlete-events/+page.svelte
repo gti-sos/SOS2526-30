@@ -1,40 +1,50 @@
 <script>
+	import { SubTitle } from "chart.js";
+
     const integraciones = [
         {
             titulo: "Integracion 1 - Ozone Depleting Substances",
+            subtitulo: "Compañero SOS",
             descripcion: "Integracion con api G22-ozone-depleting-substance-consumptions",
             ruta: "/integrations/olympics-athlete-events/ozone-depleting-substance-consumptions",
         },
         {
             titulo: "Integracion 2 - Average Monthly Wages",
+            subtitulo: "Compañero SOS",
             descripcion: "Integracion con api G24-average-monthly-wages",
             ruta: "/integrations/olympics-athlete-events/average-monthly-wages",
         },
         {
             titulo: "Integracion 3 - Average Annual Temperatures",
+            subtitulo: "Compañero SOS",
             descripcion: "Integracion con api G25-average-annual-temperatures",
             ruta: "/integrations/olympics-athlete-events/average-annual-temperatures",
         },
         {
-            titulo: "Integracion 4 - SpaceX",
-            descripcion: "Integracion con api SpaceX",
-            ruta: "/integrations/olympics-athlete-events/SpaceX",
+            titulo: "Integracion 4 - Protest",
+            subtitulo: "Compañero SOS",
+            descripcion: "Integracion con api G10-protest",
+            ruta: "/integrations/olympics-athlete-events/protest"
+            
             
         },
         {
             titulo: "Integracion 5 - random User API",
+            subtitulo: "API externa",
             descripcion: "Integracion con api random User",
             ruta: "/integrations/olympics-athlete-events/random",   
         },
         {
             titulo: "Integracion 6 - The Cat API",
+            subtitulo: "API externa",
             descripcion: "Integracion con api The Cat API", 
             ruta: "/integrations/olympics-athlete-events/theCatsApi",            
         },
         {
-            titulo: "Integracion 7 - protest",
-            descripcion: "Integracion con api G10-protest",
-            ruta: "/integrations/olympics-athlete-events/protest"
+            titulo: "Integracion 7 - SpaceX",
+            subtitulo: "API externa",
+            descripcion: "Integracion con api SpaceX",
+            ruta: "/integrations/olympics-athlete-events/SpaceX",
         },  
     ];
 </script>
@@ -47,6 +57,7 @@
         {#each integraciones as item}
             <div class="integration-card">
                 <h3>{item.titulo}</h3>
+                <p class="subtitle">{item.subtitulo}</p>
                 <p class="descripcion">{item.descripcion}</p>
                 <a href="{item.ruta}" class="btn-integracion">
                     Ver integración →

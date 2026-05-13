@@ -213,12 +213,12 @@
                     tooltip: {
                         pointFormat: `
                             <b>Año: {point.x}</b><br/>
-                            🏅 Atletas: {point.athletes}<br/>
-                            👤 Usuario: {point.name}<br/>
-                            🌍 País: {point.country}<br/>
-                            📧 Email: {point.email}<br/>
-                            🧒 Género: {point.gender}<br/>
-                            🎂 Edad: {point.y}
+                            Atletas: {point.athletes}<br/>
+                            Usuario: {point.name}<br/>
+                            País: {point.country}<br/>
+                            Email: {point.email}<br/>
+                            Género: {point.gender}<br/>
+                            Edad: {point.y}
                         `
                     },
                     plotOptions: {
