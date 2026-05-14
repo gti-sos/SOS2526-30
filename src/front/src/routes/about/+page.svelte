@@ -58,10 +58,11 @@
             <a href="https://github.com/PaGarPa" target="_blank" class="btn-github">GitHub</a>
         </div>
     </div>
+
     <div class="team-member videos-section">
         <div class="member-name">Videos del Grupo</div>
         <div class="member-details">
-            <a href="about/videos" target="_blank" class="btn-youtube">Ver todos los videos</a>
+            <a href="about/videos" class="btn-youtube">Ver todos los videos</a>
         </div>
     </div>
 

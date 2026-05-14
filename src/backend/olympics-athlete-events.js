@@ -44,6 +44,10 @@ db.ensureIndex({ fieldName: 'team' });
 db.ensureIndex({ fieldName: 'age' });
 db.ensureIndex({ fieldName: 'height' });
 db.ensureIndex({ fieldName: 'weight' });
+db.ensureIndex({ fieldName: 'medal' });
+db.ensureIndex({ fieldName: 'sex' });
+db.ensureIndex({ fieldName: 'noc' });
+db.ensureIndex({ fieldName: 'games' });
 
 // ============================================
 // VERSIÓN 1 - SOLO LECTURA (GET)
@@ -278,11 +282,12 @@ routerV2.get("/loadInitialData", (req, res) => {
     });
 });
 
-// Colección principal v2 (GET con filtros avanzados)
+// Colección principal v2 (GET con filtros avanzados + NUEVOS FILTROS)
 routerV2.get("/", (req, res) => {
     const { 
         name, team, country, year, from, to, sport, season, city, id, page = 1, limit = 20,
-        age_min, age_max, height_min, height_max, weight_min, weight_max
+        age_min, age_max, height_min, height_max, weight_min, weight_max,
+        medal, sex, noc, games
     } = req.query;
     
     let query = {};
@@ -320,6 +325,20 @@ routerV2.get("/", (req, res) => {
         query.weight = {};
         if (weight_min) query.weight.$gte = parseFloat(weight_min);
         if (weight_max) query.weight.$lte = parseFloat(weight_max);
+    }
+    
+    // NUEVOS FILTROS AÑADIDOS
+    if (medal && medal !== '') {
+        query.medal = medal;
+    }
+    if (sex && sex !== '') {
+        query.sex = sex;
+    }
+    if (noc && noc !== '') {
+        query.noc = { $regex: new RegExp(`^${noc}$`, 'i') };
+    }
+    if (games && games !== '') {
+        query.games = { $regex: new RegExp(games, 'i') };
     }
 
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -425,14 +444,15 @@ routerV2.get("/season", (req, res) => {
     });
 });
 
-// Búsqueda por nombre v2 con filtros numéricos
+// Búsqueda por nombre v2 con filtros numéricos y nuevos filtros
 routerV2.get("/:name", (req, res) => {
     const name = req.params.name;
     const { 
         from, to,
         age_min, age_max,
         height_min, height_max,
-        weight_min, weight_max
+        weight_min, weight_max,
+        medal, sex, noc, games
     } = req.query;
     
     let query = { name: { $regex: new RegExp(name, 'i') } };
@@ -460,6 +480,20 @@ routerV2.get("/:name", (req, res) => {
         if (weight_min) query.weight.$gte = parseFloat(weight_min);
         if (weight_max) query.weight.$lte = parseFloat(weight_max);
     }
+    
+    // NUEVOS FILTROS AÑADIDOS
+    if (medal && medal !== '') {
+        query.medal = medal;
+    }
+    if (sex && sex !== '') {
+        query.sex = sex;
+    }
+    if (noc && noc !== '') {
+        query.noc = { $regex: new RegExp(`^${noc}$`, 'i') };
+    }
+    if (games && games !== '') {
+        query.games = { $regex: new RegExp(games, 'i') };
+    }
 
     db.find(query)
         .sort({ year: 1 })
@@ -468,7 +502,7 @@ routerV2.get("/:name", (req, res) => {
                 return res.status(500).json({ error: "Error al acceder a la base de datos" });
             }
             
-            if (data.length === 0 && !from && !to && !age_min && !age_max && !height_min && !height_max && !weight_min && !weight_max) {
+            if (data.length === 0 && !from && !to && !age_min && !age_max && !height_min && !height_max && !weight_min && !weight_max && !medal && !sex && !noc && !games) {
                 return res.status(404).json({ message: `No existe ningún atleta con el nombre "${name}"` });
             }
             
