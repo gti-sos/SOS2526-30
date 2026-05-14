@@ -54,14 +54,13 @@ const routerV1 = express.Router();
 routerV1.get("/docs", (req, res) => {
     res.redirect("https://documenter.getpostman.com/view/52768258/2sBXiesZR7");
 });
-
 // Carga inicial v1
 routerV1.get("/loadInitialData", (req, res) => {
     db.count({}, (err, count) => {
         if (err) return res.status(500).json({ error: "Error al comprobar la base de datos" });
         
         if (count === 0) {
-            const initialData = csvContent.slice(0, 150);
+            const initialData = csvContent.slice(0, 150); console.log("c");
             db.insert(initialData, (err, newDocs) => {
                 if (err) return res.status(500).json({ error: "Error al insertar datos iniciales" });
                 console.log(`Datos iniciales cargados: ${newDocs.length} registros`);
@@ -81,7 +80,6 @@ routerV1.get("/loadInitialData", (req, res) => {
         }
     });
 });
-
 // Colección principal v1 (GET)
 routerV1.get("/", (req, res) => {
     const { name, team, country, year, from, to, sport, season, city, id, page = 1, limit = 20 } = req.query;

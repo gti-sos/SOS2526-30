@@ -11,7 +11,7 @@
     const repoUrl = "https://github.com/gti-sos/SOS2526-30";
     
     // Variable de entorno para la URL base de la API
-    const baseApiUrl = "https://sos2526-30.onrender.com/api/v1";
+    const baseApiUrl = import.meta.env.PUBLIC_API_BASE_URL || "https://sos2526-30.onrender.com/api/v1";
     
     // URLs de documentación específicas
     const docUrls = {
@@ -34,6 +34,7 @@
 <svelte:head>
     <title>SOS2526-30 - Panel de Control</title>
 </svelte:head>
+
 
 <div class="cards-grid">
     <section class="card">
