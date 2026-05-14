@@ -8,24 +8,24 @@
     let yearsList = [];
     
     async function loadInitialData() {
-        console.log('🏗️ Inicializando datos en Construction API...');
+        console.log('Inicializando datos en Construction API...');
         
         try {
             const response = await fetch('https://sos2526-24.onrender.com/api/v1/international-construction-costs/LoadInitialData');
             
             if (response.status === 400) {
                 const data = await response.json();
-                console.log('ℹ️', data.message);
+                console.log(data.message);
                 return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅', data.message);
+                console.log(data.message);
                 return { initialized: true };
             }
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar:', err.message);
+            console.warn('No se pudo inicializar:', err.message);
             return null;
         }
     }
@@ -108,18 +108,18 @@
         if (chart) chart.destroy();
         
         chart = new Chart(element, {
-            title: '🏗️ Reportes de Tramposos vs Coste de Construcción',
+            title: 'Reportes de Tramposos vs Coste de Construcción',
             data: {
                 labels: chartData.years,
                 datasets: [
                     {
-                        name: '📊 Reportes de Tramposos',
+                        name: 'Reportes de Tramposos',
                         values: chartData.reportsData,
                         chartType: 'bar',
                         color: '#7e22ce'
                     },
                     {
-                        name: '💰 Coste Construcción (USD/m²)',
+                        name: 'Coste Construcción (USD/m²)',
                         values: chartData.costData,
                         chartType: 'bar',
                         color: '#dc2626'
@@ -135,9 +135,9 @@
             tooltipOptions: {
                 formatTooltip: (x, y, datasetName) => {
                     if (datasetName.includes('Reportes')) {
-                        return `📊 ${datasetName}: ${y.toLocaleString()}`;
+                        return `${datasetName}: ${y.toLocaleString()}`;
                     } else {
-                        return `💰 ${datasetName}: $${y.toFixed(0)}/m²`;
+                        return `${datasetName}: $${y.toFixed(0)}/m²`;
                     }
                 }
             }
@@ -160,16 +160,16 @@
             const chartData = prepareChartData(cheatersByYear, avgCostByYear);
             yearsList = chartData.years;
             
-            console.log('📅 Años:', yearsList);
-            console.log('📊 Reportes:', chartData.reportsData);
-            console.log('💰 Costes:', chartData.costData);
+            console.log('Años:', yearsList);
+            console.log('Reportes:', chartData.reportsData);
+            console.log('Costes:', chartData.costData);
             
             renderBarChart(chartData);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -178,7 +178,7 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🏗️ Construction Costs + Cheaters Stats</h1>
+    <h1>Construction Costs + Cheaters Stats</h1>
     <p class="subtitle">Bar Chart (Frappe Charts): Comparación de reportes vs coste de construcción por año</p>
     
     <div style="height: 550px; width: 100%;">
@@ -186,21 +186,21 @@
     </div>
     
     {#if loading}
-        <div class="loading">🏗️ Cargando datos...</div>
+        <div class="loading">Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Bar Chart (Frappe Charts):</strong></p>
+            <p><strong>Bar Chart (Frappe Charts):</strong></p>
             <ul>
-                <li><strong>🟣 Barras moradas:</strong> Reportes de tramposos</li>
-                <li><strong>🔴 Barras rojas:</strong> Coste de construcción (USD/m²)</li>
-                <li><strong>📅 Eje X:</strong> Año</li>
-                <li><strong>📊 Eje Y:</strong> Cantidad de reportes / USD por m²</li>
+                <li><strong>Barras moradas:</strong> Reportes de tramposos</li>
+                <li><strong>Barras rojas:</strong> Coste de construcción (USD/m²)</li>
+                <li><strong>Eje X:</strong> Año</li>
+                <li><strong>Eje Y:</strong> Cantidad de reportes / USD por m²</li>
             </ul>
-            <p><strong>📐 Años:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
-            <p><strong>💰 Coste máximo:</strong> ${Math.max(...(chartData?.costData || [0])).toFixed(0)}/m²</p>
-            <p><strong>📊 Reportes máximos:</strong> {Math.max(...(chartData?.reportsData || [0])).toLocaleString()}</p>
+            <p><strong>Años:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
+            <p><strong>Coste máximo:</strong> ${Math.max(...(chartData?.costData || [0])).toFixed(0)}/m²</p>
+            <p><strong>Reportes máximos:</strong> {Math.max(...(chartData?.reportsData || [0])).toLocaleString()}</p>
         </div>
     {/if}
 </div>

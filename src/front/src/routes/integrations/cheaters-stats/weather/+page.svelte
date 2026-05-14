@@ -19,18 +19,18 @@
             console.log('Estado PAT OpenWeather:', patStatus);
             return patStatus;
         } catch (err) {
-            console.warn('⚠️ No se pudo conectar:', err.message);
+            console.warn('No se pudo conectar:', err.message);
             return null;
         }
     }
     
     async function fetchCurrentWeather(city) {
-        console.log(` Obteniendo clima actual para ${city}...`);
+        console.log(`Obteniendo clima actual para ${city}...`);
         try {
             const response = await fetch(`/api/weather/weather?city=${city}`);
             const data = await response.json();
             if (data.success) {
-                console.log(` Clima: ${data.temperature}°C, ${data.description}`);
+                console.log(`Clima: ${data.temperature}°C, ${data.description}`);
                 return data;
             }
         } catch (err) {
@@ -40,12 +40,12 @@
     }
     
     async function fetchForecast(city) {
-        console.log(`📅 Obteniendo pronóstico para ${city}...`);
+        console.log(`Obteniendo pronóstico para ${city}...`);
         try {
             const response = await fetch(`/api/weather/forecast?city=${city}&limit=40`);
             const data = await response.json();
             if (data.success) {
-                console.log(` Pronóstico: ${data.forecast?.length || 0} días`);
+                console.log(`Pronóstico: ${data.forecast?.length || 0} días`);
                 return data.forecast || [];
             }
         } catch (err) {
@@ -57,7 +57,7 @@
   
     
     async function fetchCheatersData() {
-        console.log(' Cargando datos de Cheaters Stats...');
+        console.log('Cargando datos de Cheaters Stats...');
         try {
             const response = await fetch('/api/v2/cheaters-stats?limit=200');
             const json = await response.json();
@@ -94,7 +94,7 @@
         // Nodos de reportes por año
         years.forEach((year, i) => {
             children.push({
-                name: ` ${year}`,
+                name: `${year}`,
                 value: normalizedReports[i],
                 type: 'reports',
                 originalValue: reportsData[i],
@@ -106,7 +106,7 @@
         if (forecastDays && forecastDays.length > 0) {
             forecastDays.slice(0, 5).forEach((day, i) => {
                 children.push({
-                    name: ` ${day.date || `Día ${i+1}`}`,
+                    name: `${day.date || `Día ${i+1}`}`,
                     value: (day.temp_max || 20) * 2,
                     type: 'forecast',
                     tempMin: day.temp_min,
@@ -119,7 +119,7 @@
         // Nodo de clima actual si existe
         if (currentTemp) {
             children.push({
-                name: `🌡️ Actual`,
+                name: 'Actual',
                 value: (currentTemp + 20) * 2,
                 type: 'current',
                 temperature: currentTemp
@@ -127,11 +127,11 @@
         }
         
         const root = {
-            name: ' Clima y Reportes',
+            name: 'Clima y Reportes',
             children: children
         };
         
-        console.log('📊 Datos preparados:', children.length, 'nodos');
+        console.log('Datos preparados:', children.length, 'nodos');
         return root;
     }
     
@@ -202,11 +202,11 @@
                 
                 let tooltipHtml = `<strong>${d.data.name}</strong><br/>`;
                 if (d.data.type === 'reports') {
-                    tooltipHtml += `📊 Reportes: ${d.data.originalValue?.toLocaleString() || 0}`;
+                    tooltipHtml += `Reportes: ${d.data.originalValue?.toLocaleString() || 0}`;
                 } else if (d.data.type === 'forecast') {
-                    tooltipHtml += `🌡️ Máx: ${d.data.tempMax}°C / Mín: ${d.data.tempMin}°C<br/>${d.data.description || ''}`;
+                    tooltipHtml += `Máx: ${d.data.tempMax}°C / Mín: ${d.data.tempMin}°C<br/>${d.data.description || ''}`;
                 } else if (d.data.type === 'current') {
-                    tooltipHtml += `🌡️ Temperatura actual: ${d.data.temperature}°C`;
+                    tooltipHtml += `Temperatura actual: ${d.data.temperature}°C`;
                 }
                 
                 tooltip.style('opacity', 1)
@@ -234,8 +234,6 @@
             .style('pointer-events', 'none')
             .text(d => {
                 let name = d.data.name;
-                if (name.includes('📊')) name = name.replace('📊 ', '');
-                if (name.includes('📅')) name = name.replace('📅 ', '');
                 if (name.length > 12) name = name.substring(0, 10) + '...';
                 return name;
             });
@@ -248,7 +246,7 @@
             .style('font-size', '18px')
             .style('font-weight', 'bold')
             .style('fill', '#15803d')
-            .text(`🌤️ Reportes de Tramposos vs Clima - ${cityName}`);
+            .text(`Reportes de Tramposos vs Clima - ${cityName}`);
         
         if (currentWeatherData) {
             svg.append('text')
@@ -257,14 +255,14 @@
                 .attr('text-anchor', 'end')
                 .style('font-size', '11px')
                 .style('fill', '#666')
-                .html(`🌡️ ${Math.round(currentWeatherData.temperature)}°C | 💧 ${currentWeatherData.humidity}%`);
+                .html(`${Math.round(currentWeatherData.temperature)}°C | Humedad: ${currentWeatherData.humidity}%`);
         }
     }
     
     async function loadWeatherIntegration() {
         try {
             loading = true;
-            console.log('🌤️ Cargando integración: Cheaters Stats + OpenWeather API...');
+            console.log('Cargando integración: Cheaters Stats + OpenWeather API...');
             
             await loadInitialData();
             
@@ -283,16 +281,16 @@
             
             const chartData = prepareCirclePackData(cheatersByYear, forecast, currentWeather?.temperature);
             
-            console.log('📅 Años:', yearsList);
-            console.log('📅 Pronóstico:', forecast.length);
-            console.log('🌤️ Clima actual:', currentWeather?.city, currentWeather?.temperature);
+            console.log('Años:', yearsList);
+            console.log('Pronóstico:', forecast.length);
+            console.log('Clima actual:', currentWeather?.city, currentWeather?.temperature);
             
             renderCirclePack(chartData, currentWeather, currentCity);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -306,11 +304,11 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🌤️ OpenWeather API + Cheaters Stats</h1>
+    <h1>OpenWeather API + Cheaters Stats</h1>
     <p class="subtitle">Circle Packing (D3.js): Proporciones de reportes, clima actual y pronóstico</p>
     
     <div class="info-note-top">
-        📌 <strong>Interpretación del Circle Packing:</strong> Cada círculo representa un dato. 
+        <strong>Interpretación del Circle Packing:</strong> Cada círculo representa un dato. 
         El <strong>tamaño</strong> es proporcional al valor. Los colores distinguen categorías: 
         Reportes (morado) | Pronóstico (azul) | Clima actual (naranja)
     </div>
@@ -320,19 +318,19 @@
     </div>
     
     {#if loading}
-        <div class="loading">🌤️ Cargando datos de las APIs...</div>
+        <div class="loading">Cargando datos de las APIs...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         {#if currentWeather}
         <div class="current-weather">
-            <h3>🌤️ Clima actual en {currentWeather.city}</h3>
+            <h3>Clima actual en {currentWeather.city}</h3>
             <div class="weather-info">
                 <div class="weather-temp">{Math.round(currentWeather.temperature)}°C</div>
                 <div class="weather-desc">{currentWeather.description}</div>
                 <div class="weather-details">
-                    <span>💧 Humedad: {currentWeather.humidity}%</span>
-                    <span>💨 Viento: {currentWeather.wind_speed} m/s</span>
+                    <span>Humedad: {currentWeather.humidity}%</span>
+                    <span>Viento: {currentWeather.wind_speed} m/s</span>
                 </div>
             </div>
         </div>
@@ -340,12 +338,12 @@
         
         {#if forecast.length > 0}
         <div class="forecast">
-            <h3>📅 Pronóstico 5 días</h3>
+            <h3>Pronóstico 5 días</h3>
             <div class="forecast-grid">
                 {#each forecast.slice(0, 5) as day}
                 <div class="forecast-card">
                     <div class="forecast-date">{day.date}</div>
-                    <div class="forecast-temp">🌡️ {Math.round(day.temp_max)}°/{Math.round(day.temp_min)}°</div>
+                    <div class="forecast-temp">{Math.round(day.temp_max)}°/{Math.round(day.temp_min)}°</div>
                     <div class="forecast-desc">{day.description}</div>
                 </div>
                 {/each}
@@ -354,16 +352,16 @@
         {/if}
         
         <div class="info-note">
-            <p><strong>📌 Circle Packing (D3.js):</strong></p>
+            <p><strong>Circle Packing (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Círculos morados:</strong> Reportes de tramposos por año (Cheaters Stats API)</li>
-                <li><strong>🔵 Círculos azules:</strong> Pronóstico de temperatura por día (OpenWeather API)</li>
-                <li><strong>🟠 Círculo naranja:</strong> Clima actual (OpenWeather API)</li>
-                <li><strong>📏 Tamaño:</strong> Proporcional al valor</li>
-                <li><strong>🔘 Hover:</strong> Muestra el valor exacto</li>
+                <li><strong>Círculos morados:</strong> Reportes de tramposos por año (Cheaters Stats API)</li>
+                <li><strong>Círculos azules:</strong> Pronóstico de temperatura por día (OpenWeather API)</li>
+                <li><strong>Círculo naranja:</strong> Clima actual (OpenWeather API)</li>
+                <li><strong>Tamaño:</strong> Proporcional al valor</li>
+                <li><strong>Hover:</strong> Muestra el valor exacto</li>
             </ul>
-            <p><strong>📐 Años representados:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
-            <p><strong>✅ Sin datos precargados:</strong> Todo se obtiene mediante fetch() a las APIs</p>
+            <p><strong>Años representados:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
+            <p><strong>Sin datos precargados:</strong> Todo se obtiene mediante fetch() a las APIs</p>
         </div>
     {/if}
 </div>

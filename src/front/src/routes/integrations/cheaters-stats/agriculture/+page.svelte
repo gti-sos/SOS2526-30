@@ -7,24 +7,24 @@
     let yearsList = [];
     
     async function loadInitialData() {
-        console.log('🌾 Inicializando datos en Agriculture API...');
+        console.log('Inicializando datos en Agriculture API...');
         
         try {
             const response = await fetch('https://sos2526-22.onrender.com/api/v1/global-agriculture-climate-impacts/LoadInitialData');
             
             if (response.status === 400) {
                 const data = await response.json();
-                console.log('ℹ️', data.message);
+                console.log(data.message);
                 return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅', data.message);
+                console.log(data.message);
                 return { initialized: true };
             }
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar:', err.message);
+            console.warn('No se pudo inicializar:', err.message);
             return null;
         }
     }
@@ -260,7 +260,7 @@
                 .style('cursor', 'pointer')
                 .on('mouseover', (event) => {
                     tooltip.transition().duration(200).style('opacity', 0.9);
-                    tooltip.html(`📊 Reportes ${chartData.years[i]}:<br/>${point.realValue.toLocaleString()}<br/>📈 ${point.value.toFixed(1)}%`)
+                    tooltip.html(`Reportes ${chartData.years[i]}:<br/>${point.realValue.toLocaleString()}<br/>${point.value.toFixed(1)}%`)
                         .style('left', (event.pageX + 10) + 'px')
                         .style('top', (event.pageY - 28) + 'px');
                 })
@@ -281,7 +281,7 @@
                 .style('cursor', 'pointer')
                 .on('mouseover', (event) => {
                     tooltip.transition().duration(200).style('opacity', 0.9);
-                    tooltip.html(`🌡️ Temperatura ${chartData.years[i]}:<br/>${point.realValue.toFixed(1)}°C<br/>📈 ${point.value.toFixed(1)}%`)
+                    tooltip.html(`Temperatura ${chartData.years[i]}:<br/>${point.realValue.toFixed(1)}°C<br/>${point.value.toFixed(1)}%`)
                         .style('left', (event.pageX + 10) + 'px')
                         .style('top', (event.pageY - 28) + 'px');
                 })
@@ -305,7 +305,7 @@
             .attr('y', 4)
             .attr('fill', '#666')
             .attr('font-size', '11px')
-            .text('📊 Reportes de Tramposos');
+            .text('Reportes de Tramposos');
         
         legend.append('circle')
             .attr('cx', 0)
@@ -318,7 +318,7 @@
             .attr('y', 24)
             .attr('fill', '#666')
             .attr('font-size', '11px')
-            .text('🌡️ Temperatura Promedio');
+            .text('Temperatura Promedio');
     }
     
     onMount(async () => {
@@ -337,16 +337,16 @@
             const chartData = prepareChartData(cheatersByYear, avgTempByYear);
             yearsList = chartData.years;
             
-            console.log('📅 Años:', yearsList);
-            console.log('📊 Reportes:', chartData.reportsData);
-            console.log('🌡️ Temperaturas:', chartData.tempData);
+            console.log('Años:', yearsList);
+            console.log('Reportes:', chartData.reportsData);
+            console.log('Temperaturas:', chartData.tempData);
             
             renderPolarChart(chartData);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -355,7 +355,7 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🌾 Agriculture Climate + Cheaters Stats</h1>
+    <h1>Agriculture Climate + Cheaters Stats</h1>
     <p class="subtitle">Polar Chart (D3.js): Comparación radial de reportes vs temperatura agrícola</p>
     
     <div style="height: 600px; width: 100%; display: flex; justify-content: center;">
@@ -363,20 +363,20 @@
     </div>
     
     {#if loading}
-        <div class="loading">🌾 Cargando datos...</div>
+        <div class="loading">Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Polar Chart (D3.js):</strong></p>
+            <p><strong>Polar Chart (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Área morada:</strong> Reportes de tramposos (normalizado 0-100%)</li>
-                <li><strong>🟢 Área verde:</strong> Temperatura agrícola promedio (normalizado 0-100%)</li>
-                <li><strong>📅 Ejes radiales:</strong> Años disponibles</li>
-                <li><strong>📈 Círculos concéntricos:</strong> Escala de porcentaje (20%, 40%, 60%, 80%, 100%)</li>
-                <li><strong>🔘 Puntos interactivos:</strong> Muestran valores reales al hacer hover</li>
+                <li><strong>Área morada:</strong> Reportes de tramposos (normalizado 0-100%)</li>
+                <li><strong>Área verde:</strong> Temperatura agrícola promedio (normalizado 0-100%)</li>
+                <li><strong>Ejes radiales:</strong> Años disponibles</li>
+                <li><strong>Círculos concéntricos:</strong> Escala de porcentaje (20%, 40%, 60%, 80%, 100%)</li>
+                <li><strong>Puntos interactivos:</strong> Muestran valores reales al hacer hover</li>
             </ul>
-            <p><strong>📐 Años:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
+            <p><strong>Años:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
         </div>
     {/if}
 </div>

@@ -8,24 +8,24 @@
     let yearsList = [];
     
     async function loadInitialData() {
-        console.log('🛰️ Inicializando datos en Active Satellites API...');
+        console.log('Inicializando datos en Active Satellites API...');
         
         try {
             const response = await fetch('https://sos2526-14-yjus.onrender.com/api/v1/active-satellites/LoadInitialData');
             
             if (response.status === 400) {
                 const data = await response.json();
-                console.log('ℹ️', data.message);
+                console.log(data.message);
                 return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅', data.message);
+                console.log(data.message);
                 return { initialized: true };
             }
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar:', err.message);
+            console.warn('No se pudo inicializar:', err.message);
             return null;
         }
     }
@@ -112,9 +112,9 @@
         const totalSatellites = chartData.satellitesData.reduce((a, b) => a + b, 0);
         
         chart = new Chart(element, {
-            title: '🛰️ Total Reportes vs Total Satélites Lanzados',
+            title: 'Total Reportes vs Total Satélites Lanzados',
             data: {
-                labels: ['📊 Reportes de Tramposos', '🛰️ Satélites Lanzados'],
+                labels: ['Reportes de Tramposos', 'Satélites Lanzados'],
                 datasets: [
                     {
                         name: 'Totales',
@@ -150,16 +150,16 @@
             const chartData = prepareChartData(cheatersByYear, satellitesByYear);
             yearsList = chartData.years;
             
-            console.log('📅 Años:', yearsList);
-            console.log('📊 Reportes:', chartData.reportsData);
-            console.log('🛰️ Satélites:', chartData.satellitesData);
+            console.log('Años:', yearsList);
+            console.log('Reportes:', chartData.reportsData);
+            console.log('Satélites:', chartData.satellitesData);
             
             renderPieChart(chartData);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -168,7 +168,7 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🛰️ Active Satellites + Cheaters Stats</h1>
+    <h1>Active Satellites + Cheaters Stats</h1>
     <p class="subtitle">Pie Chart (Frappe Charts): Total de reportes vs total de satélites lanzados</p>
     
     <div style="height: 550px; width: 100%;">
@@ -176,20 +176,20 @@
     </div>
     
     {#if loading}
-        <div class="loading">🛰️ Cargando datos...</div>
+        <div class="loading">Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Pie Chart (Frappe Charts):</strong></p>
+            <p><strong>Pie Chart (Frappe Charts):</strong></p>
             <ul>
-                <li><strong>🟣 Morado:</strong> Total de reportes de tramposos</li>
-                <li><strong>🔵 Azul:</strong> Total de satélites lanzados</li>
-                <li><strong>📊 Valores:</strong> Suma total de todos los años</li>
+                <li><strong>Morado:</strong> Total de reportes de tramposos</li>
+                <li><strong>Azul:</strong> Total de satélites lanzados</li>
+                <li><strong>Valores:</strong> Suma total de todos los años</li>
             </ul>
-            <p><strong>📐 Años analizados:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
-            <p><strong>📊 Total reportes:</strong> {chartData?.reportsData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
-            <p><strong>🛰️ Total satélites:</strong> {chartData?.satellitesData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
+            <p><strong>Años analizados:</strong> {yearsList.length} años ({yearsList.join(', ')})</p>
+            <p><strong>Total reportes:</strong> {chartData?.reportsData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
+            <p><strong>Total satélites:</strong> {chartData?.satellitesData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
         </div>
     {/if}
 </div>
