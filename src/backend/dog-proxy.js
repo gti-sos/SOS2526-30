@@ -16,8 +16,8 @@ const router = express.Router();
 // Leer API Key desde .env
 const DOG_API_KEY = process.env.DOG_API_KEY;
 
-console.log('🐕 DOG API Proxy cargado');
-console.log('📁 __dirname:', __dirname);
+console.log(' DOG API Proxy cargado');
+console.log(' __dirname:', __dirname);
 console.log('DOG_API_KEY configurada:', !!DOG_API_KEY);
 if (DOG_API_KEY) {
     console.log('DOG_API_KEY prefix:', DOG_API_KEY.substring(0, 20) + '...');
@@ -28,17 +28,17 @@ if (DOG_API_KEY) {
 // Endpoint para verificar el estado del PAT
 router.get('/status', async (req, res) => {
     try {
-        console.log('🔐 Verificando estado de Dog API...');
+        console.log(' Verificando estado de Dog API...');
         
         if (!DOG_API_KEY) {
-            console.error('❌ DOG_API_KEY no existe en process.env');
+            console.error(' DOG_API_KEY no existe en process.env');
             return res.status(401).json({ 
                 authenticated: false, 
                 error: 'API Key no configurada en .env' 
             });
         }
         
-        console.log('🔑 Usando API Key:', DOG_API_KEY.substring(0, 15) + '...');
+        
         
         // Probar la API Key con una consulta simple
         const response = await fetch('https://api.thedogapi.com/v1/breeds?limit=1', {
@@ -47,11 +47,11 @@ router.get('/status', async (req, res) => {
             }
         });
         
-        console.log('📡 Respuesta de The Dog API:', response.status);
+        console.log(' Respuesta de The Dog API:', response.status);
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Error response:', errorText);
+            console.error(' Error response:', errorText);
             return res.status(response.status).json({
                 authenticated: false,
                 status: response.status,
@@ -60,7 +60,7 @@ router.get('/status', async (req, res) => {
         }
         
         const data = await response.json();
-        console.log('✅ Autenticación exitosa');
+        console.log(' Autenticación exitosa');
         
         res.json({
             authenticated: true,
@@ -70,7 +70,7 @@ router.get('/status', async (req, res) => {
             test_response: data.length > 0 ? 'OK' : 'No data'
         });
     } catch (error) {
-        console.error('❌ Error en /status:', error.message);
+        console.error(' Error en /status:', error.message);
         res.status(500).json({ 
             authenticated: false, 
             error: error.message,
@@ -120,14 +120,14 @@ router.get('/breeds', async (req, res) => {
             bred_for: breed.bred_for || 'No especificado'
         }));
         
-        console.log(`✅ Devolviendo ${breeds.length} razas`);
+        console.log(` Devolviendo ${breeds.length} razas`);
         res.json({
             success: true,
             total: breeds.length,
             breeds: breeds
         });
     } catch (error) {
-        console.error('❌ Error fetching breeds:', error);
+        console.error(' Error fetching breeds:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -167,7 +167,7 @@ router.get('/temperament-stats', async (req, res) => {
             top_temperaments: sortedTemperaments.map(([name, count]) => ({ name, count }))
         });
     } catch (error) {
-        console.error('❌ Error getting temperament stats:', error);
+        console.error(' Error getting temperament stats:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -195,7 +195,7 @@ router.get('/random-image', async (req, res) => {
             breed_name: data[0]?.breeds?.[0]?.name
         });
     } catch (error) {
-        console.error('❌ Error fetching random image:', error);
+        console.error(' Error fetching random image:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -225,7 +225,7 @@ router.get('/breed-image/:breedId', async (req, res) => {
             breed_id: breedId
         });
     } catch (error) {
-        console.error('❌ Error fetching breed image:', error);
+        console.error(' Error fetching breed image:', error);
         res.status(500).json({ error: error.message });
     }
 });

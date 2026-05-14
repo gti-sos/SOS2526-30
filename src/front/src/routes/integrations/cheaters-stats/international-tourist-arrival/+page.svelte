@@ -7,23 +7,23 @@
     let yearsList = [];
     
     async function loadInitialData() {
-        console.log('✈️ Inicializando datos en Tourist Arrivals API...');
+        console.log('Inicializando datos en Tourist Arrivals API...');
         
         try {
             const response = await fetch('https://sos2526-25.onrender.com/api/v1/international-tourist-arrivals/LoadInitialData');
             
             if (response.status === 409 || response.status === 400) {
-                console.log('ℹ️ Base de datos ya inicializada');
+                console.log('Base de datos ya inicializada');
                 return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅', data.message);
+                console.log(data.message);
                 return { initialized: true };
             }
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar:', err.message);
+            console.warn('No se pudo inicializar:', err.message);
             return null;
         }
     }
@@ -112,7 +112,7 @@
             name: 'root',
             children: [
                 {
-                    name: '📊 Reportes de Tramposos',
+                    name: 'Reportes de Tramposos',
                     children: chartData.years.map((year, i) => ({
                         name: `${year}`,
                         value: chartData.reportsData[i],
@@ -121,7 +121,7 @@
                     })).filter(d => d.value > 0)
                 },
                 {
-                    name: '✈️ Llegadas Turísticas',
+                    name: 'Llegadas Turísticas',
                     children: chartData.years.map((year, i) => ({
                         name: `${year}`,
                         value: chartData.touristData[i],
@@ -156,8 +156,8 @@
         
         // Colores por categoría
         const categoryColors = {
-            '📊 Reportes de Tramposos': '#7e22ce',
-            '✈️ Llegadas Turísticas': '#22c55e'
+            'Reportes de Tramposos': '#7e22ce',
+            'Llegadas Turísticas': '#22c55e'
         };
         
         // Tooltip
@@ -199,7 +199,7 @@
                     formattedValue = value.toLocaleString() + ' llegadas';
                 }
                 tooltip.style('opacity', 1)
-                    .html(`<strong>${category}</strong><br/>📅 Año: ${d.data.name}<br/>📊 Valor: ${formattedValue}`)
+                    .html(`<strong>${category}</strong><br/>Año: ${d.data.name}<br/>Valor: ${formattedValue}`)
                     .style('left', (event.pageX + 15) + 'px')
                     .style('top', (event.pageY - 30) + 'px');
             })
@@ -239,7 +239,7 @@
             .style('font-size', '18px')
             .style('font-weight', 'bold')
             .style('fill', '#15803d')
-            .text('✈️ Reportes de Tramposos vs Llegadas Turísticas Internacionales');
+            .text('Reportes de Tramposos vs Llegadas Turísticas Internacionales');
         
         // Subtítulo
         svg.append('text')
@@ -259,7 +259,7 @@
             .attr('y', 0)
             .attr('width', 14)
             .attr('height', 14)
-            .attr('fill', categoryColors['📊 Reportes de Tramposos'])
+            .attr('fill', categoryColors['Reportes de Tramposos'])
             .attr('rx', 3);
         
         legend.append('text')
@@ -267,14 +267,14 @@
             .attr('y', 11)
             .style('font-size', '11px')
             .style('fill', '#666')
-            .text('📊 Reportes');
+            .text('Reportes');
         
         legend.append('rect')
             .attr('x', 0)
             .attr('y', 22)
             .attr('width', 14)
             .attr('height', 14)
-            .attr('fill', categoryColors['✈️ Llegadas Turísticas'])
+            .attr('fill', categoryColors['Llegadas Turísticas'])
             .attr('rx', 3);
         
         legend.append('text')
@@ -282,7 +282,7 @@
             .attr('y', 33)
             .style('font-size', '11px')
             .style('fill', '#666')
-            .text('✈️ Llegadas Turísticas');
+            .text('Llegadas Turísticas');
     }
     
     onMount(async () => {
@@ -301,16 +301,16 @@
             const chartData = prepareChartData(cheatersByYear, touristByYear);
             yearsList = chartData.years;
             
-            console.log('📅 Años:', yearsList);
-            console.log('📊 Reportes:', chartData.reportsData);
-            console.log('✈️ Turistas:', chartData.touristData);
+            console.log('Años:', yearsList);
+            console.log('Reportes:', chartData.reportsData);
+            console.log('Turistas:', chartData.touristData);
             
             renderTreemap(chartData);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -319,11 +319,11 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>✈️ International Tourist Arrivals + Cheaters Stats</h1>
+    <h1>International Tourist Arrivals + Cheaters Stats</h1>
     <p class="subtitle">Treemap (D3.js): Visualización de proporciones - reportes vs llegadas turísticas</p>
     
     <div class="info-note-top">
-        📌 <strong>Interpretación del Treemap:</strong> Cada rectángulo representa un año. 
+        <strong>Interpretación del Treemap:</strong> Cada rectángulo representa un año. 
         El <strong>tamaño</strong> del rectángulo es proporcional al valor (reportes o llegadas). 
         A mayor área, mayor magnitud. Los colores distinguen entre reportes (morado) y turistas (verde).
     </div>
@@ -333,22 +333,22 @@
     </div>
     
     {#if loading}
-        <div class="loading">✈️ Cargando datos...</div>
+        <div class="loading">Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Treemap (D3.js):</strong></p>
+            <p><strong>Treemap (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Rectángulos morados:</strong> Reportes de tramposos por año</li>
-                <li><strong>🟢 Rectángulos verdes:</strong> Llegadas turísticas internacionales por año</li>
-                <li><strong>📏 Tamaño:</strong> Proporcional al valor (más grande = mayor cantidad)</li>
-                <li><strong>🔢 Números:</strong> Muestra valores abreviados (K = miles, M = millones)</li>
-                <li><strong>🔘 Hover:</strong> Muestra el valor exacto al pasar el ratón</li>
+                <li><strong>Rectángulos morados:</strong> Reportes de tramposos por año</li>
+                <li><strong>Rectángulos verdes:</strong> Llegadas turísticas internacionales por año</li>
+                <li><strong>Tamaño:</strong> Proporcional al valor (más grande = mayor cantidad)</li>
+                <li><strong>Números:</strong> Muestra valores abreviados (K = miles, M = millones)</li>
+                <li><strong>Hover:</strong> Muestra el valor exacto al pasar el ratón</li>
             </ul>
-            <p><strong>📐 Años representados:</strong> {yearsList.length} años</p>
-            <p><strong>📊 Total reportes:</strong> {chartData?.reportsData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
-            <p><strong>✈️ Total llegadas:</strong> {chartData?.touristData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
+            <p><strong>Años representados:</strong> {yearsList.length} años</p>
+            <p><strong>Total reportes:</strong> {chartData?.reportsData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
+            <p><strong>Total llegadas:</strong> {chartData?.touristData?.reduce((a,b) => a + b, 0).toLocaleString()}</p>
         </div>
     {/if}
 </div>

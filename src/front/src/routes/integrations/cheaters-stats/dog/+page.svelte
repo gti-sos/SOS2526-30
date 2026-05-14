@@ -15,7 +15,7 @@
     let sankeyData = null;
     
     async function loadInitialData() {
-        console.log('🐕 Verificando Dog API...');
+        console.log('Verificando Dog API...');
         
         try {
             const response = await fetch('/api/dog/status');
@@ -23,36 +23,36 @@
             console.log('Estado PAT Dog API:', patStatus);
             return patStatus;
         } catch (err) {
-            console.warn('⚠️ No se pudo conectar a Dog API:', err.message);
+            console.warn('No se pudo conectar a Dog API:', err.message);
             return null;
         }
     }
     
     async function fetchDogBreeds() {
-        console.log('🐕 Obteniendo razas de perros...');
+        console.log('Obteniendo razas de perros...');
         const response = await fetch('/api/dog/breeds?limit=150');
         const data = await response.json();
-        console.log(`✅ Dog Breeds: ${data.breeds?.length || 0} razas`);
+        console.log(`Dog Breeds: ${data.breeds?.length || 0} razas`);
         return data.breeds || [];
     }
     
     async function fetchTemperaments() {
-        console.log('🐕 Obteniendo estadísticas de temperamentos...');
+        console.log('Obteniendo estadísticas de temperamentos...');
         const response = await fetch('/api/dog/temperament-stats');
         const data = await response.json();
-        console.log(`✅ Temperamentos: ${data.top_temperaments?.length || 0}`);
+        console.log(`Temperamentos: ${data.top_temperaments?.length || 0}`);
         return data.top_temperaments || [];
     }
     
     async function fetchRandomDogImage() {
-        console.log('🐕 Obteniendo imagen aleatoria...');
+        console.log('Obteniendo imagen aleatoria...');
         const response = await fetch('/api/dog/random-image');
         const data = await response.json();
         return data.success ? data.image_url : null;
     }
     
     async function fetchCheatersData() {
-        console.log('📊 Cargando datos de Cheaters Stats...');
+        console.log('Cargando datos de Cheaters Stats...');
         try {
             const response = await fetch('https://sos2526-30.onrender.com/api/v2/cheaters-stats?limit=200');
             if (response.ok) {
@@ -90,9 +90,9 @@
     function prepareSankeyData(cheatersByYear, dogBreedsList, temperamentsList) {
         // Nodos
         const nodes = [
-            { name: '📊 Reportes Cheaters', category: 'reports' },
+            { name: 'Reportes Cheaters', category: 'reports' },
             ...Object.keys(cheatersByYear).map(year => ({ name: `Año ${year}`, category: 'year' })),
-            { name: '🐕 Razas de Perros', category: 'breeds' },
+            { name: 'Razas de Perros', category: 'breeds' },
             ...temperamentsList.slice(0, 6).map(t => ({ name: t.name, category: 'temperament', value: t.count }))
         ];
         
@@ -103,7 +103,7 @@
         const totalReports = Object.values(cheatersByYear).reduce((a, b) => a + b, 0);
         Object.keys(cheatersByYear).forEach(year => {
             links.push({
-                source: '📊 Reportes Cheaters',
+                source: 'Reportes Cheaters',
                 target: `Año ${year}`,
                 value: cheatersByYear[year]
             });
@@ -113,7 +113,7 @@
         Object.keys(cheatersByYear).forEach(year => {
             links.push({
                 source: `Año ${year}`,
-                target: '🐕 Razas de Perros',
+                target: 'Razas de Perros',
                 value: dogBreedsList.length / Object.keys(cheatersByYear).length
             });
         });
@@ -121,7 +121,7 @@
         // Conexión: Razas de Perros → Temperamentos
         temperamentsList.slice(0, 6).forEach(temp => {
             links.push({
-                source: '🐕 Razas de Perros',
+                source: 'Razas de Perros',
                 target: temp.name,
                 value: temp.count
             });
@@ -208,7 +208,7 @@
             .on('mouseover', function(event, d) {
                 d3.select(this).attr('opacity', 0.9);
                 tooltip.style('opacity', 1)
-                    .html(`<strong>${nodes[d.source.index].name} → ${nodes[d.target.index].name}</strong><br/>📊 Valor: ${d.value.toFixed(0)}`)
+                    .html(`<strong>${nodes[d.source.index].name} → ${nodes[d.target.index].name}</strong><br/>Valor: ${d.value.toFixed(0)}`)
                     .style('left', (event.pageX + 15) + 'px')
                     .style('top', (event.pageY - 30) + 'px');
             })
@@ -234,7 +234,7 @@
             .on('mouseover', function(event, d) {
                 d3.select(this).attr('opacity', 0.8);
                 tooltip.style('opacity', 1)
-                    .html(`<strong>${d.name}</strong><br/>📊 Categoría: ${d.category}<br/>📐 Valor: ${d.value || d.y1 - d.y0}`)
+                    .html(`<strong>${d.name}</strong><br/>Categoría: ${d.category}<br/>Valor: ${d.value || d.y1 - d.y0}`)
                     .style('left', (event.pageX + 15) + 'px')
                     .style('top', (event.pageY - 30) + 'px');
             })
@@ -266,7 +266,7 @@
             .style('font-size', '16px')
             .style('font-weight', 'bold')
             .style('fill', '#9a3412')
-            .text('🐕 Flujo de Datos: Reportes → Años → Razas → Temperamentos');
+            .text('Flujo de Datos: Reportes → Años → Razas → Temperamentos');
         
         // Subtítulo
         svg.append('text')
@@ -301,16 +301,16 @@
             
             const years = Object.keys(cheatersByYear).sort();
             
-            console.log('📅 Años:', years);
-            console.log('🐕 Razas:', dogBreedsList.length);
-            console.log('🏆 Temperamentos:', temperamentsList.length);
+            console.log('Años:', years);
+            console.log('Razas:', dogBreedsList.length);
+            console.log('Temperamentos:', temperamentsList.length);
             
             renderSankeyChart(sankeyData);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -335,11 +335,11 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>🐕 Dog API + Cheaters Stats</h1>
+    <h1>Dog API + Cheaters Stats</h1>
     <p class="subtitle">Sankey Diagram (D3.js): Flujo de datos desde reportes hasta temperamentos de perros</p>
     
     <div class="info-note-top">
-        📌 <strong>Interpretación del Sankey Diagram:</strong> Las líneas muestran el flujo de datos. 
+        <strong>Interpretación del Sankey Diagram:</strong> Las líneas muestran el flujo de datos. 
         El <strong>grosor</strong> de las líneas es proporcional a la magnitud. 
         De izquierda a derecha: Reportes → Años → Razas de perros → Temperamentos.
     </div>
@@ -349,23 +349,23 @@
     </div>
     
     {#if loading}
-        <div class="loading">🐕 Cargando datos de las APIs...</div>
+        <div class="loading">Cargando datos de las APIs...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-grid">
             <div class="info-card">
-                <h3>🐕 Razas de Perros</h3>
+                <h3>Razas de Perros</h3>
                 <p class="big-number">{dogBreeds.length}</p>
                 <p>desde The Dog API</p>
             </div>
             <div class="info-card">
-                <h3>🏆 Temperamentos</h3>
+                <h3>Temperamentos</h3>
                 <p class="big-number">{topTemperaments.length}</p>
                 <p>top temperamentos</p>
             </div>
             <div class="info-card">
-                <h3>📊 Reportes Totales</h3>
+                <h3>Reportes Totales</h3>
                 <p class="big-number">{cheatersDataRaw.reduce((s, i) => s + (i.cheater_report || 0), 0).toLocaleString()}</p>
                 <p>de Cheaters Stats</p>
             </div>
@@ -373,7 +373,7 @@
         
         {#if topTemperaments.length > 0}
         <div class="info-card full-width">
-            <h3>🏆 Top Temperamentos de Perros</h3>
+            <h3>Top Temperamentos de Perros</h3>
             <div class="temperament-grid">
                 {#each topTemperaments.slice(0, 8) as temp}
                     <span class="temperament-badge">{temp.name}: {temp.count}</span>
@@ -384,21 +384,21 @@
         
         {#if randomDogImage}
         <div class="random-dog">
-            <h3>🐕 Perro Aleatorio</h3>
+            <h3>Perro Aleatorio</h3>
             <img src={randomDogImage} alt="Random dog" class="dog-image">
         </div>
         {/if}
         
         <div class="info-note">
-            <p><strong>📌 Sankey Diagram (D3.js):</strong></p>
+            <p><strong>Sankey Diagram (D3.js):</strong></p>
             <ul>
-                <li><strong>🟣 Nodos morados:</strong> Reportes totales de tramposos</li>
-                <li><strong>🟣 Nodos violeta claro:</strong> Años (distribución de reportes)</li>
-                <li><strong>🟠 Nodo naranja:</strong> Total de razas de perros</li>
-                <li><strong>🟡 Nodos amarillos:</strong> Temperamentos más comunes</li>
-                <li><strong>📏 Grosor de línea:</strong> Proporcional a la magnitud del flujo</li>
+                <li><strong>Nodos morados:</strong> Reportes totales de tramposos</li>
+                <li><strong>Nodos violeta claro:</strong> Años (distribución de reportes)</li>
+                <li><strong>Nodo naranja:</strong> Total de razas de perros</li>
+                <li><strong>Nodos amarillos:</strong> Temperamentos más comunes</li>
+                <li><strong>Grosor de línea:</strong> Proporcional a la magnitud del flujo</li>
             </ul>
-            <p><strong>🔗 APIs utilizadas:</strong> Cheaters Stats + The Dog API (con PAT)</p>
+            <p><strong>APIs utilizadas:</strong> Cheaters Stats + The Dog API (con PAT)</p>
         </div>
     {/if}
 </div>

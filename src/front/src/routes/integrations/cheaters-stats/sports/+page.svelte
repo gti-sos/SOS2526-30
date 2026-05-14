@@ -13,14 +13,14 @@
     
    
     async function fetchCheatersData() {
-        console.log('📊 Cargando datos de Cheaters Stats...');
+        console.log('Cargando datos de Cheaters Stats...');
         
         const proxyResponse = await fetch('/api/v2/cheaters-stats?limit=200');
         if (proxyResponse.ok) {
             const json = await proxyResponse.json();
             const allData = json.data || [];
             const total = allData.reduce((sum, item) => sum + (item.cheater_report || 0), 0);
-            console.log(`📊 Total reportes: ${total}`);
+            console.log(`Total reportes: ${total}`);
             return total;
         }
         
@@ -41,7 +41,7 @@
         const data = await response.json();
         const teams = data.teams || [];
         
-        console.log(`⚽ Equipos encontrados: ${teams.length}`);
+        console.log(`Equipos encontrados: ${teams.length}`);
         
         let maxCapacity = 0;
         let maxTeam = '';
@@ -58,8 +58,8 @@
             }
         });
         
-        console.log(`⚽ Equipos con capacidad válida: ${validTeams}`);
-        console.log(`🏟️ Capacidad máxima: ${maxCapacity.toLocaleString()} (${maxTeam})`);
+        console.log(`Equipos con capacidad válida: ${validTeams}`);
+        console.log(`Capacidad máxima: ${maxCapacity.toLocaleString()} (${maxTeam})`);
         
         return { maxCapacity, maxTeam, totalTeams: teams.length, validTeams };
     }
@@ -72,8 +72,8 @@
         const totalComparacion = totalReportes + maxStadiumCapacity;
         
         const data = [
-            { name: '📊 Reportes de Tramposos', value: totalReportes, color: '#7e22ce', description: 'Total de reportes' },
-            { name: '🏟️ Capacidad Máxima Estadio', value: maxStadiumCapacity, color: '#f59e0b', description: `Estadio de ${maxStadiumTeam}` }
+            { name: 'Reportes de Tramposos', value: totalReportes, color: '#7e22ce', description: 'Total de reportes' },
+            { name: 'Capacidad Máxima Estadio', value: maxStadiumCapacity, color: '#f59e0b', description: `Estadio de ${maxStadiumTeam}` }
         ];
         
         const width = 700;
@@ -120,7 +120,7 @@
                 d3.select(this).transition().duration(200).attr('d', arcHover);
                 const percentage = ((d.data.value / totalComparacion) * 100).toFixed(1);
                 tooltip.style('opacity', 1)
-                    .html(`<strong>${d.data.name}</strong><br/>📊 Valor: ${d.data.value.toLocaleString()}<br/>📈 Porcentaje: ${percentage}%<br/>📝 ${d.data.description}`)
+                    .html(`<strong>${d.data.name}</strong><br/>Valor: ${d.data.value.toLocaleString()}<br/>Porcentaje: ${percentage}%<br/>${d.data.description}`)
                     .style('left', (event.pageX + 15) + 'px')
                     .style('top', (event.pageY - 30) + 'px');
             })
@@ -173,7 +173,7 @@
             .style('font-size', '16px')
             .style('font-weight', 'bold')
             .style('fill', '#166534')
-            .text('⚽ Reportes de Tramposos vs Capacidad del Estadio Más Grande');
+            .text('Reportes de Tramposos vs Capacidad del Estadio Más Grande');
         
         // Leyenda debajo del gráfico
         const legendX = -150;
@@ -216,7 +216,7 @@
             totalTeamsProcessed = sportsData.totalTeams;
             teamsWithCapacity = sportsData.validTeams;
             
-            console.log('✅ Datos cargados desde el proxy:', { 
+            console.log('Datos cargados desde el proxy:', { 
                 totalReportes, 
                 maxStadiumCapacity, 
                 maxStadiumTeam
@@ -225,7 +225,7 @@
             renderPieChart();
             loading = false;
         } catch (err) {
-            console.error('❌ Error fatal:', err);
+            console.error('Error fatal:', err);
             error = err.message;
             loading = false;
         }
@@ -234,11 +234,11 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>⚽ Cheaters Stats + Fútbol en España</h1>
+    <h1>Cheaters Stats + Fútbol en España</h1>
     <p class="subtitle">Comparativa: Reportes de tramposos vs Capacidad del estadio más grande de España</p>
     
     <div class="info-note-top">
-        📌 <strong>Interpretación del gráfico:</strong> El gráfico circular compara el total de reportes de tramposos 
+        <strong>Interpretación del gráfico:</strong> El gráfico circular compara el total de reportes de tramposos 
         con la <strong>capacidad máxima de un estadio de fútbol</strong> en España (The Sports DB).
     </div>
     
@@ -247,23 +247,23 @@
     </div>
     
     {#if loading}
-        <div class="loading">⚽ Cargando datos de las APIs a través del proxy...</div>
+        <div class="loading">Cargando datos de las APIs a través del proxy...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="stats-grid">
             <div class="stat-card cheaters">
-                <h3>📊 Reportes de Tramposos</h3>
+                <h3>Reportes de Tramposos</h3>
                 <p class="big-number">{totalReportes.toLocaleString()}</p>
                 <p>Total de reportes</p>
             </div>
             <div class="stat-card stadium">
-                <h3>🏟️ Capacidad Máxima</h3>
+                <h3>Capacidad Máxima</h3>
                 <p class="big-number">{maxStadiumCapacity.toLocaleString()}</p>
                 <p>Estadio de <strong>{maxStadiumTeam}</strong></p>
             </div>
             <div class="stat-card info">
-                <h3>⚽ Equipos Analizados</h3>
+                <h3>Equipos Analizados</h3>
                 <p class="big-number">{totalTeamsProcessed}</p>
                 <p>Equipos de fútbol en España</p>
                 <small>({teamsWithCapacity} con capacidad válida)</small>
@@ -271,11 +271,11 @@
         </div>
         
         <div class="info-note">
-            <p><strong>📌 Datos obtenidos en tiempo real (sin precarga):</strong></p>
+            <p><strong>Datos obtenidos en tiempo real (sin precarga):</strong></p>
             <ul>
-                <li><strong>📊 Cheaters Stats:</strong> <code>fetch('/api/v2/cheaters-stats')</code> → Total de reportes</li>
-                <li><strong>⚽ The Sports DB (vía proxy):</strong> <code>fetch('/api/sports/teams?sport=Soccer&country=Spain')</code> → Equipos españoles y capacidades</li>
-                <li><strong>🏟️ Capacidad máxima:</strong> Se calcula recorriendo todos los equipos</li>
+                <li><strong>Cheaters Stats:</strong> <code>fetch('/api/v2/cheaters-stats')</code> → Total de reportes</li>
+                <li><strong>The Sports DB (vía proxy):</strong> <code>fetch('/api/sports/teams?sport=Soccer&country=Spain')</code> → Equipos españoles y capacidades</li>
+                <li><strong>Capacidad máxima:</strong> Se calcula recorriendo todos los equipos</li>
             </ul>
         </div>
     {/if}

@@ -8,23 +8,23 @@
     let deathsUnit = 'miles';
     
     async function loadInitialData() {
-        console.log('💀 Inicializando datos en Deaths API...');
+        console.log('Inicializando datos en Deaths API...');
         
         try {
             const response = await fetch('https://sos2526-10.onrender.com/api/v2/deaths-by-risk-factors/LoadInitialData');
             
             if (response.status === 409 || response.status === 400) {
-                console.log('ℹ️ Base de datos ya inicializada');
+                console.log('Base de datos ya inicializada');
                 return { alreadyInitialized: true };
             }
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅', data.message);
+                console.log(data.message);
                 return { initialized: true };
             }
         } catch (err) {
-            console.warn('⚠️ No se pudo inicializar:', err.message);
+            console.warn('No se pudo inicializar:', err.message);
             return null;
         }
     }
@@ -220,9 +220,9 @@
             rect.on('mouseover', function(event) {
                 let text = '';
                 if (fill === colors.reportes) {
-                    text = `📊 Reportes de Tramposos ${year}: ${yearData.reports.toLocaleString()}`;
+                    text = `Reportes de Tramposos ${year}: ${yearData.reports.toLocaleString()}`;
                 } else {
-                    text = `💀 Muertes por Factores de Riesgo ${year}: ${yearData.deaths.toFixed(1)} mil (${(yearData.deaths * 1000).toLocaleString()} personas)`;
+                    text = `Muertes por Factores de Riesgo ${year}: ${yearData.deaths.toFixed(1)} mil (${(yearData.deaths * 1000).toLocaleString()} personas)`;
                 }
                 tooltip.style('opacity', 1)
                     .html(text)
@@ -259,7 +259,7 @@
             .style('font-size', '16px')
             .style('font-weight', 'bold')
             .style('fill', '#991b1b')
-            .text('💀 Reportes de Tramposos vs Muertes por Factores de Riesgo');
+            .text('Reportes de Tramposos vs Muertes por Factores de Riesgo');
         
         // Subtítulo (unidades)
         svg.append('text')
@@ -268,7 +268,7 @@
             .attr('text-anchor', 'middle')
             .style('font-size', '12px')
             .style('fill', '#666')
-            .text('📊 Reportes: número de reportes | 💀 Muertes: datos divididos entre 1.000 (mostrados en miles)');
+            .text('Reportes: número de reportes | Muertes: datos divididos entre 1.000 (mostrados en miles)');
         
         // Etiqueta del eje Y
         svg.append('text')
@@ -297,7 +297,7 @@
             .attr('y', 11)
             .style('font-size', '11px')
             .style('fill', '#666')
-            .text('📊 Reportes');
+            .text('Reportes');
         
         legend.append('rect')
             .attr('x', 0)
@@ -312,7 +312,7 @@
             .attr('y', 33)
             .style('font-size', '11px')
             .style('fill', '#666')
-            .text('💀 Muertes (×1.000)');
+            .text('Muertes (×1.000)');
     }
     
     onMount(async () => {
@@ -331,16 +331,16 @@
             const chartData = prepareChartData(cheatersByYear, deathsByYear);
             yearsList = chartData.years;
             
-            console.log('📅 Años:', yearsList);
-            console.log('📊 Reportes:', chartData.reportsData);
-            console.log('💀 Muertes (en miles):', chartData.deathsData);
+            console.log('Años:', yearsList);
+            console.log('Reportes:', chartData.reportsData);
+            console.log('Muertes (en miles):', chartData.deathsData);
             
             renderBarChart(chartData);
             
             loading = false;
             
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('Error:', err);
             error = err.message;
             loading = false;
         }
@@ -349,11 +349,11 @@
 
 <div class="container">
     <a href="/integrations/cheaters-stats" class="back-link">← Volver a Cheaters Stats</a>
-    <h1>💀 Deaths by Risk Factors + Cheaters Stats</h1>
+    <h1>Deaths by Risk Factors + Cheaters Stats</h1>
     <p class="subtitle">Bar Chart (D3.js): Reportes vs Muertes (datos de muertes divididos entre 1.000)</p>
     
     <div class="unit-note">
-        ⚠️ <strong>Nota:</strong> Los datos de muertes se muestran <strong>divididos entre 1.000</strong> (en miles) para facilitar la visualización. 
+        <strong>Nota:</strong> Los datos de muertes se muestran <strong>divididos entre 1.000</strong> (en miles) para facilitar la visualización. 
         Al hacer hover sobre las barras rojas se muestra el valor real en personas.
     </div>
     
@@ -362,21 +362,21 @@
     </div>
     
     {#if loading}
-        <div class="loading">💀 Cargando datos...</div>
+        <div class="loading">Cargando datos...</div>
     {:else if error}
         <div class="error">Error: {error}</div>
     {:else}
         <div class="info-note">
-            <p><strong>📌 Bar Chart (D3.js) - Datos transformados:</strong></p>
+            <p><strong>Bar Chart (D3.js) - Datos transformados:</strong></p>
             <ul>
-                <li><strong>🟣 Barras moradas:</strong> Reportes de tramposos (valores reales)</li>
-                <li><strong>🔴 Barras rojas:</strong> Muertes por factores de riesgo <strong>(÷ 1.000)</strong> - mostradas en miles</li>
-                <li><strong>📅 Eje X:</strong> Año</li>
-                <li><strong>📊 Eje Y:</strong> Cantidad (reportes / muertes en miles)</li>
-                <li><strong>🔘 Hover:</strong> Muestra valores reales (muertes en personas)</li>
+                <li><strong>Barras moradas:</strong> Reportes de tramposos (valores reales)</li>
+                <li><strong>Barras rojas:</strong> Muertes por factores de riesgo <strong>(÷ 1.000)</strong> - mostradas en miles</li>
+                <li><strong>Eje X:</strong> Año</li>
+                <li><strong>Eje Y:</strong> Cantidad (reportes / muertes en miles)</li>
+                <li><strong>Hover:</strong> Muestra valores reales (muertes en personas)</li>
             </ul>
-            <p><strong>📐 Años:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
-            <p><strong>💀 Ejemplo de transformación:</strong> Una muerte de 2.526.523 personas → 2.526,5 miles (mostrado en el gráfico)</p>
+            <p><strong>Años:</strong> {yearsList.length} años ({yearsList.slice(0, 5).join(', ')}...)</p>
+            <p><strong>Ejemplo de transformación:</strong> Una muerte de 2.526.523 personas → 2.526,5 miles (mostrado en el gráfico)</p>
         </div>
     {/if}
 </div>
