@@ -11,7 +11,7 @@
     let totalTeamsProcessed = 0;
     let teamsWithCapacity = 0;
     
-    // 1. Obtener datos de Cheaters Stats
+   
     async function fetchCheatersData() {
         console.log('📊 Cargando datos de Cheaters Stats...');
         
@@ -27,11 +27,11 @@
         throw new Error('No se pudo obtener datos de Cheaters Stats');
     }
     
-    // 2. Obtener equipos de España a través del PROXY
+   
     async function fetchSpanishTeams() {
-        console.log('⚽ Obteniendo equipos de fútbol de España a través del proxy...');
         
-        // ✅ Ahora llama al proxy, no directamente a la API externa
+        
+      
         const response = await fetch('/api/sports/teams?sport=Soccer&country=Spain');
         
         if (!response.ok) {

@@ -11,7 +11,7 @@
     const repoUrl = "https://github.com/gti-sos/SOS2526-30";
     
     // Variable de entorno para la URL base de la API
-    const baseApiUrl = import.meta.env.PUBLIC_API_BASE_URL || "https://sos2526-30.onrender.com/api/v1";
+    const baseApiUrl = "https://sos2526-30.onrender.com/api/v1";
     
     // URLs de documentación específicas
     const docUrls = {
@@ -34,7 +34,6 @@
 <svelte:head>
     <title>SOS2526-30 - Panel de Control</title>
 </svelte:head>
-
 
 <div class="cards-grid">
     <section class="card">
@@ -112,6 +111,18 @@
     <section class="card full-width">
         <h2>Repositorio</h2>
         <p><a href={repoUrl} target="_blank" rel="noreferrer" class="repo-link">{repoUrl}</a></p>
+    </section>
+
+    <!-- Sección de Videos Entregable D03 -->
+    <section class="card full-width video-section">
+        <h2>📹 Videos Entregable D03</h2>
+        <ul class="video-list">
+            <li>
+                <a href="https://youtu.be/MDm96x4fNVo" target="_blank" rel="noreferrer" class="video-link">
+                    🎥 Francisco Manuel García Patino - Cheaters Stats
+                </a>
+            </li>
+        </ul>
     </section>
 </div>
 
@@ -344,6 +355,43 @@
     .links-list li a small {
         color: var(--celeste-500);
         font-size: 0.8rem;
+    }
+
+    /* Estilos para la sección de videos */
+    .video-section {
+        background: linear-gradient(135deg, #ffffff 0%, var(--celeste-50) 100%);
+    }
+
+    .video-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .video-list li {
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+    }
+
+    .video-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--celeste-700);
+        background-color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--celeste-300);
+        transition: all 0.3s ease;
+    }
+
+    .video-link:hover {
+        background-color: var(--celeste-100);
+        border-color: var(--celeste-500);
+        transform: translateX(5px);
+        text-decoration: none;
     }
 
     @media (max-width: 640px) {
