@@ -221,7 +221,7 @@
 </script>
 
 <div class="map-container">
-    <h1 style="color: #60a5fa;">🌍 Mapa Mundial de Atletas Olímpicos</h1>
+    <h1 style="color: #60a5fa;">Mapa Mundial de Atletas Olímpicos</h1>
     <p class="subtitle" style="color: #94a3b8;">Haz clic en cualquier círculo para ver los atletas de ese país</p>
     
     <div id="map" style="height: 500px; width: 100%; border-radius: 12px; position: relative;"></div>
@@ -270,7 +270,7 @@
     {/if}
     
     <div class="info dark-info">
-        <h3 style="color: #60a5fa;">📖 Interpretación</h3>
+        <h3 style="color: #60a5fa;">Interpretación</h3>
         <ul style="color: #94a3b8;">
             <li><strong>Mapa base:</strong> Mapa mundial real con países</li>
             <li><strong>Tamaño del círculo:</strong> Número de atletas de ese país</li>

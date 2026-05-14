@@ -326,13 +326,13 @@
 </script>
 
 <div class="analytics-container">
-    <h1>📊 Estadísticas de Atletas Olímpicos</h1>
+    <h1> Estadísticas de Atletas Olímpicos</h1>
     <p class="subtitle">Relación entre altura de atletas y años de participación (colores por rango de años)</p>
     
     <!-- Botón para ir al mapa -->
     <div class="map-link">
         <a href="/analytics/olympics-athlete-events/map" class="btn-map">
-            🗺️ Ver mapa geospacial de atletas
+            Ver mapa geospacial de atletas
         </a>
     </div>
     

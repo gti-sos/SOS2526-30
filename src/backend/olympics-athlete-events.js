@@ -481,7 +481,6 @@ routerV2.get("/:name", (req, res) => {
         if (weight_max) query.weight.$lte = parseFloat(weight_max);
     }
     
-    // NUEVOS FILTROS AÑADIDOS
     if (medal && medal !== '') {
         query.medal = medal;
     }
