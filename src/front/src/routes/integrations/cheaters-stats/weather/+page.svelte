@@ -11,7 +11,7 @@
     let currentCity = 'Madrid';
     
     async function loadInitialData() {
-        console.log('🌤️ Verificando OpenWeather API...');
+       
         
         try {
             const response = await fetch('/api/weather/status');
@@ -25,12 +25,12 @@
     }
     
     async function fetchCurrentWeather(city) {
-        console.log(`🌤️ Obteniendo clima actual para ${city}...`);
+        console.log(` Obteniendo clima actual para ${city}...`);
         try {
             const response = await fetch(`/api/weather/weather?city=${city}`);
             const data = await response.json();
             if (data.success) {
-                console.log(`✅ Clima: ${data.temperature}°C, ${data.description}`);
+                console.log(` Clima: ${data.temperature}°C, ${data.description}`);
                 return data;
             }
         } catch (err) {
@@ -45,7 +45,7 @@
             const response = await fetch(`/api/weather/forecast?city=${city}&limit=40`);
             const data = await response.json();
             if (data.success) {
-                console.log(`✅ Pronóstico: ${data.forecast?.length || 0} días`);
+                console.log(` Pronóstico: ${data.forecast?.length || 0} días`);
                 return data.forecast || [];
             }
         } catch (err) {
@@ -57,7 +57,7 @@
   
     
     async function fetchCheatersData() {
-        console.log('📊 Cargando datos de Cheaters Stats...');
+        console.log(' Cargando datos de Cheaters Stats...');
         try {
             const response = await fetch('/api/v2/cheaters-stats?limit=200');
             const json = await response.json();
@@ -94,7 +94,7 @@
         // Nodos de reportes por año
         years.forEach((year, i) => {
             children.push({
-                name: `📊 ${year}`,
+                name: ` ${year}`,
                 value: normalizedReports[i],
                 type: 'reports',
                 originalValue: reportsData[i],
@@ -106,7 +106,7 @@
         if (forecastDays && forecastDays.length > 0) {
             forecastDays.slice(0, 5).forEach((day, i) => {
                 children.push({
-                    name: `📅 ${day.date || `Día ${i+1}`}`,
+                    name: ` ${day.date || `Día ${i+1}`}`,
                     value: (day.temp_max || 20) * 2,
                     type: 'forecast',
                     tempMin: day.temp_min,
@@ -127,7 +127,7 @@
         }
         
         const root = {
-            name: '🌍 Clima y Reportes',
+            name: ' Clima y Reportes',
             children: children
         };
         
