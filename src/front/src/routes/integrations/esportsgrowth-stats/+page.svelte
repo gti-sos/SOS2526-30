@@ -70,7 +70,7 @@
     a.sos-card:hover { box-shadow: 0 10px 20px -5px rgba(126, 34, 206, 0.2); border-color: #a855f7; }
     .sos-card p { color: #7e22ce; }
 
-    /* Estilos para las tarjetas externas */
+    /* Estilos para las tarjetas */
     .ext-card { background: #f8fafc; border-color: #e2e8f0; color: #334155; }
     .ext-card.placeholder { opacity: 0.6; cursor: not-allowed; }
     
