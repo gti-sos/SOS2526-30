@@ -32,7 +32,6 @@
         <div class="member-details">
             <code>esportsgrowth-stats</code>
             <a href="https://github.com/davreaper" target="_blank" class="btn-github">GitHub</a>
-            <a href="PONER_AQUI_EL_ENLACE_DE_DAVID" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -41,7 +40,6 @@
         <div class="member-details">
             <code>esportsearnings-stats</code>
             <a href="https://github.com/MarioRt8558" target="_blank" class="btn-github">GitHub</a>
-            <a href="https://youtu.be/04ZKjztOZz0" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -50,7 +48,6 @@
         <div class="member-details">
             <code>olympics-athlete-events</code>
             <a href="https://github.com/gonzaloogrcia" target="_blank" class="btn-github">GitHub</a>
-            <a href="PONER_AQUI_EL_ENLACE_DE_GONZALO" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
 
@@ -59,13 +56,11 @@
         <div class="member-details">
             <code>cheaters-stats</code>
             <a href="https://github.com/PaGarPa" target="_blank" class="btn-github">GitHub</a>
-            <a href="PONER_AQUI_EL_ENLACE_DE_FRANCISCO" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
     <div class="team-member videos-section">
-        <div class="member-name">🎬 Videos del Grupo</div>
+        <div class="member-name">Videos del Grupo</div>
         <div class="member-details">
-            <code>todos-los-miembros</code>
             <a href="about/videos" target="_blank" class="btn-youtube">Ver todos los videos</a>
         </div>
     </div>
