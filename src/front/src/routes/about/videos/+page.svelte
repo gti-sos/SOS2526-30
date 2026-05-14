@@ -3,7 +3,7 @@
     const videos = [
         {
             name: "David Real Pérez",
-            videoUrl: "" // Enlace de David
+            videoUrl: "https://youtu.be/aqpTXkrsZrk"
         },
         {
             name: "Mario Ramos Tuñón",
