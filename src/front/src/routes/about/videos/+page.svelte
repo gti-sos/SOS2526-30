@@ -11,7 +11,7 @@
         },
         {
             name: "Gonzalo García Gómez",
-            videoUrl: "" // Enlace de Gonzalo
+            videoUrl: "https://youtu.be/XpYLktnqNog"
         },
         {
             name: "Francisco Manuel García Patino",
