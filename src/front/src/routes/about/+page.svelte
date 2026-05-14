@@ -62,6 +62,13 @@
             <a href="PONER_AQUI_EL_ENLACE_DE_FRANCISCO" target="_blank" class="btn-youtube">▶️ Ver Vídeo</a>
         </div>
     </div>
+    <div class="team-member videos-section">
+        <div class="member-name">🎬 Videos del Grupo</div>
+        <div class="member-details">
+            <code>todos-los-miembros</code>
+            <a href="about/videos" target="_blank" class="btn-youtube">Ver todos los videos</a>
+        </div>
+    </div>
 
     <h2>Enlaces a las APIs</h2>
     <h3>Bases de las APIs</h3>
